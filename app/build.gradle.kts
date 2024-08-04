@@ -28,7 +28,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -41,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
@@ -55,6 +56,8 @@ android {
 ktlint {
     android.set(true)
     outputColorName.set("RED")
+    ignoreFailures.set(false)
+    enableExperimentalRules.set(false)
     filter {
         exclude("**/generated/**")
         include("**/kotlin/**")
@@ -98,4 +101,29 @@ ksp {
     arg("compose-destinations.mermaidGraph", "$rootDir/docs")
     // .html file
     arg("compose-destinations.htmlMermaidGraph", "$rootDir/docs")
+}
+
+koverReport {
+    filters {
+        excludes {
+            classes(
+                "*ReportsApplication*",
+                "*Activity*",
+                "*BuildConfig*",
+                "*ComposableSingletons*",
+                "*Ext*",
+                "*Screen*",
+            )
+            packages(
+                "*.model",
+                "org.koin.ksp.generated",
+                "pl.fmizielinski.reports.ui.base",
+                "pl.fmizielinski.reports.ui.theme",
+            )
+            annotatedBy(
+                "*Generated*",
+                "*Composable*",
+            )
+        }
+    }
 }
