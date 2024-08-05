@@ -18,7 +18,9 @@ ktlint = "12.1.1"
 lifecycleRuntimeKtx = "2.8.4"
 mockk = "1.13.12"
 navigation = "2.7.7"
+retrofit = "2.11.0"
 room = "2.6.1"
+serialization = "1.7.1"
 strikt = "0.35.1"
 turbine = "1.1.0"
 timber = "5.0.1"
@@ -27,7 +29,13 @@ timber = "5.0.1"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+# region retrofit
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-converter-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
+# endregion
 
 # region koin
 koin = { module = "io.insert-koin:koin-android", version.ref = "koin" }
@@ -79,6 +87,7 @@ compose = ["compose-material", "compose-ui", "compose-ui-tooling-preview", "comp
 compose-debug = ["compose-ui-test-manifest", "compose-ui-tooling"]
 koin = ["koin", "koin-compose", "koin-annotations"]
 navigation = ["navigation-ui", "navigation-fragment", "navigation-compose"]
+retrofit = ["retrofit", "retrofit-converter-serialization"]
 room = ["room", "room-ktx"]
 test-koin = ["test-koin", "test-koin-junit4"]
 test-strikt = ["test-strikt", "test-strikt-mockk"]
@@ -90,4 +99,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
-
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

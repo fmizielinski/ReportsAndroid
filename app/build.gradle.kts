@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -71,6 +72,7 @@ ktlint {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.serialization)
 
     // Compose
     implementation(platform(libs.compose.bom))
@@ -94,6 +96,9 @@ dependencies {
 
     // Timber
     implementation(libs.timber)
+
+    // Retrofit
+    implementation(libs.bundles.retrofit)
 }
 
 ksp {
@@ -117,6 +122,7 @@ koverReport {
             packages(
                 "*.model",
                 "org.koin.ksp.generated",
+                "pl.fmizielinski.reports.di",
                 "pl.fmizielinski.reports.ui.base",
                 "pl.fmizielinski.reports.ui.theme",
             )
