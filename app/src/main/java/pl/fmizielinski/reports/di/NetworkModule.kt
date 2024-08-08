@@ -5,6 +5,7 @@ import okhttp3.MediaType
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Single
+import pl.fmizielinski.reports.BuildConfig
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -14,8 +15,8 @@ class NetworkModule {
     @Single
     fun retrofit(
         @Named("jsonConverterFactory") jsonConverterFactory: Converter.Factory,
-    ) = Retrofit.Builder()
-        .baseUrl("http://localhost:8080")
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(BuildConfig.HOST)
         .addConverterFactory(jsonConverterFactory)
         .build()
 
