@@ -1,0 +1,12 @@
+---
+title: Root Navigation Graph
+---
+%%{init: {'theme':'base', 'themeVariables': { 'primaryTextColor': '#fff' }}%%
+graph TD
+root(["RootGraph"]) -- "start" --- login_screen("LoginScreen")
+
+
+classDef destination fill:#5383EC,stroke:#ffffff;
+class login_screen destination;
+classDef navgraph fill:#63BC76,stroke:#ffffff;
+class root navgraph;

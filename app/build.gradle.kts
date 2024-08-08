@@ -80,6 +80,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.activity)
     implementation(libs.bundles.compose)
+    debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.compose.destinations.ksp)
 
     // Koin
