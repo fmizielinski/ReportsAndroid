@@ -6,6 +6,7 @@ import org.koin.core.annotation.Module
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Single
 import pl.fmizielinski.reports.BuildConfig
+import pl.fmizielinski.reports.data.network.auth.AuthService
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -26,4 +27,7 @@ class NetworkModule {
         Json.asConverterFactory(
             MediaType.get("application/json; charset=UTF8"),
         )
+
+    @Single
+    fun authService(retrofit: Retrofit): AuthService = retrofit.create(AuthService::class.java)
 }

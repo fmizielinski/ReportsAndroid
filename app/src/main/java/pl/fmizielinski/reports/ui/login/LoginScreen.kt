@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardType
@@ -25,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
@@ -38,9 +40,15 @@ fun LoginScreen() {
         LoginForm(
             uiState = state.value,
             callbacks = LoginCallbacks(
-                onEmailChanged = { TODO() },
-                onPasswordChanged = { TODO() },
-                onLoginClicked = { TODO() },
+                onEmailChanged = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
+                },
+                onPasswordChanged = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
+                },
+                onLoginClicked = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+                },
             ),
         )
     }
@@ -58,6 +66,7 @@ fun LoginForm(
         Column(
             modifier = Modifier.align(Alignment.Center),
         ) {
+            val keyboardController = LocalSoftwareKeyboardController.current
             var usernameRange by remember { mutableStateOf(TextRange.Zero) }
             val usernameValue = TextFieldValue(
                 text = uiState.email,
@@ -65,7 +74,7 @@ fun LoginForm(
             )
             var passwordRange by remember { mutableStateOf(TextRange.Zero) }
             val passwordValue = TextFieldValue(
-                text = uiState.email,
+                text = uiState.password,
                 selection = passwordRange,
             )
 
@@ -92,7 +101,10 @@ fun LoginForm(
                 label = { Text(stringResource(R.string.loginScreen_label_password)) },
             )
             Button(
-                onClick = { callbacks.onLoginClicked() },
+                onClick = {
+                    callbacks.onLoginClicked()
+                    keyboardController?.hide()
+                },
                 modifier = Modifier.padding(vertical = 8.dp)
                     .align(Alignment.CenterHorizontally),
             ) {
