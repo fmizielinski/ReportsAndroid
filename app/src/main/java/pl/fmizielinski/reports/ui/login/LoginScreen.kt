@@ -79,10 +79,7 @@ fun LoginForm(
             )
             ReportsTextField(
                 value = uiState.password,
-                onValueChange = {
-                    callbacks.onPasswordChanged(it)
-                    keyboardController?.hide()
-                },
+                onValueChange = callbacks.onPasswordChanged,
                 modifier = Modifier.padding(vertical = 4.dp)
                     .fillMaxWidth(),
                 labelResId = R.string.loginScreen_label_password,
