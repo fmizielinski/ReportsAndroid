@@ -76,12 +76,12 @@ class LoginViewModel(
     )
 
     sealed interface Event {
-        object LoginSuccess : Event
+        data object LoginSuccess : Event
     }
 
     sealed interface UiEvent : Event {
         data class EmailChanged(val email: String) : UiEvent
         data class PasswordChanged(val password: String) : UiEvent
-        object LoginClicked : UiEvent
+        data object LoginClicked : UiEvent
     }
 }
