@@ -89,6 +89,7 @@ fun LoginForm(
                 limit = 64,
             )
             Button(
+                enabled = uiState.isLoginButtonEnabled,
                 onClick = {
                     callbacks.onLoginClicked()
                     keyboardController?.hide()
@@ -122,6 +123,7 @@ fun LoginScreenPreview() {
 private val uiState = UiState(
     email = "test@test.com",
     password = "password",
+    isLoginButtonEnabled = true,
 )
 
 private val emptyCallbacks = LoginCallbacks(
@@ -129,27 +131,3 @@ private val emptyCallbacks = LoginCallbacks(
     onPasswordChanged = {},
     onLoginClicked = {},
 )
-
-fun parseNetworkSecurityConfig(context: Context): String? {
-    val parser = context.resources.getXml(R.xml.network_security_config)
-    var domain: String? = null
-
-    try {
-        var eventType = parser.eventType
-        while (eventType != XmlPullParser.END_DOCUMENT) {
-            if (eventType == XmlPullParser.START_TAG && parser.name == "domain") {
-                domain = parser.nextText()
-                break
-            }
-            eventType = parser.next()
-        }
-    } catch (e: XmlPullParserException) {
-        e.printStackTrace()
-    } catch (e: IOException) {
-        e.printStackTrace()
-    } finally {
-        parser.close()
-    }
-
-    return domain
-}

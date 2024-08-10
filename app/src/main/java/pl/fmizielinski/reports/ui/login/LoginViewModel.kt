@@ -34,6 +34,7 @@ class LoginViewModel(
     override fun mapState(state: State): UiState = UiState(
         email = state.email,
         password = state.password,
+        isLoginButtonEnabled = state.email.isNotBlank() && state.password.isNotBlank(),
     )
 
     // region handleEvent
@@ -80,6 +81,7 @@ class LoginViewModel(
     data class UiState(
         val email: String,
         val password: String,
+        val isLoginButtonEnabled: Boolean,
     )
 
     sealed interface Event {
