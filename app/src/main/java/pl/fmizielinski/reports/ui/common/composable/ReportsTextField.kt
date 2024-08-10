@@ -25,6 +25,7 @@ fun ReportsTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     limit: Int = Int.MAX_VALUE,
+    trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     var fieldRange by remember { mutableStateOf(TextRange.Zero) }
     val fieldValue = TextFieldValue(
@@ -45,5 +46,6 @@ fun ReportsTextField(
         label = { Text(stringResource(labelResId)) },
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
+        trailingIcon = trailingIcon,
     )
 }

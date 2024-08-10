@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.ui.login
 
-import android.content.Context
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,29 +9,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import kotlinx.coroutines.launch
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserException
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
-import java.io.IOException
 
 @Destination<RootGraph>(start = true)
 @Composable
@@ -47,6 +50,9 @@ fun LoginScreen() {
                 },
                 onLoginClicked = {
                     coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+                },
+                onShowPasswordClicked = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
                 },
             ),
         )
@@ -66,6 +72,11 @@ fun LoginForm(
             modifier = Modifier.align(Alignment.Center),
         ) {
             val keyboardController = LocalSoftwareKeyboardController.current
+            val passwordVisualTransformation = if (uiState.showPassword) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            }
 
             ReportsTextField(
                 value = uiState.email,
@@ -85,8 +96,26 @@ fun LoginForm(
                 labelResId = R.string.loginScreen_label_password,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = passwordVisualTransformation,
                 limit = 64,
+                trailingIcon = {
+                    val drawableResId = if (uiState.showPassword) {
+                        R.drawable.ic_visibility_off_24dp
+                    } else {
+                        R.drawable.ic_visibility_24dp
+                    }
+                    val contentDescriptionResId = if (uiState.showPassword) {
+                        R.string.loginScreen_button_hidePassword
+                    } else {
+                        R.string.loginScreen_button_showPassword
+                    }
+                    Image(
+                        imageVector = ImageVector.vectorResource(drawableResId),
+                        contentDescription = stringResource(contentDescriptionResId),
+                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                        modifier = Modifier.clickable { callbacks.onShowPasswordClicked() },
+                    )
+                },
             )
             Button(
                 enabled = uiState.isLoginButtonEnabled,
@@ -107,6 +136,7 @@ data class LoginCallbacks(
     val onEmailChanged: (String) -> Unit,
     val onPasswordChanged: (String) -> Unit,
     val onLoginClicked: () -> Unit,
+    val onShowPasswordClicked: () -> Unit = {},
 )
 
 @Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_4)
@@ -124,6 +154,7 @@ private val uiState = UiState(
     email = "test@test.com",
     password = "password",
     isLoginButtonEnabled = true,
+    showPassword = false,
 )
 
 private val emptyCallbacks = LoginCallbacks(

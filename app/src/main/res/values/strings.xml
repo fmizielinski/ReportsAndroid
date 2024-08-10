@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">Reports</string>
 
+    <string name="loginScreen_button_hidePassword">Hide password</string>
     <string name="loginScreen_button_login">Sign in</string>
-    <string name="loginScreen_error_login">Unable to sign in. Try again</string>
+    <string name="loginScreen_button_showPassword">Show password</string>
     <string name="loginScreen_error_invalidCredentials">Invalid credentials</string>
+    <string name="loginScreen_error_login">Unable to sign in. Try again</string>
     <string name="loginScreen_label_email">Email</string>
     <string name="loginScreen_label_password">Password</string>
 </resources>

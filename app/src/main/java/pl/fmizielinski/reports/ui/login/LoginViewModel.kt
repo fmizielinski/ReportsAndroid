@@ -28,6 +28,7 @@ class LoginViewModel(
             is UiEvent.EmailChanged -> handleEmailChanged(state, event)
             is UiEvent.PasswordChanged -> handlePasswordChanged(state, event)
             is UiEvent.LoginClicked -> handleLoginClicked(state)
+            is UiEvent.ShowPasswordClicked -> handleShowPasswordClicked(state)
         }
     }
 
@@ -35,6 +36,7 @@ class LoginViewModel(
         email = state.email,
         password = state.password,
         isLoginButtonEnabled = state.email.isNotBlank() && state.password.isNotBlank(),
+        showPassword = state.showPassword,
     )
 
     // region handleEvent
@@ -71,17 +73,23 @@ class LoginViewModel(
         return state
     }
 
+    private fun handleShowPasswordClicked(state: State): State {
+        return state.copy(showPassword = !state.showPassword)
+    }
+
     // endregion handleEvent
 
     data class State(
         val email: String = "",
         val password: String = "",
+        val showPassword: Boolean = false,
     )
 
     data class UiState(
         val email: String,
         val password: String,
         val isLoginButtonEnabled: Boolean,
+        val showPassword: Boolean,
     )
 
     sealed interface Event {
@@ -93,5 +101,6 @@ class LoginViewModel(
         data class EmailChanged(val email: String) : UiEvent
         data class PasswordChanged(val password: String) : UiEvent
         data object LoginClicked : UiEvent
+        data object ShowPasswordClicked : UiEvent
     }
 }
