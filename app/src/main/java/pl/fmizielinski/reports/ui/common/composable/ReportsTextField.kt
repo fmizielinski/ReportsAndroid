@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.ui.common.composable
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -23,6 +24,7 @@ fun ReportsTextField(
     singleLine: Boolean = false,
     @StringRes labelResId: Int,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     limit: Int = Int.MAX_VALUE,
     trailingIcon: @Composable (() -> Unit)? = null,
@@ -45,6 +47,7 @@ fun ReportsTextField(
         modifier = modifier,
         label = { Text(stringResource(labelResId)) },
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         trailingIcon = trailingIcon,
     )
