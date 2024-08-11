@@ -2,9 +2,9 @@ package pl.fmizielinski.reports.di
 
 import android.content.Context
 import kotlinx.serialization.json.Json
-import okhttp3.CertificatePinner
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Named
@@ -41,26 +41,21 @@ class NetworkModule {
 
     @Factory
     fun okHttpClient(
-        pinner: CertificatePinner,
         sslSocketFactory: SSLSocketFactory,
         trustManager: X509TrustManager,
         hostnameVerifier: HostnameVerifier,
+        loggingInterceptor: HttpLoggingInterceptor,
     ): OkHttpClient = OkHttpClient.Builder()
-        .certificatePinner(pinner)
         .sslSocketFactory(sslSocketFactory, trustManager)
         .hostnameVerifier(hostnameVerifier)
-        .build()
-
-    @Factory
-    fun certificatePinner(): CertificatePinner = CertificatePinner.Builder()
-        .add(BuildConfig.HOST, BuildConfig.CERT)
+        .addInterceptor(loggingInterceptor)
         .build()
 
     @Factory
     @Named("jsonConverterFactory")
     fun jsonConverterFactory(): Converter.Factory =
         Json.asConverterFactory(
-            MediaType.get("application/json; charset=UTF8"),
+            "application/json; charset=UTF8".toMediaType(),
         )
 
     @Single
@@ -90,5 +85,10 @@ class NetworkModule {
     @Factory
     fun hostnameVerifier(): HostnameVerifier = HostnameVerifier { hostname, _ ->
         BuildConfig.HOST.contains(hostname)
+    }
+
+    @Factory
+    fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
     }
 }

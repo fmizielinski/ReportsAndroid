@@ -2,12 +2,11 @@ package pl.fmizielinski.reports.di
 
 import android.app.Application
 import androidx.room.Room
-import androidx.room.RoomDatabase
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import pl.fmizielinski.reports.BuildConfig
 import pl.fmizielinski.reports.data.db.ReportsDatabase
-import pl.fmizielinski.reports.data.db.dao.UserDao
+import pl.fmizielinski.reports.data.db.dao.TokenDao
 import timber.log.Timber
 
 @Module
@@ -33,5 +32,5 @@ class DatabaseModule {
         .build()
 
     @Single
-    fun userDao(database: ReportsDatabase): UserDao = database.userDao()
+    fun tokenDao(database: ReportsDatabase): TokenDao = database.tokenDao()
 }

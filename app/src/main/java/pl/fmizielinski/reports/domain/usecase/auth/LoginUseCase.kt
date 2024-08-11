@@ -3,16 +3,16 @@ package pl.fmizielinski.reports.domain.usecase.auth
 import okhttp3.Credentials
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.R
-import pl.fmizielinski.reports.data.db.dao.UserDao
+import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.domain.error.ErrorException
-import pl.fmizielinski.reports.domain.mapper.toUserModel
+import pl.fmizielinski.reports.domain.mapper.toTokenModel
 import retrofit2.HttpException
 
 @Factory
 class LoginUseCase(
     private val authService: AuthService,
-    private val userDao: UserDao,
+    private val tokenDao: TokenDao,
 ) {
 
     suspend operator fun invoke(username: String, password: String) {
@@ -24,8 +24,8 @@ class LoginUseCase(
         } catch (e: Exception) {
             throw genericErrorException(e)
         }
-        val userModel = loginResponseModel.toUserModel()
-        if (!userDao.addUser(userModel)) {
+        val tokenModel = loginResponseModel.toTokenModel()
+        if (!tokenDao.addToken(tokenModel)) {
             throw ErrorException(
                 uiMessage = R.string.loginScreen_error_login,
                 message = "Cannot save credentials",
