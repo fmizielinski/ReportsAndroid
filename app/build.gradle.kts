@@ -24,6 +24,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "HOST", "${project.properties["hostDev"]}")
+        buildConfigField("String", "CERT", "${project.properties["certificateHash"]}")
     }
 
     buildTypes {

@@ -21,6 +21,8 @@ class LoginUseCase(
             authService.login(credentials)
         } catch (e: HttpException) {
             throw e.toErrorException()
+        } catch (e: Exception) {
+            throw genericErrorException(e)
         }
         val userModel = loginResponseModel.toUserModel()
         if (!userDao.addUser(userModel)) {
@@ -39,11 +41,15 @@ class LoginUseCase(
                 cause = this,
             )
 
-            else -> ErrorException(
-                uiMessage = R.string.loginScreen_error_login,
-                message = "Unknown login error",
-                cause = this,
-            )
+            else -> genericErrorException(this)
         }
+    }
+
+    private fun genericErrorException(cause: Throwable): ErrorException {
+        return ErrorException(
+            uiMessage = R.string.loginScreen_error_login,
+            message = "Unknown login error",
+            cause = cause,
+        )
     }
 }

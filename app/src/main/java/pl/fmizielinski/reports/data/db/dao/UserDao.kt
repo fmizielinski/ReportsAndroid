@@ -7,6 +7,7 @@ import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 import pl.fmizielinski.reports.data.db.model.UserModel
 
+// FIXME Change to TokenDao
 @Dao
 interface UserDao {
 
