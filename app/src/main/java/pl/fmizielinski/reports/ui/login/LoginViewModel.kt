@@ -83,6 +83,7 @@ class LoginViewModel(
         val email: String = "",
         val password: String = "",
         val showPassword: Boolean = false,
+        val loginInProgress: Boolean = false,
     )
 
     data class UiState(
