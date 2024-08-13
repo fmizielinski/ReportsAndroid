@@ -32,24 +32,28 @@ class LoginViewModel(
         }
     }
 
-    override fun mapState(state: State): UiState = UiState(
-        email = state.email,
-        password = state.password,
-        isLoginButtonEnabled = state.email.isNotBlank() && state.password.isNotBlank(),
-        showPassword = state.showPassword,
-    )
+    override fun mapState(state: State): UiState {
+        val isLoginButtonEnabled =
+            state.email.isNotBlank() && state.password.isNotBlank() && !state.loginInProgress
+        return UiState(
+            email = state.email,
+            password = state.password,
+            isLoginButtonEnabled = isLoginButtonEnabled,
+            showPassword = state.showPassword,
+        )
+    }
 
     // region handleEvent
 
     private fun handleLoginSuccess(state: State): State {
-        return state
+        return state.copy(password = "", loginInProgress = false)
     }
 
     private fun handleLoginFailed(state: State, event: Event.LoginFailed): State {
         scope.launch {
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
         }
-        return state.copy(password = "")
+        return state.copy(password = "", loginInProgress = false)
     }
 
     private fun handleEmailChanged(state: State, event: UiEvent.EmailChanged): State {
@@ -70,7 +74,7 @@ class LoginViewModel(
                 postEvent(Event.LoginFailed(error))
             }
         }
-        return state
+        return state.copy(loginInProgress = true)
     }
 
     private fun handleShowPasswordClicked(state: State): State {
