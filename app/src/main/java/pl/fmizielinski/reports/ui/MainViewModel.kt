@@ -24,7 +24,6 @@ class MainViewModel(
     dispatcher: CoroutineDispatcher,
     private val eventsRepository: EventsRepository,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
-
     private val _showSnackBar = MutableSharedFlow<SnackBarData>()
     val showSnackBar: SharedFlow<SnackBarData> = _showSnackBar
 
@@ -40,7 +39,10 @@ class MainViewModel(
         }
     }
 
-    override fun handleEvent(state: State, event: Event): State = state
+    override fun handleEvent(
+        state: State,
+        event: Event,
+    ): State = state
 
     override fun mapState(state: State): UiState = UiState()
 
@@ -67,8 +69,6 @@ class MainViewModel(
     sealed interface UiEvent : Event
 }
 
-suspend inline fun <TYPE : Optional<SUBTYPE>, reified SUBTYPE> Flow<TYPE>.collectDestination(
-    collector: FlowCollector<SUBTYPE>,
-) {
+suspend inline fun <TYPE : Optional<SUBTYPE>, reified SUBTYPE> Flow<TYPE>.collectDestination(collector: FlowCollector<SUBTYPE>) {
     collect { value -> collector.emit(value.orElse(null)) }
 }

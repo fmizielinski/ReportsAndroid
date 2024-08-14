@@ -14,16 +14,19 @@ class LoginUseCase(
     private val authService: AuthService,
     private val tokenDao: TokenDao,
 ) {
-
-    suspend operator fun invoke(username: String, password: String) {
+    suspend operator fun invoke(
+        username: String,
+        password: String,
+    ) {
         val credentials = Credentials.basic(username, password)
-        val loginResponseModel = try {
-            authService.login(credentials)
-        } catch (e: HttpException) {
-            throw e.toErrorException()
-        } catch (e: Exception) {
-            throw genericErrorException(e)
-        }
+        val loginResponseModel =
+            try {
+                authService.login(credentials)
+            } catch (e: HttpException) {
+                throw e.toErrorException()
+            } catch (e: Exception) {
+                throw genericErrorException(e)
+            }
         val tokenModel = loginResponseModel.toTokenModel()
         if (!tokenDao.addToken(tokenModel)) {
             throw ErrorException(
@@ -35,11 +38,12 @@ class LoginUseCase(
 
     private fun HttpException.toErrorException(): ErrorException {
         return when (code()) {
-            401 -> ErrorException(
-                uiMessage = R.string.loginScreen_error_invalidCredentials,
-                message = "Invalid credentials",
-                cause = this,
-            )
+            401 ->
+                ErrorException(
+                    uiMessage = R.string.loginScreen_error_invalidCredentials,
+                    message = "Invalid credentials",
+                    cause = this,
+                )
 
             else -> genericErrorException(this)
         }

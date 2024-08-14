@@ -11,7 +11,6 @@ import pl.fmizielinski.reports.data.db.model.TokenModel
     exportSchema = false,
 )
 abstract class ReportsDatabase : RoomDatabase() {
-
     abstract fun tokenDao(): TokenDao
 
     companion object {

@@ -30,11 +30,12 @@ class NetworkModule {
     fun retrofit(
         @Named("jsonConverterFactory") jsonConverterFactory: Converter.Factory,
         client: OkHttpClient,
-    ): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.HOST)
-        .addConverterFactory(jsonConverterFactory)
-        .client(client)
-        .build()
+    ): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.HOST)
+            .addConverterFactory(jsonConverterFactory)
+            .client(client)
+            .build()
 
     @Single
     fun authService(retrofit: Retrofit): AuthService = retrofit.create(AuthService::class.java)
@@ -45,11 +46,12 @@ class NetworkModule {
         trustManager: X509TrustManager,
         hostnameVerifier: HostnameVerifier,
         loggingInterceptor: HttpLoggingInterceptor,
-    ): OkHttpClient = OkHttpClient.Builder()
-        .sslSocketFactory(sslSocketFactory, trustManager)
-        .hostnameVerifier(hostnameVerifier)
-        .addInterceptor(loggingInterceptor)
-        .build()
+    ): OkHttpClient =
+        OkHttpClient.Builder()
+            .sslSocketFactory(sslSocketFactory, trustManager)
+            .hostnameVerifier(hostnameVerifier)
+            .addInterceptor(loggingInterceptor)
+            .build()
 
     @Factory
     @Named("jsonConverterFactory")
@@ -83,12 +85,14 @@ class NetworkModule {
     }
 
     @Factory
-    fun hostnameVerifier(): HostnameVerifier = HostnameVerifier { hostname, _ ->
-        BuildConfig.HOST.contains(hostname)
-    }
+    fun hostnameVerifier(): HostnameVerifier =
+        HostnameVerifier { hostname, _ ->
+            BuildConfig.HOST.contains(hostname)
+        }
 
     @Factory
-    fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
+    fun loggingInterceptor(): HttpLoggingInterceptor =
+        HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
 }

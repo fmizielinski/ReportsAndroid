@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import androidx.annotation.StringRes
 import pl.fmizielinski.reports.domain.error.ErrorException
 
 fun errorException(

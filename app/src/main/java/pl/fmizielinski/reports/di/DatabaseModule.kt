@@ -11,25 +11,25 @@ import timber.log.Timber
 
 @Module
 class DatabaseModule {
-
     @Single
-    fun reportsDatabase(application: Application): ReportsDatabase = Room.databaseBuilder(
-        application,
-        ReportsDatabase::class.java,
-        ReportsDatabase.NAME,
-    )
-        .apply {
-            if (BuildConfig.DEBUG) {
-                setQueryCallback(
-                    queryCallback = { sqlQuery, bindArgs ->
-                        Timber.d("SQL Query: $sqlQuery")
-                        Timber.d("Bind Args: $bindArgs")
-                    },
-                    executor = { it.run() },
-                )
+    fun reportsDatabase(application: Application): ReportsDatabase =
+        Room.databaseBuilder(
+            application,
+            ReportsDatabase::class.java,
+            ReportsDatabase.NAME,
+        )
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    setQueryCallback(
+                        queryCallback = { sqlQuery, bindArgs ->
+                            Timber.d("SQL Query: $sqlQuery")
+                            Timber.d("Bind Args: $bindArgs")
+                        },
+                        executor = { it.run() },
+                    )
+                }
             }
-        }
-        .build()
+            .build()
 
     @Single
     fun tokenDao(database: ReportsDatabase): TokenDao = database.tokenDao()

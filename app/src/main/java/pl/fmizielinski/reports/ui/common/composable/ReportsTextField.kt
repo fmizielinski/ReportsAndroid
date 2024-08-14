@@ -30,10 +30,11 @@ fun ReportsTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
 ) {
     var fieldRange by remember { mutableStateOf(TextRange.Zero) }
-    val fieldValue = TextFieldValue(
-        text = value,
-        selection = fieldRange,
-    )
+    val fieldValue =
+        TextFieldValue(
+            text = value,
+            selection = fieldRange,
+        )
 
     TextField(
         value = fieldValue,

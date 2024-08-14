@@ -9,36 +9,38 @@ import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 
 class EventsRepositoryTest {
-
     private val eventsRepository = EventsRepository()
 
     @Test
-    fun postNavEvent() = runTest {
-        eventsRepository.navigationEvent.test {
-            eventsRepository.postNavEvent(LoginScreenDestination())
+    fun postNavEvent() =
+        runTest {
+            eventsRepository.navigationEvent.test {
+                eventsRepository.postNavEvent(LoginScreenDestination())
 
-            expectThat(awaitItem().get()) isEqualTo LoginScreenDestination()
-            cancel()
+                expectThat(awaitItem().get()) isEqualTo LoginScreenDestination()
+                cancel()
+            }
         }
-    }
 
     @Test
-    fun postNavUpEvent() = runTest {
-        eventsRepository.navigationEvent.test {
-            eventsRepository.postNavUpEvent()
+    fun postNavUpEvent() =
+        runTest {
+            eventsRepository.navigationEvent.test {
+                eventsRepository.postNavUpEvent()
 
-            expectThat(awaitItem().isPresent) isEqualTo false
-            cancel()
+                expectThat(awaitItem().isPresent) isEqualTo false
+                cancel()
+            }
         }
-    }
 
     @Test
-    fun postSnackBarEvent() = runTest {
-        eventsRepository.showSnackBar.test {
-            eventsRepository.postSnackBarEvent(SnackBarData.empty())
+    fun postSnackBarEvent() =
+        runTest {
+            eventsRepository.showSnackBar.test {
+                eventsRepository.postSnackBarEvent(SnackBarData.empty())
 
-            expectThat(awaitItem()) isEqualTo SnackBarData.empty()
-            cancel()
+                expectThat(awaitItem()) isEqualTo SnackBarData.empty()
+                cancel()
+            }
         }
-    }
 }

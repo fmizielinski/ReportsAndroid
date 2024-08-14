@@ -19,78 +19,84 @@ import strikt.api.expectThrows
 import strikt.assertions.isEqualTo
 
 class LoginUseCaseTest {
-
     private val authService: AuthService = mockk()
     private val tokenDao: TokenDao = mockk()
 
     private val useCase = LoginUseCase(authService, tokenDao)
 
     @Test
-    fun `GIVEN valid credentials WHEN login THEN save token`() = runTest {
-        val token = "token"
-        val tokenModel = tokenModel(token = token)
-        coEvery { authService.login(any()) } returns loginResponseModel(token = token)
-        coEvery { tokenDao.addToken(tokenModel) } returns true
+    fun `GIVEN valid credentials WHEN login THEN save token`() =
+        runTest {
+            val token = "token"
+            val tokenModel = tokenModel(token = token)
+            coEvery { authService.login(any()) } returns loginResponseModel(token = token)
+            coEvery { tokenDao.addToken(tokenModel) } returns true
 
-        useCase("username", "password")
+            useCase("username", "password")
 
-        coVerify(exactly = 1) { tokenDao.addToken(tokenModel) }
-    }
+            coVerify(exactly = 1) { tokenDao.addToken(tokenModel) }
+        }
 
     @Test
-    fun `GIVEN invalid credentials WHEN login THEN throw invalid credentials exception`() = runTest {
-        val exception = HttpException(
-            Response.error<LoginResponseModel>(401, "".toResponseBody()),
-        )
-        coEvery { authService.login(any()) } throws exception
+    fun `GIVEN invalid credentials WHEN login THEN throw invalid credentials exception`() =
+        runTest {
+            val exception =
+                HttpException(
+                    Response.error<LoginResponseModel>(401, "".toResponseBody()),
+                )
+            coEvery { authService.login(any()) } throws exception
 
-        expectThrows<ErrorException> {
-            useCase("username", "password")
-        }.and {
-            get { uiMessage } isEqualTo R.string.loginScreen_error_invalidCredentials
-            get { message } isEqualTo "Invalid credentials"
+            expectThrows<ErrorException> {
+                useCase("username", "password")
+            }.and {
+                get { uiMessage } isEqualTo R.string.loginScreen_error_invalidCredentials
+                get { message } isEqualTo "Invalid credentials"
+            }
         }
-    }
 
     @Test
-    fun `GIVEN unknown error WHEN login THEN throw unknown error exception`() = runTest {
-        coEvery { authService.login(any()) } throws Exception()
+    fun `GIVEN unknown error WHEN login THEN throw unknown error exception`() =
+        runTest {
+            coEvery { authService.login(any()) } throws Exception()
 
-        expectThrows<ErrorException> {
-            useCase("username", "password")
-        }.and {
-            get { uiMessage } isEqualTo R.string.loginScreen_error_login
-            get { message } isEqualTo "Unknown login error"
+            expectThrows<ErrorException> {
+                useCase("username", "password")
+            }.and {
+                get { uiMessage } isEqualTo R.string.loginScreen_error_login
+                get { message } isEqualTo "Unknown login error"
+            }
         }
-    }
 
     @Test
-    fun `GIVEN unknown http error WHEN login THEN throw unknown error exception`() = runTest {
-        val exception = HttpException(
-            Response.error<LoginResponseModel>(999, "".toResponseBody()),
-        )
-        coEvery { authService.login(any()) } throws exception
+    fun `GIVEN unknown http error WHEN login THEN throw unknown error exception`() =
+        runTest {
+            val exception =
+                HttpException(
+                    Response.error<LoginResponseModel>(999, "".toResponseBody()),
+                )
+            coEvery { authService.login(any()) } throws exception
 
-        expectThrows<ErrorException> {
-            useCase("username", "password")
-        }.and {
-            get { uiMessage } isEqualTo R.string.loginScreen_error_login
-            get { message } isEqualTo "Unknown login error"
+            expectThrows<ErrorException> {
+                useCase("username", "password")
+            }.and {
+                get { uiMessage } isEqualTo R.string.loginScreen_error_login
+                get { message } isEqualTo "Unknown login error"
+            }
         }
-    }
 
     @Test
-    fun `GIVEN valid credentials WHEN saving token error THEN throw save credentials exception`() = runTest {
-        val token = "token"
-        val tokenModel = tokenModel(token = token)
-        coEvery { authService.login(any()) } returns loginResponseModel(token = token)
-        coEvery { tokenDao.addToken(tokenModel) } returns false
+    fun `GIVEN valid credentials WHEN saving token error THEN throw save credentials exception`() =
+        runTest {
+            val token = "token"
+            val tokenModel = tokenModel(token = token)
+            coEvery { authService.login(any()) } returns loginResponseModel(token = token)
+            coEvery { tokenDao.addToken(tokenModel) } returns false
 
-        expectThrows<ErrorException> {
-            useCase("username", "password")
-        }.and {
-            get { uiMessage } isEqualTo R.string.loginScreen_error_login
-            get { message } isEqualTo "Cannot save credentials"
+            expectThrows<ErrorException> {
+                useCase("username", "password")
+            }.and {
+                get { uiMessage } isEqualTo R.string.loginScreen_error_login
+                get { message } isEqualTo "Cannot save credentials"
+            }
         }
-    }
 }

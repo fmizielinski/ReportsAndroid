@@ -46,20 +46,21 @@ fun LoginScreen() {
     BaseScreen<LoginViewModel, UiState, UiEvent> {
         LoginForm(
             uiState = state.value,
-            callbacks = LoginCallbacks(
-                onEmailChanged = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
-                },
-                onPasswordChanged = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
-                },
-                onLoginClicked = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
-                },
-                onShowPasswordClicked = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
-                },
-            ),
+            callbacks =
+                LoginCallbacks(
+                    onEmailChanged = {
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
+                    },
+                    onPasswordChanged = {
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
+                    },
+                    onLoginClicked = {
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+                    },
+                    onShowPasswordClicked = {
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+                    },
+                ),
         )
     }
 }
@@ -70,30 +71,34 @@ fun LoginForm(
     callbacks: LoginCallbacks,
 ) {
     Box(
-        modifier = Modifier.fillMaxSize()
-            .padding(32.dp),
+        modifier =
+            Modifier.fillMaxSize()
+                .padding(32.dp),
     ) {
         Column(
             modifier = Modifier.align(Alignment.Center),
         ) {
             val keyboardController = LocalSoftwareKeyboardController.current
-            val passwordVisualTransformation = if (uiState.showPassword) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            }
+            val passwordVisualTransformation =
+                if (uiState.showPassword) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                }
             val focusRequester = remember { FocusRequester() }
 
             ReportsTextField(
                 value = uiState.email,
                 onValueChange = callbacks.onEmailChanged,
-                modifier = Modifier.padding(vertical = 4.dp)
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier.padding(vertical = 4.dp)
+                        .fillMaxWidth(),
                 labelResId = R.string.loginScreen_label_email,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next,
+                    ),
                 keyboardActions = KeyboardActions { focusRequester.requestFocus() },
                 singleLine = true,
                 limit = 254,
@@ -101,32 +106,37 @@ fun LoginForm(
             ReportsTextField(
                 value = uiState.password,
                 onValueChange = callbacks.onPasswordChanged,
-                modifier = Modifier.padding(vertical = 4.dp)
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
+                modifier =
+                    Modifier.padding(vertical = 4.dp)
+                        .fillMaxWidth()
+                        .focusRequester(focusRequester),
                 labelResId = R.string.loginScreen_label_password,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions {
-                    callbacks.onLoginClicked()
-                    keyboardController?.hide()
-                },
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions =
+                    KeyboardActions {
+                        callbacks.onLoginClicked()
+                        keyboardController?.hide()
+                    },
                 singleLine = true,
                 visualTransformation = passwordVisualTransformation,
                 limit = 64,
                 trailingIcon = {
-                    val drawableResId = if (uiState.showPassword) {
-                        R.drawable.ic_visibility_off_24dp
-                    } else {
-                        R.drawable.ic_visibility_24dp
-                    }
-                    val contentDescriptionResId = if (uiState.showPassword) {
-                        R.string.loginScreen_button_hidePassword
-                    } else {
-                        R.string.loginScreen_button_showPassword
-                    }
+                    val drawableResId =
+                        if (uiState.showPassword) {
+                            R.drawable.ic_visibility_off_24dp
+                        } else {
+                            R.drawable.ic_visibility_24dp
+                        }
+                    val contentDescriptionResId =
+                        if (uiState.showPassword) {
+                            R.string.loginScreen_button_hidePassword
+                        } else {
+                            R.string.loginScreen_button_showPassword
+                        }
                     Image(
                         imageVector = ImageVector.vectorResource(drawableResId),
                         contentDescription = stringResource(contentDescriptionResId),
@@ -141,8 +151,9 @@ fun LoginForm(
                     callbacks.onLoginClicked()
                     keyboardController?.hide()
                 },
-                modifier = Modifier.padding(vertical = 8.dp)
-                    .align(Alignment.CenterHorizontally),
+                modifier =
+                    Modifier.padding(vertical = 8.dp)
+                        .align(Alignment.CenterHorizontally),
             ) {
                 Text(stringResource(R.string.loginScreen_button_login))
             }
@@ -168,15 +179,17 @@ fun LoginScreenPreview() {
     }
 }
 
-private val uiState = UiState(
-    email = "test@test.com",
-    password = "password",
-    isLoginButtonEnabled = true,
-    showPassword = false,
-)
+private val uiState =
+    UiState(
+        email = "test@test.com",
+        password = "password",
+        isLoginButtonEnabled = true,
+        showPassword = false,
+    )
 
-private val emptyCallbacks = LoginCallbacks(
-    onEmailChanged = {},
-    onPasswordChanged = {},
-    onLoginClicked = {},
-)
+private val emptyCallbacks =
+    LoginCallbacks(
+        onEmailChanged = {},
+        onPasswordChanged = {},
+        onLoginClicked = {},
+    )

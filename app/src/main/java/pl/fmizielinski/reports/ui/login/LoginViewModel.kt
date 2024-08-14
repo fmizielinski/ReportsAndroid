@@ -20,8 +20,10 @@ class LoginViewModel(
     private val loginUseCase: LoginUseCase,
     private val eventsRepository: EventsRepository,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
-
-    override fun handleEvent(state: State, event: Event): State {
+    override fun handleEvent(
+        state: State,
+        event: Event,
+    ): State {
         return when (event) {
             is Event.LoginSuccess -> handleLoginSuccess(state)
             is Event.LoginFailed -> handleLoginFailed(state, event)
@@ -49,18 +51,27 @@ class LoginViewModel(
         return state.copy(password = "", loginInProgress = false)
     }
 
-    private fun handleLoginFailed(state: State, event: Event.LoginFailed): State {
+    private fun handleLoginFailed(
+        state: State,
+        event: Event.LoginFailed,
+    ): State {
         scope.launch {
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
         }
         return state.copy(password = "", loginInProgress = false)
     }
 
-    private fun handleEmailChanged(state: State, event: UiEvent.EmailChanged): State {
+    private fun handleEmailChanged(
+        state: State,
+        event: UiEvent.EmailChanged,
+    ): State {
         return state.copy(email = event.email)
     }
 
-    private fun handlePasswordChanged(state: State, event: UiEvent.PasswordChanged): State {
+    private fun handlePasswordChanged(
+        state: State,
+        event: UiEvent.PasswordChanged,
+    ): State {
         return state.copy(password = event.password)
     }
 
@@ -99,13 +110,17 @@ class LoginViewModel(
 
     sealed interface Event {
         data object LoginSuccess : Event
+
         data class LoginFailed(val error: ErrorException) : Event
     }
 
     sealed interface UiEvent : Event {
         data class EmailChanged(val email: String) : UiEvent
+
         data class PasswordChanged(val password: String) : UiEvent
+
         data object LoginClicked : UiEvent
+
         data object ShowPasswordClicked : UiEvent
     }
 }
