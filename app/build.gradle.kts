@@ -132,6 +132,7 @@ koverReport {
                 "*ReportsApplication*",
                 "*ReportsDatabase*",
                 "*Screen*",
+                "*MainViewModelKt*",
             )
             packages(
                 "*.model",
