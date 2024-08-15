@@ -15,8 +15,8 @@ jobs:
           cache: gradle
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
-      - name: Run lint check
-        run: ./gradlew ktlintCheck
+      - name: Run Detekt check
+        run: ./gradlew detekt
       - name: Generate Kover report
         run: ./gradlew koverXmlReportDebug
       - name: Parse Kover Report
