@@ -22,6 +22,8 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "HOST", "${project.properties["hostDev"]}")
     }
 
     buildTypes {
@@ -78,6 +80,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.activity)
     implementation(libs.bundles.compose)
+    debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.compose.destinations.ksp)
 
     // Koin
@@ -99,6 +102,15 @@ dependencies {
 
     // Retrofit
     implementation(libs.bundles.retrofit)
+    implementation(libs.okHttp)
+
+    testImplementation(libs.bundles.test.koin)
+    testImplementation(libs.bundles.test.strikt)
+    testImplementation(libs.test.arch.core)
+    testImplementation(libs.test.coroutines)
+    testImplementation(libs.test.junit)
+    testImplementation(libs.test.mockk)
+    testImplementation(libs.test.turbine)
 }
 
 ksp {
@@ -112,18 +124,24 @@ koverReport {
     filters {
         excludes {
             classes(
-                "*ReportsApplication*",
                 "*Activity*",
                 "*BuildConfig*",
+                "*Callbacks*",
                 "*ComposableSingletons*",
                 "*Ext*",
+                "*ReportsApplication*",
+                "*ReportsDatabase*",
                 "*Screen*",
+                "*MainViewModelKt*",
             )
             packages(
                 "*.model",
                 "org.koin.ksp.generated",
+                "pl.fmizielinski.reports.data.db.dao",
                 "pl.fmizielinski.reports.di",
+                "pl.fmizielinski.reports.domain.error",
                 "pl.fmizielinski.reports.ui.base",
+                "pl.fmizielinski.reports.ui.common.composables",
                 "pl.fmizielinski.reports.ui.theme",
             )
             annotatedBy(

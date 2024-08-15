@@ -30,7 +30,7 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
 
     val initialUiState: UiState = this.mapState(mState)
 
-    abstract fun handleEvent(
+    protected abstract fun handleEvent(
         state: State,
         event: Event,
     ): State

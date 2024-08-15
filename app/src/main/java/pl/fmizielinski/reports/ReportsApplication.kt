@@ -5,7 +5,10 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import org.koin.ksp.generated.module
+import pl.fmizielinski.reports.di.DatabaseModule
+import pl.fmizielinski.reports.di.DomainModule
 import pl.fmizielinski.reports.di.NetworkModule
+import pl.fmizielinski.reports.di.ViewModelModule
 import timber.log.Timber
 
 class ReportsApplication : Application() {
@@ -19,7 +22,12 @@ class ReportsApplication : Application() {
         startKoin {
             androidLogger()
             androidContext(this@ReportsApplication)
-            modules(NetworkModule().module)
+            modules(
+                NetworkModule().module,
+                ViewModelModule().module,
+                DomainModule().module,
+                DatabaseModule().module,
+            )
         }
     }
 }
