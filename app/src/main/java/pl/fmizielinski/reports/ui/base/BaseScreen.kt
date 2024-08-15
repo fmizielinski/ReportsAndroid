@@ -12,24 +12,24 @@ import pl.fmizielinski.reports.ui.common.collectUiStateAsState
 
 @Composable
 inline fun <
-    reified ViewModel : BaseViewModel<*, *, UiState, UiEvent>,
-    reified UiState,
-    reified UiEvent,
-    > BaseScreen(
+        reified ViewModel : BaseViewModel<*, *, UiState, UiEvent>,
+        reified UiState,
+        reified UiEvent,
+        > BaseScreen(
     noinline parameters: ParametersDefinition? = null,
     content: @Composable ScreenScope<ViewModel, UiState>.() -> Unit,
 ) {
+
     val viewModel: ViewModel = koinViewModel(parameters = parameters)
     val coroutineScope = rememberCoroutineScope()
 
     val state = viewModel.collectUiStateAsState()
 
-    val scope =
-        ScreenScope(
-            viewModel = viewModel,
-            coroutineScope = coroutineScope,
-            state = state,
-        )
+    val scope = ScreenScope(
+        viewModel = viewModel,
+        coroutineScope = coroutineScope,
+        state = state,
+    )
 
     DisposableEffect(key1 = viewModel) {
         coroutineScope.launch { viewModel.onStart() }

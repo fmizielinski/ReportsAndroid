@@ -6,6 +6,7 @@ data class SnackBarData(
     @StringRes val messageResId: Int?,
     val secondsAlive: Long = DURATION_LONG,
 ) {
+
     val isValid: Boolean = messageResId != null
 
     companion object {

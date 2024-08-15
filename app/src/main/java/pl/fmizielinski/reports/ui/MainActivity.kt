@@ -73,9 +73,8 @@ fun MainScreen(
         DestinationsNavHost(
             navGraph = NavGraphs.root,
             navController = navController,
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(it),
+            modifier = Modifier.fillMaxSize()
+                .padding(it),
         )
     }
 }

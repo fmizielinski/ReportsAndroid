@@ -21,6 +21,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
@@ -46,21 +47,20 @@ fun LoginScreen() {
     BaseScreen<LoginViewModel, UiState, UiEvent> {
         LoginForm(
             uiState = state.value,
-            callbacks =
-                LoginCallbacks(
-                    onEmailChanged = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
-                    },
-                    onPasswordChanged = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
-                    },
-                    onLoginClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
-                    },
-                    onShowPasswordClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
-                    },
-                ),
+            callbacks = LoginCallbacks(
+                onEmailChanged = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
+                },
+                onPasswordChanged = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
+                },
+                onLoginClicked = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+                },
+                onShowPasswordClicked = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+                },
+            ),
         )
     }
 }
@@ -71,79 +71,19 @@ fun LoginForm(
     callbacks: LoginCallbacks,
 ) {
     Box(
-        modifier =
-            Modifier.fillMaxSize()
-                .padding(32.dp),
+        modifier = Modifier.fillMaxSize()
+            .padding(32.dp),
     ) {
         Column(
             modifier = Modifier.align(Alignment.Center),
         ) {
             val keyboardController = LocalSoftwareKeyboardController.current
-            val passwordVisualTransformation =
-                if (uiState.showPassword) {
-                    VisualTransformation.None
-                } else {
-                    PasswordVisualTransformation()
-                }
-            val focusRequester = remember { FocusRequester() }
-
-            ReportsTextField(
-                value = uiState.email,
-                onValueChange = callbacks.onEmailChanged,
-                modifier =
-                    Modifier.padding(vertical = 4.dp)
-                        .fillMaxWidth(),
-                labelResId = R.string.loginScreen_label_email,
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Email,
-                        imeAction = ImeAction.Next,
-                    ),
-                keyboardActions = KeyboardActions { focusRequester.requestFocus() },
-                singleLine = true,
-                limit = 254,
-            )
-            ReportsTextField(
-                value = uiState.password,
-                onValueChange = callbacks.onPasswordChanged,
-                modifier =
-                    Modifier.padding(vertical = 4.dp)
-                        .fillMaxWidth()
-                        .focusRequester(focusRequester),
-                labelResId = R.string.loginScreen_label_password,
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                        imeAction = ImeAction.Done,
-                    ),
-                keyboardActions =
-                    KeyboardActions {
-                        callbacks.onLoginClicked()
-                        keyboardController?.hide()
-                    },
-                singleLine = true,
-                visualTransformation = passwordVisualTransformation,
-                limit = 64,
-                trailingIcon = {
-                    val drawableResId =
-                        if (uiState.showPassword) {
-                            R.drawable.ic_visibility_off_24dp
-                        } else {
-                            R.drawable.ic_visibility_24dp
-                        }
-                    val contentDescriptionResId =
-                        if (uiState.showPassword) {
-                            R.string.loginScreen_button_hidePassword
-                        } else {
-                            R.string.loginScreen_button_showPassword
-                        }
-                    Image(
-                        imageVector = ImageVector.vectorResource(drawableResId),
-                        contentDescription = stringResource(contentDescriptionResId),
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                        modifier = Modifier.clickable { callbacks.onShowPasswordClicked() },
-                    )
-                },
+            Credentials(
+                email = uiState.email,
+                password = uiState.password,
+                showPassword = uiState.showPassword,
+                callbacks = callbacks,
+                keyboardController = keyboardController,
             )
             Button(
                 enabled = uiState.isLoginButtonEnabled,
@@ -151,14 +91,91 @@ fun LoginForm(
                     callbacks.onLoginClicked()
                     keyboardController?.hide()
                 },
-                modifier =
-                    Modifier.padding(vertical = 8.dp)
-                        .align(Alignment.CenterHorizontally),
+                modifier = Modifier.padding(vertical = 8.dp)
+                    .align(Alignment.CenterHorizontally),
             ) {
                 Text(stringResource(R.string.loginScreen_button_login))
             }
         }
     }
+}
+
+@Composable
+fun Credentials(
+    email: String,
+    password: String,
+    showPassword: Boolean,
+    callbacks: LoginCallbacks,
+    keyboardController: SoftwareKeyboardController?,
+) {
+    val passwordVisualTransformation = if (showPassword) {
+        VisualTransformation.None
+    } else {
+        PasswordVisualTransformation()
+    }
+    val focusRequester = remember { FocusRequester() }
+
+    ReportsTextField(
+        value = email,
+        onValueChange = callbacks.onEmailChanged,
+        modifier = Modifier.padding(vertical = 4.dp)
+            .fillMaxWidth(),
+        labelResId = R.string.loginScreen_label_email,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next,
+        ),
+        keyboardActions = KeyboardActions { focusRequester.requestFocus() },
+        singleLine = true,
+        limit = 254,
+    )
+    ReportsTextField(
+        value = password,
+        onValueChange = callbacks.onPasswordChanged,
+        modifier = Modifier.padding(vertical = 4.dp)
+            .fillMaxWidth()
+            .focusRequester(focusRequester),
+        labelResId = R.string.loginScreen_label_password,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done,
+        ),
+        keyboardActions = KeyboardActions {
+            callbacks.onLoginClicked()
+            keyboardController?.hide()
+        },
+        singleLine = true,
+        visualTransformation = passwordVisualTransformation,
+        limit = 64,
+        trailingIcon = {
+            ShowPasswordButton(showPassword, callbacks.onShowPasswordClicked)
+        },
+    )
+}
+
+@Composable
+fun ShowPasswordButton(
+    showPassword: Boolean,
+    onShowPasswordClicked: () -> Unit,
+) {
+    val drawableResId =
+        if (showPassword) {
+            R.drawable.ic_visibility_off_24dp
+        } else {
+            R.drawable.ic_visibility_24dp
+        }
+    val contentDescriptionResId =
+        if (showPassword) {
+            R.string.loginScreen_button_hidePassword
+        } else {
+            R.string.loginScreen_button_showPassword
+        }
+    Image(
+        imageVector = ImageVector.vectorResource(drawableResId),
+        contentDescription = stringResource(contentDescriptionResId),
+        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+        modifier = Modifier.clickable { onShowPasswordClicked() },
+    )
 }
 
 data class LoginCallbacks(
@@ -173,13 +190,13 @@ data class LoginCallbacks(
 fun LoginScreenPreview() {
     ReportsTheme {
         LoginForm(
-            uiState = uiState,
+            uiState = prviewUiState,
             callbacks = emptyCallbacks,
         )
     }
 }
 
-private val uiState =
+private val prviewUiState =
     UiState(
         email = "test@test.com",
         password = "password",

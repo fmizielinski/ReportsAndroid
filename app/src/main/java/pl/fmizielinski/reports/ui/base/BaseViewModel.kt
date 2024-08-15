@@ -16,16 +16,16 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
     protected val dispatcher: CoroutineDispatcher,
     mState: State,
 ) : ViewModel() {
+
     protected val scope = CoroutineScope(dispatcher)
     private val events = MutableSharedFlow<Event>()
-    private val state: Flow<State> =
-        events
-            .runningFold(mState, ::handleEvent)
-            .shareIn(
-                scope = scope,
-                started = SharingStarted.Lazily,
-                replay = 1,
-            )
+    private val state: Flow<State> = events
+        .runningFold(mState, ::handleEvent)
+        .shareIn(
+            scope = scope,
+            started = SharingStarted.Lazily,
+            replay = 1,
+        )
     val uiState: Flow<UiState> = state.map(::mapState)
 
     val initialUiState: UiState = this.mapState(mState)
@@ -37,10 +37,9 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
 
     protected abstract fun mapState(state: State): UiState
 
-    suspend fun postUiEvent(event: UiEvent) =
-        withContext(dispatcher) {
-            events.emit(event)
-        }
+    suspend fun postUiEvent(event: UiEvent) = withContext(dispatcher) {
+        events.emit(event)
+    }
 
     protected suspend fun postEvent(event: Event) {
         events.emit(event)

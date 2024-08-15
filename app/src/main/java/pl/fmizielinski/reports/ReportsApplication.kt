@@ -12,6 +12,7 @@ import pl.fmizielinski.reports.di.ViewModelModule
 import timber.log.Timber
 
 class ReportsApplication : Application() {
+
     override fun onCreate() {
         super.onCreate()
 
