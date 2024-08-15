@@ -1,13 +1,13 @@
-import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import io.gitlab.arturbosch.detekt.Detekt
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -56,18 +56,15 @@ android {
     }
 }
 
-ktlint {
-    android.set(true)
-    outputColorName.set("RED")
-    ignoreFailures.set(false)
-    enableExperimentalRules.set(false)
-    filter {
-        exclude("**/generated/**")
-        include("**/kotlin/**")
-        reporters {
-            reporter(ReporterType.CHECKSTYLE)
-            reporter(ReporterType.HTML)
-        }
+detekt {
+    source.setFrom("src/main/java")
+    config.setFrom("../config/detekt/detekt.yml")
+}
+
+tasks.withType<Detekt>().configureEach {
+    reports {
+        md.required.set(false)
+        txt.required.set(false)
     }
 }
 

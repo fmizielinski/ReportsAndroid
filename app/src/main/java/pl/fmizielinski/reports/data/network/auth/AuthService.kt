@@ -6,6 +6,7 @@ import retrofit2.http.Header
 import retrofit2.http.Headers
 
 interface AuthService {
+
     @GET("/auth/login")
     @Headers("Content-Type: application/json")
     suspend fun login(

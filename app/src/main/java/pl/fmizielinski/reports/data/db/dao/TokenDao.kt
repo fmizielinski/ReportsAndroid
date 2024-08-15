@@ -9,6 +9,7 @@ import pl.fmizielinski.reports.data.db.model.TokenModel
 
 @Dao
 interface TokenDao {
+
     @Query("SELECT * FROM Token LIMIT 1")
     fun getToken(): Flow<TokenModel>
 

@@ -20,6 +20,7 @@ class LoginViewModel(
     private val loginUseCase: LoginUseCase,
     private val eventsRepository: EventsRepository,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
+
     override fun handleEvent(
         state: State,
         event: Event,

@@ -9,6 +9,7 @@ import java.util.Optional
 
 @Single
 class EventsRepository {
+
     private val _showSnackBar = MutableSharedFlow<SnackBarData>()
     val showSnackBar: SharedFlow<SnackBarData> = _showSnackBar
 

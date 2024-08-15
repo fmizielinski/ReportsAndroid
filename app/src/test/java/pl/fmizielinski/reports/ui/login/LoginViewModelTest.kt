@@ -24,156 +24,148 @@ class LoginViewModelTest : BaseViewModelTest() {
     private val loginUseCase: LoginUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
 
-    private fun viewModel(scheduler: TestCoroutineScheduler) =
-        LoginViewModel(
-            dispatcher = StandardTestDispatcher(scheduler),
-            loginUseCase = loginUseCase,
-            eventsRepository = eventsRepository,
-        )
+    private fun viewModel(scheduler: TestCoroutineScheduler) = LoginViewModel(
+        dispatcher = StandardTestDispatcher(scheduler),
+        loginUseCase = loginUseCase,
+        eventsRepository = eventsRepository,
+    )
 
     @Test
-    fun `WHEN no credentials passed THEN disable login button`() =
-        runTurbineTest {
-            val viewModel = viewModel(scheduler)
+    fun `WHEN no credentials passed THEN disable login button`() = runTurbineTest {
+        val viewModel = viewModel(scheduler)
 
-            val uiState = viewModel.uiState.testIn(context)
+        val uiState = viewModel.uiState.testIn(context)
 
-            val result = uiState.awaitItem()
-            expectThat(result.isLoginButtonEnabled).isFalse()
+        val result = uiState.awaitItem()
+        expectThat(result.isLoginButtonEnabled).isFalse()
 
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
-
-    @Test
-    fun `WHEN no email passed THEN disable login button`() =
-        runTurbineTest {
-            val viewModel = viewModel(scheduler)
-
-            val uiState = viewModel.uiState.testIn(context)
-            uiState.skipItems(1)
-
-            viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
-
-            val result = uiState.awaitItem()
-            expectThat(result.isLoginButtonEnabled).isFalse()
-
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 
     @Test
-    fun `WHEN no password passed THEN disable login button`() =
-        runTurbineTest {
-            val viewModel = viewModel(scheduler)
+    fun `WHEN no email passed THEN disable login button`() = runTurbineTest {
+        val viewModel = viewModel(scheduler)
 
-            val uiState = viewModel.uiState.testIn(context)
-            uiState.skipItems(1)
+        val uiState = viewModel.uiState.testIn(context)
+        uiState.skipItems(1)
 
-            viewModel.postUiEvent(UiEvent.EmailChanged("email"))
+        viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
 
-            val result = uiState.awaitItem()
-            expectThat(result.isLoginButtonEnabled).isFalse()
+        val result = uiState.awaitItem()
+        expectThat(result.isLoginButtonEnabled).isFalse()
 
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
-
-    @Test
-    fun `WHEN email and password passed THEN enable login button`() =
-        runTurbineTest {
-            val viewModel = viewModel(scheduler)
-
-            val uiState = viewModel.uiState.testIn(context)
-            uiState.skipItems(1)
-
-            viewModel.postUiEvent(UiEvent.EmailChanged("email"))
-            uiState.skipItems(1)
-            viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
-
-            val result = uiState.awaitItem()
-            expectThat(result.isLoginButtonEnabled).isTrue()
-
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 
     @Test
-    fun `GIVEN valid credentials WHEN login clicked THEN disable login button AND clear password`() =
-        runTurbineTest {
-            val email = "email"
-            val password = "password"
-            coJustRun { loginUseCase(email, password) }
+    fun `WHEN no password passed THEN disable login button`() = runTurbineTest {
+        val viewModel = viewModel(scheduler)
 
-            val viewModel = viewModel(scheduler)
+        val uiState = viewModel.uiState.testIn(context)
+        uiState.skipItems(1)
 
-            val uiState = viewModel.uiState.testIn(context)
-            uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.EmailChanged("email"))
 
-            viewModel.postUiEvent(UiEvent.EmailChanged(email))
-            uiState.skipItems(1)
-            viewModel.postUiEvent(UiEvent.PasswordChanged(password))
-            uiState.skipItems(1)
-            viewModel.postUiEvent(UiEvent.LoginClicked)
+        val result = uiState.awaitItem()
+        expectThat(result.isLoginButtonEnabled).isFalse()
 
-            var result = uiState.awaitItem()
-            expectThat(result.isLoginButtonEnabled).isFalse()
-            result = uiState.awaitItem()
-            expectThat(result.password).isBlank()
-
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 
     @Test
-    fun `GIVEN valid credentials WHEN login clicked AND login error THEN show snackbar AND clear password`() =
-        runTurbineTest {
-            val email = "email"
-            val password = "password"
-            val errorException =
-                errorException(
-                    uiMessage = 1,
-                    message = "message",
-                    cause = Exception("cause"),
-                )
-            val snackBarData = errorException.toSnackBarData()
-            coEvery { loginUseCase(email, password) } throws errorException
+    fun `WHEN email and password passed THEN enable login button`() = runTurbineTest {
+        val viewModel = viewModel(scheduler)
 
-            val viewModel = viewModel(scheduler)
+        val uiState = viewModel.uiState.testIn(context)
+        uiState.skipItems(1)
 
-            val uiState = viewModel.uiState.testIn(context)
-            uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.EmailChanged("email"))
+        uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
 
-            viewModel.postUiEvent(UiEvent.EmailChanged(email))
-            uiState.skipItems(1)
-            viewModel.postUiEvent(UiEvent.PasswordChanged(password))
-            uiState.skipItems(1)
-            viewModel.postUiEvent(UiEvent.LoginClicked)
-            uiState.skipItems(1)
+        val result = uiState.awaitItem()
+        expectThat(result.isLoginButtonEnabled).isTrue()
 
-            val result = uiState.awaitItem()
-            expectThat(result.password).isBlank()
-
-            coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
-
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 
     @Test
-    fun `GIVEN password passed WHEN show password clicked THEN toggle show password`() =
-        runTurbineTest {
-            val viewModel = viewModel(scheduler)
+    fun `GIVEN valid credentials WHEN login clicked THEN disable login button AND clear password`() = runTurbineTest {
+        val email = "email"
+        val password = "password"
+        coJustRun { loginUseCase(email, password) }
 
-            val uiState = viewModel.uiState.testIn(context)
-            uiState.skipItems(1)
+        val viewModel = viewModel(scheduler)
 
-            viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
-            uiState.skipItems(1)
-            viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+        val uiState = viewModel.uiState.testIn(context)
+        uiState.skipItems(1)
 
-            var result = uiState.awaitItem()
-            expectThat(result.showPassword).isTrue()
+        viewModel.postUiEvent(UiEvent.EmailChanged(email))
+        uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.PasswordChanged(password))
+        uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.LoginClicked)
 
-            viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+        var result = uiState.awaitItem()
+        expectThat(result.isLoginButtonEnabled).isFalse()
+        result = uiState.awaitItem()
+        expectThat(result.password).isBlank()
 
-            result = uiState.awaitItem()
-            expectThat(result.showPassword).isFalse()
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 
-            uiState.cancelAndIgnoreRemainingEvents()
-        }
+    @Test
+    fun `GIVEN valid credentials WHEN login clicked AND login error THEN show snackbar AND clear password`() = runTurbineTest {
+        val email = "email"
+        val password = "password"
+        val errorException =
+            errorException(
+                uiMessage = 1,
+                message = "message",
+                cause = Exception("cause"),
+            )
+        val snackBarData = errorException.toSnackBarData()
+        coEvery { loginUseCase(email, password) } throws errorException
+
+        val viewModel = viewModel(scheduler)
+
+        val uiState = viewModel.uiState.testIn(context)
+        uiState.skipItems(1)
+
+        viewModel.postUiEvent(UiEvent.EmailChanged(email))
+        uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.PasswordChanged(password))
+        uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.LoginClicked)
+        uiState.skipItems(1)
+
+        val result = uiState.awaitItem()
+        expectThat(result.password).isBlank()
+
+        coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `GIVEN password passed WHEN show password clicked THEN toggle show password`() = runTurbineTest {
+        val viewModel = viewModel(scheduler)
+
+        val uiState = viewModel.uiState.testIn(context)
+        uiState.skipItems(1)
+
+        viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
+        uiState.skipItems(1)
+        viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+
+        var result = uiState.awaitItem()
+        expectThat(result.showPassword).isTrue()
+
+        viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+
+        result = uiState.awaitItem()
+        expectThat(result.showPassword).isFalse()
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 }

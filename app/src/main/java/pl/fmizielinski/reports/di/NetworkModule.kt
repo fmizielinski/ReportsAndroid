@@ -26,16 +26,16 @@ import javax.net.ssl.X509TrustManager
 
 @Module
 class NetworkModule {
+
     @Single
     fun retrofit(
         @Named("jsonConverterFactory") jsonConverterFactory: Converter.Factory,
         client: OkHttpClient,
-    ): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(BuildConfig.HOST)
-            .addConverterFactory(jsonConverterFactory)
-            .client(client)
-            .build()
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(BuildConfig.HOST)
+        .addConverterFactory(jsonConverterFactory)
+        .client(client)
+        .build()
 
     @Single
     fun authService(retrofit: Retrofit): AuthService = retrofit.create(AuthService::class.java)
@@ -46,19 +46,17 @@ class NetworkModule {
         trustManager: X509TrustManager,
         hostnameVerifier: HostnameVerifier,
         loggingInterceptor: HttpLoggingInterceptor,
-    ): OkHttpClient =
-        OkHttpClient.Builder()
-            .sslSocketFactory(sslSocketFactory, trustManager)
-            .hostnameVerifier(hostnameVerifier)
-            .addInterceptor(loggingInterceptor)
-            .build()
+    ): OkHttpClient = OkHttpClient.Builder()
+        .sslSocketFactory(sslSocketFactory, trustManager)
+        .hostnameVerifier(hostnameVerifier)
+        .addInterceptor(loggingInterceptor)
+        .build()
 
     @Factory
     @Named("jsonConverterFactory")
-    fun jsonConverterFactory(): Converter.Factory =
-        Json.asConverterFactory(
-            "application/json; charset=UTF8".toMediaType(),
-        )
+    fun jsonConverterFactory(): Converter.Factory = Json.asConverterFactory(
+        "application/json; charset=UTF8".toMediaType(),
+    )
 
     @Single
     fun trustManager(context: Context): X509TrustManager {
@@ -85,14 +83,12 @@ class NetworkModule {
     }
 
     @Factory
-    fun hostnameVerifier(): HostnameVerifier =
-        HostnameVerifier { hostname, _ ->
-            BuildConfig.HOST.contains(hostname)
-        }
+    fun hostnameVerifier(): HostnameVerifier = HostnameVerifier { hostname, _ ->
+        BuildConfig.HOST.contains(hostname)
+    }
 
     @Factory
-    fun loggingInterceptor(): HttpLoggingInterceptor =
-        HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
+    fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
 }

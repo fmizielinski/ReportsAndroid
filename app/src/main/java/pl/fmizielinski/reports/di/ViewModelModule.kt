@@ -9,6 +9,7 @@ import org.koin.core.annotation.Single
 @Module
 @ComponentScan("pl.fmizielinski.reports.ui")
 class ViewModelModule {
+
     @Single
     fun dispatcher(): CoroutineDispatcher = Dispatchers.Default
 }
