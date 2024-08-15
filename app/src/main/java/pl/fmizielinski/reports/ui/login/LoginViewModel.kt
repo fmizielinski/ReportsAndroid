@@ -111,17 +111,13 @@ class LoginViewModel(
 
     sealed interface Event {
         data object LoginSuccess : Event
-
         data class LoginFailed(val error: ErrorException) : Event
     }
 
     sealed interface UiEvent : Event {
         data class EmailChanged(val email: String) : UiEvent
-
         data class PasswordChanged(val password: String) : UiEvent
-
         data object LoginClicked : UiEvent
-
         data object ShowPasswordClicked : UiEvent
     }
 }

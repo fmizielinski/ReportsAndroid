@@ -1,12 +1,14 @@
 package pl.fmizielinski.reports.ui.register
 
 import kotlinx.coroutines.CoroutineDispatcher
+import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.Event
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.State
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiState
 
+@KoinViewModel
 class RegisterViewModel(
     dispatcher: CoroutineDispatcher,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {

@@ -1,8 +1,6 @@
 package pl.fmizielinski.reports.ui.register
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -125,7 +124,7 @@ fun LoginData(
     ReportsTextField(
         value = uiState.email,
         onValueChange = callbacks.onEmailChanged,
-        modifier = Modifier.padding(vertical = 4.dp)
+        modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth(),
         labelResId = R.string.loginScreen_label_email,
         keyboardOptions = KeyboardOptions(
@@ -177,7 +176,7 @@ fun PasswordTextField(
     ReportsTextField(
         value = password,
         onValueChange = onPasswordChanged,
-        modifier = Modifier.padding(vertical = 4.dp)
+        modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth()
             .focusRequester(focusRequester),
         labelResId = labelResId,
@@ -215,19 +214,22 @@ fun ShowPasswordButton(
         } else {
             R.string.registerScreen_button_showPassword
         }
-    Image(
-        imageVector = ImageVector.vectorResource(drawableResId),
-        contentDescription = stringResource(contentDescriptionResId),
-        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-        modifier = Modifier.clickable { onShowPasswordClicked() },
-    )
+    IconButton(
+        onClick = onShowPasswordClicked,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(drawableResId),
+            contentDescription = stringResource(contentDescriptionResId),
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 @Composable
 fun UserData(
     uiState: UiState.UserData,
     callbacks: RegisterCallbacks.UserDataCallbacks,
-    onRegisterClicked: () -> Unit
+    onRegisterClicked: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val nameFocusRequester = remember(key1 = NAME_FOCUS_REQUESTER) { FocusRequester() }
@@ -236,7 +238,7 @@ fun UserData(
     ReportsTextField(
         value = uiState.name,
         onValueChange = callbacks.onNameChanged,
-        modifier = Modifier.padding(vertical = 4.dp)
+        modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth()
             .focusRequester(nameFocusRequester),
         labelResId = R.string.registerScreen_label_name,
@@ -251,7 +253,7 @@ fun UserData(
     ReportsTextField(
         value = uiState.surname,
         onValueChange = callbacks.onSurnameChanged,
-        modifier = Modifier.padding(vertical = 4.dp)
+        modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth()
             .focusRequester(surnameFocusRequester),
         labelResId = R.string.registerScreen_label_surname,
