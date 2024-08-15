@@ -8,4 +8,11 @@
     <string name="loginScreen_error_login">Unable to sign in. Try again</string>
     <string name="loginScreen_label_email">Email</string>
     <string name="loginScreen_label_password">Password</string>
+    <string name="registerScreen_button_register">Sign up</string>
+    <string name="registerScreen_button_hidePassword">Hide password</string>
+    <string name="registerScreen_button_showPassword">Show password</string>
+    <string name="registerScreen_label_password">Password</string>
+    <string name="registerScreen_label_passwordConfirmation">Confirm password</string>
+    <string name="registerScreen_label_name">Name</string>
+    <string name="registerScreen_label_surname">Surname</string>
 </resources>

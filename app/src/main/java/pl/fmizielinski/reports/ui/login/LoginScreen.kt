@@ -21,7 +21,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
@@ -41,7 +40,7 @@ import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
-@Destination<RootGraph>(start = true)
+@Destination<RootGraph>(route = "Login", start = true)
 @Composable
 fun LoginScreen() {
     BaseScreen<LoginViewModel, UiState, UiEvent> {
@@ -83,7 +82,6 @@ fun LoginForm(
                 password = uiState.password,
                 showPassword = uiState.showPassword,
                 callbacks = callbacks,
-                keyboardController = keyboardController,
             )
             Button(
                 enabled = uiState.isLoginButtonEnabled,
@@ -106,8 +104,8 @@ fun Credentials(
     password: String,
     showPassword: Boolean,
     callbacks: LoginCallbacks,
-    keyboardController: SoftwareKeyboardController?,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     val passwordVisualTransformation = if (showPassword) {
         VisualTransformation.None
     } else {
@@ -190,13 +188,13 @@ data class LoginCallbacks(
 fun LoginScreenPreview() {
     ReportsTheme {
         LoginForm(
-            uiState = prviewUiState,
+            uiState = previewUiState,
             callbacks = emptyCallbacks,
         )
     }
 }
 
-private val prviewUiState =
+private val previewUiState =
     UiState(
         email = "test@test.com",
         password = "password",
