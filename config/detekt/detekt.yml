@@ -617,6 +617,7 @@ style:
       - '1'
       - '2'
       - '401'
+      - '400'
     ignoreHashCodeFunction: true
     ignorePropertyDeclaration: true
     ignoreLocalVariableDeclaration: false

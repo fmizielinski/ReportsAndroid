@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
@@ -48,28 +49,30 @@ fun RegisterScreen() {
             callbacks = RegisterCallbacks(
                 loginDataCallbacks = RegisterCallbacks.LoginDataCallbacks(
                     onEmailChanged = {
-                        TODO()
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
                     },
                     onPasswordChanged = {
-                        TODO()
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
                     },
                     onPasswordConfirmationChanged = {
-                        TODO()
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(it))
+                        }
                     },
                     onShowPasswordClicked = {
-                        TODO()
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
                     },
                 ),
                 userDataCallbacks = RegisterCallbacks.UserDataCallbacks(
                     onNameChanged = {
-                        TODO()
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.NameChanged(it)) }
                     },
                     onSurnameChanged = {
-                        TODO()
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.SurnameChanged(it)) }
                     },
                 ),
                 onRegisterClicked = {
-                    TODO()
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
                 },
             ),
         )
@@ -81,6 +84,13 @@ fun RegisterForm(
     uiState: UiState,
     callbacks: RegisterCallbacks,
 ) {
+    val passwordFocusRequester = remember(PASSWORD_FOCUS_REQUESTER) { FocusRequester() }
+    val passwordConfirmationFocusRequester = remember(PASSWORD_CONFIRMATION_FOCUS_REQUESTER) {
+        FocusRequester()
+    }
+    val nameFocusRequester = remember(NAME_FOCUS_REQUESTER) { FocusRequester() }
+    val surnameFocusRequester = remember(SURNAME_FOCUS_REQUESTER) { FocusRequester() }
+
     Box(
         modifier = Modifier.fillMaxSize()
             .padding(32.dp),
@@ -93,11 +103,16 @@ fun RegisterForm(
             LoginData(
                 uiState = uiState.loginData,
                 callbacks = callbacks.loginDataCallbacks,
+                passwordFocusRequester = passwordFocusRequester,
+                passwordConfirmationFocusRequester = passwordConfirmationFocusRequester,
+                nameFocusRequester = nameFocusRequester,
             )
             UserData(
                 uiState = uiState.userData,
                 callbacks = callbacks.userDataCallbacks,
                 onRegisterClicked = callbacks.onRegisterClicked,
+                nameFocusRequester = nameFocusRequester,
+                surnameFocusRequester = surnameFocusRequester,
             )
             Button(
                 enabled = uiState.isRegisterButtonEnabled,
@@ -118,9 +133,10 @@ fun RegisterForm(
 fun LoginData(
     uiState: UiState.LoginData,
     callbacks: RegisterCallbacks.LoginDataCallbacks,
+    passwordFocusRequester: FocusRequester,
+    passwordConfirmationFocusRequester: FocusRequester,
+    nameFocusRequester: FocusRequester,
 ) {
-    val focusRequester = remember(key1 = PASSWORD_FOCUS_REQUESTER) { FocusRequester() }
-
     ReportsTextField(
         value = uiState.email,
         onValueChange = callbacks.onEmailChanged,
@@ -131,7 +147,7 @@ fun LoginData(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next,
         ),
-        keyboardActions = KeyboardActions { focusRequester.requestFocus() },
+        keyboardActions = KeyboardActions { passwordFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
     )
@@ -141,27 +157,29 @@ fun LoginData(
         showPassword = uiState.showPassword,
         onPasswordChanged = callbacks.onPasswordChanged,
         onShowPasswordClicked = callbacks.onShowPasswordClicked,
-        focusRequesterKey = PASSWORD_FOCUS_REQUESTER,
-        nextFocusRequesterKey = PASSWORD_CONFIRMATION_FOCUS_REQUESTER,
+        focusRequester = passwordFocusRequester,
+        nextFocusRequester = passwordConfirmationFocusRequester,
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_passwordConfirmation,
-        password = uiState.password,
+        password = uiState.passwordConfirmation,
         showPassword = uiState.showPassword,
-        onPasswordChanged = callbacks.onPasswordChanged,
+        onPasswordChanged = callbacks.onPasswordConfirmationChanged,
         onShowPasswordClicked = callbacks.onShowPasswordClicked,
-        focusRequesterKey = PASSWORD_CONFIRMATION_FOCUS_REQUESTER,
-        nextFocusRequesterKey = NAME_FOCUS_REQUESTER,
+        focusRequester = passwordConfirmationFocusRequester,
+        nextFocusRequester = nameFocusRequester,
+        passwordVerificationError = uiState.passwordVerificationError,
     )
 }
 
 @Composable
 fun PasswordTextField(
     @StringRes labelResId: Int,
-    focusRequesterKey: String,
-    nextFocusRequesterKey: String,
+    focusRequester: FocusRequester,
+    nextFocusRequester: FocusRequester,
     password: String,
     showPassword: Boolean,
+    passwordVerificationError: Boolean = false,
     onPasswordChanged: (String) -> Unit,
     onShowPasswordClicked: () -> Unit,
 ) {
@@ -170,8 +188,6 @@ fun PasswordTextField(
     } else {
         PasswordVisualTransformation()
     }
-    val focusRequester = remember(key1 = focusRequesterKey) { FocusRequester() }
-    val nextFocusRequester = remember(key1 = nextFocusRequesterKey) { FocusRequester() }
 
     ReportsTextField(
         value = password,
@@ -193,6 +209,9 @@ fun PasswordTextField(
                 showPassword,
                 onShowPasswordClicked,
             )
+        },
+        error = stringResource(R.string.registerScreen_error_password).takeIf {
+            passwordVerificationError
         },
     )
 }
@@ -230,10 +249,10 @@ fun UserData(
     uiState: UiState.UserData,
     callbacks: RegisterCallbacks.UserDataCallbacks,
     onRegisterClicked: () -> Unit,
+    nameFocusRequester: FocusRequester,
+    surnameFocusRequester: FocusRequester,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
-    val nameFocusRequester = remember(key1 = NAME_FOCUS_REQUESTER) { FocusRequester() }
-    val surnameFocusRequester = remember(key1 = SURNAME_FOCUS_REQUESTER) { FocusRequester() }
 
     ReportsTextField(
         value = uiState.name,
@@ -243,7 +262,7 @@ fun UserData(
             .focusRequester(nameFocusRequester),
         labelResId = R.string.registerScreen_label_name,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email,
+            keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Next,
         ),
         keyboardActions = KeyboardActions { surnameFocusRequester.requestFocus() },
@@ -258,8 +277,8 @@ fun UserData(
             .focusRequester(surnameFocusRequester),
         labelResId = R.string.registerScreen_label_surname,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email,
-            imeAction = ImeAction.Next,
+            keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Done,
         ),
         keyboardActions = KeyboardActions {
             onRegisterClicked()
@@ -311,6 +330,7 @@ private val previewUiState = UiState(
         password = "password",
         passwordConfirmation = "password",
         showPassword = false,
+        passwordVerificationError = false,
     ),
     userData = UiState.UserData(
         name = "John",

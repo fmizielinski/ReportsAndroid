@@ -28,6 +28,7 @@ fun ReportsTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     limit: Int = Int.MAX_VALUE,
     trailingIcon: @Composable (() -> Unit)? = null,
+    error: String? = null,
 ) {
     var fieldRange by remember { mutableStateOf(TextRange.Zero) }
     val fieldValue = TextFieldValue(
@@ -50,5 +51,7 @@ fun ReportsTextField(
         keyboardActions = keyboardActions,
         visualTransformation = visualTransformation,
         trailingIcon = trailingIcon,
+        isError = error != null,
+        supportingText = { error?.let { Text(it) } },
     )
 }
