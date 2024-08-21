@@ -1,6 +1,6 @@
 [versions]
 activityCompose = "1.9.1"
-agp = "8.7.0-alpha06"
+agp = "8.7.0-alpha07"
 composeBom = "2024.06.00"
 composeCompiler = "1.5.14"
 composeConstraintLayout = "1.0.1"
@@ -8,8 +8,7 @@ composeDestinations = "2.1.0-beta11"
 coreKtx = "1.13.1"
 coroutines = "1.8.1"
 detekt = "1.23.6"
-junit = "4.13.2"
-junitVersion = "1.2.1"
+junit = "5.11.0"
 koin = "3.5.6"
 koinAnnotations = "1.4.0-RC3"
 kotlin = "2.0.0"
@@ -69,10 +68,9 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 # region test
 test-arch-core = "androidx.arch.core:core-testing:2.2.0"
 test-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-test-junit = { group = "junit", name = "junit", version.ref = "junit" }
-test-koin = { module = "io.insert-koin:koin-test", version.ref = "koin" }
-test-koin-junit4 = { module = "io.insert-koin:koin-test-junit4", version.ref = "koin" }
+test-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+test-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+test-junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 test-strikt = { module = "io.strikt:strikt-core", version.ref = "strikt" }
 test-strikt-mockk = { module = "io.strikt:strikt-mockk", version.ref = "strikt" }
@@ -93,7 +91,7 @@ koin = ["koin", "koin-compose", "koin-annotations"]
 navigation = ["navigation-ui", "navigation-fragment", "navigation-compose"]
 retrofit = ["retrofit", "retrofit-converter-serialization"]
 room = ["room", "room-ktx"]
-test-koin = ["test-koin", "test-koin-junit4"]
+test-junit = ["test-junit-jupiter-api", "test-junit-jupiter-params"]
 test-strikt = ["test-strikt", "test-strikt-mockk"]
 
 [plugins]

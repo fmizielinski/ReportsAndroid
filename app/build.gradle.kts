@@ -101,13 +101,13 @@ dependencies {
     implementation(libs.bundles.retrofit)
     implementation(libs.okHttp)
 
-    testImplementation(libs.bundles.test.koin)
     testImplementation(libs.bundles.test.strikt)
     testImplementation(libs.test.arch.core)
     testImplementation(libs.test.coroutines)
-    testImplementation(libs.test.junit)
+    testImplementation(libs.bundles.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.turbine)
+    testRuntimeOnly(libs.test.junit.jupiter.engine)
 }
 
 ksp {
@@ -147,4 +147,8 @@ koverReport {
             )
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

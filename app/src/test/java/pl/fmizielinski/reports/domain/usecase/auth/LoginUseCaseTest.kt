@@ -4,17 +4,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import okhttp3.ResponseBody.Companion.toResponseBody
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.domain.error.ErrorException
+import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.loginResponseModel
 import pl.fmizielinski.reports.fixtures.data.tokenModel
-import retrofit2.HttpException
-import retrofit2.Response
 import strikt.api.expectThrows
 import strikt.assertions.isEqualTo
 
@@ -40,10 +38,7 @@ class LoginUseCaseTest {
     @Test
     fun `GIVEN invalid credentials WHEN login THEN throw invalid credentials exception`() =
         runTest {
-            val exception =
-                HttpException(
-                    Response.error<LoginResponseModel>(401, "".toResponseBody()),
-                )
+            val exception = httpException<LoginResponseModel>(401)
             coEvery { authService.login(any()) } throws exception
 
             expectThrows<ErrorException> {
@@ -68,10 +63,7 @@ class LoginUseCaseTest {
 
     @Test
     fun `GIVEN unknown http error WHEN login THEN throw unknown error exception`() = runTest {
-        val exception =
-            HttpException(
-                Response.error<LoginResponseModel>(999, "".toResponseBody()),
-            )
+        val exception = httpException<LoginResponseModel>(999)
         coEvery { authService.login(any()) } throws exception
 
         expectThrows<ErrorException> {

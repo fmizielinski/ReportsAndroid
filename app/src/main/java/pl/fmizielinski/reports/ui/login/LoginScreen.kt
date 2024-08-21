@@ -1,7 +1,5 @@
 package pl.fmizielinski.reports.ui.login
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,10 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
@@ -41,7 +39,7 @@ import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
-@Destination<RootGraph>(start = true)
+@Destination<RootGraph>(route = "Login", start = true)
 @Composable
 fun LoginScreen() {
     BaseScreen<LoginViewModel, UiState, UiEvent> {
@@ -83,7 +81,6 @@ fun LoginForm(
                 password = uiState.password,
                 showPassword = uiState.showPassword,
                 callbacks = callbacks,
-                keyboardController = keyboardController,
             )
             Button(
                 enabled = uiState.isLoginButtonEnabled,
@@ -106,8 +103,8 @@ fun Credentials(
     password: String,
     showPassword: Boolean,
     callbacks: LoginCallbacks,
-    keyboardController: SoftwareKeyboardController?,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     val passwordVisualTransformation = if (showPassword) {
         VisualTransformation.None
     } else {
@@ -170,11 +167,15 @@ fun ShowPasswordButton(
         } else {
             R.string.loginScreen_button_showPassword
         }
-    Image(
-        imageVector = ImageVector.vectorResource(drawableResId),
-        contentDescription = stringResource(contentDescriptionResId),
-        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-        modifier = Modifier.clickable { onShowPasswordClicked() },
+    IconButton(
+        onClick = onShowPasswordClicked,
+        content = {
+            Icon(
+                imageVector = ImageVector.vectorResource(drawableResId),
+                contentDescription = stringResource(contentDescriptionResId),
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     )
 }
 
@@ -190,13 +191,13 @@ data class LoginCallbacks(
 fun LoginScreenPreview() {
     ReportsTheme {
         LoginForm(
-            uiState = prviewUiState,
+            uiState = previewUiState,
             callbacks = emptyCallbacks,
         )
     }
 }
 
-private val prviewUiState =
+private val previewUiState =
     UiState(
         email = "test@test.com",
         password = "password",
@@ -209,4 +210,5 @@ private val emptyCallbacks =
         onEmailChanged = {},
         onPasswordChanged = {},
         onLoginClicked = {},
+        onShowPasswordClicked = {},
     )
