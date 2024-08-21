@@ -2,6 +2,7 @@ package pl.fmizielinski.reports.data.network.auth
 
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.data.network.auth.model.RegisterRequestModel
+import pl.fmizielinski.reports.data.network.auth.model.RegisterResponseModel
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -18,5 +19,5 @@ interface AuthService {
 
     @POST("/auth/register")
     @Headers("Accept: application/json")
-    suspend fun register(@Body request: RegisterRequestModel)
+    suspend fun register(@Body request: RegisterRequestModel): RegisterResponseModel
 }

@@ -40,7 +40,7 @@ import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
-@Destination<RootGraph>
+@Destination<RootGraph>(route = "Register")
 @Composable
 fun RegisterScreen() {
     BaseScreen<RegisterViewModel, UiState, UiEvent> {

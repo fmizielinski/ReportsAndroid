@@ -1,7 +1,7 @@
 package pl.fmizielinski.reports.ui
 
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
-import com.ramcosta.composedestinations.generated.destinations.RegisterScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
 import com.ramcosta.composedestinations.generated.navgraphs.RootNavGraph
 import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.utils.startDestination
@@ -70,14 +70,14 @@ class MainViewModel(
 
     private fun handleBackClicked(state: State): State {
         scope.launch {
-            eventsRepository.postNavUpEvent()
+            postNavigationUpEvent()
         }
         return state
     }
 
     private fun handleRegisterClicked(state: State): State {
         scope.launch {
-            eventsRepository.postNavEvent(RegisterScreenDestination)
+            postNavigationEvent(RegisterDestination)
         }
         return state
     }
@@ -93,6 +93,10 @@ class MainViewModel(
     }
 
     // endregion handleEvent
+
+    private suspend fun postNavigationUpEvent() {
+        postNavigationEvent(Optional.empty())
+    }
 
     private suspend fun postNavigationEvent(direction: Direction) {
         postNavigationEvent(Optional.of(direction))

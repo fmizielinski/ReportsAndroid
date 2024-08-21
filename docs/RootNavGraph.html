@@ -12,11 +12,11 @@ title: Root Navigation Graph
 %%{init: {'theme':'base', 'themeVariables': { 'primaryTextColor': '#fff' }}%%
 graph TD
 root(["RootGraph"]) -- "start" --- Login("LoginScreen")
-root(["RootGraph"]) --- register_screen("RegisterScreen")
+root(["RootGraph"]) --- Register("RegisterScreen")
 
 
 classDef destination fill:#5383EC,stroke:#ffffff;
-class Login,register_screen destination;
+class Login,Register destination;
 classDef navgraph fill:#63BC76,stroke:#ffffff;
 class root navgraph;
 

@@ -1,9 +1,9 @@
 package pl.fmizielinski.reports.domain.repository
 
 import app.cash.turbine.test
-import com.ramcosta.composedestinations.generated.destinations.LoginScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import kotlinx.coroutines.test.runTest
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
@@ -14,9 +14,9 @@ class EventsRepositoryTest {
     @Test
     fun postNavEvent() = runTest {
         eventsRepository.navigationEvent.test {
-            eventsRepository.postNavEvent(LoginScreenDestination())
+            eventsRepository.postNavEvent(LoginDestination)
 
-            expectThat(awaitItem().get()) isEqualTo LoginScreenDestination()
+            expectThat(awaitItem().get()) isEqualTo LoginDestination
             cancel()
         }
     }

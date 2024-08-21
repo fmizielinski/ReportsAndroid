@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.withContext
 
 abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
     protected val dispatcher: CoroutineDispatcher,
@@ -37,7 +36,7 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
 
     protected abstract fun mapState(state: State): UiState
 
-    suspend fun postUiEvent(event: UiEvent) = withContext(dispatcher) {
+    suspend fun postUiEvent(event: UiEvent) {
         events.emit(event)
     }
 
