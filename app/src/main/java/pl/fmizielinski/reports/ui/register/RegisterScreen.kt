@@ -31,16 +31,16 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
-import com.ramcosta.composedestinations.annotation.RootGraph
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
+import pl.fmizielinski.reports.ui.navigation.AuthGraph
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
-@Destination<RootGraph>(route = "Register")
+@Destination<AuthGraph>(route = "Register")
 @Composable
 fun RegisterScreen() {
     BaseScreen<RegisterViewModel, UiState, UiEvent> {

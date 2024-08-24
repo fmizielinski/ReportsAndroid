@@ -2,8 +2,10 @@ package pl.fmizielinski.reports.ui
 
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
+import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
+import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.RootNavGraph
-import com.ramcosta.composedestinations.spec.Direction
+import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -34,14 +36,14 @@ class MainViewModel(
     private val isLoggedInUseCase: IsLoggedInUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    private val _isInitialLoading = MutableStateFlow(true)
+    val isInitialLoading: StateFlow<Boolean> = _isInitialLoading
 
     private val _showSnackBar = MutableSharedFlow<SnackBarData>()
     val showSnackBar: SharedFlow<SnackBarData> = _showSnackBar
 
-    private val _navigationEvents = MutableSharedFlow<Optional<Direction>>()
-    val navigationEvents: SharedFlow<Optional<Direction>> = _navigationEvents
+    private val _navigationEvents = MutableSharedFlow<Optional<DestinationSpec>>()
+    val navigationEvents: SharedFlow<Optional<DestinationSpec>> = _navigationEvents
 
     init {
         scope.launch {
@@ -50,17 +52,12 @@ class MainViewModel(
         scope.launch {
             eventsRepository.showSnackBar.collect(::postSnackBarEvent)
         }
-        scope.launch {
-            isLoggedInUseCase().collect { isLoggedIn ->
-                postEvent(Event.LoggedInStateChanged(isLoggedIn))
-                _isLoading.emit(isLoggedIn)
-            }
-        }
     }
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
-            is Event.LoggedInStateChanged -> handleLoggedInStateChanged(state, event)
+            is Event.LoggedInStateChecked -> handleLoggedInStateChecked(state, event)
+            is Event.CheckIfLoggedIn -> handleCheckIfLoggedIn(state)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.RegisterClicked -> handleRegisterClicked(state)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -73,19 +70,42 @@ class MainViewModel(
                 add(TopBarAction.REGISTER)
             }
         }
-        val isBackVisible = state.currentDestination != RootNavGraph.startDestination.baseRoute
+        val isBackVisible = RootNavGraph.nestedNavGraphs.any { graph ->
+            graph.startDestination.baseRoute == state.currentDestination
+        }
         return UiState(
             actions = actions,
             isBackVisible = isBackVisible,
-            isLoggedIn = state.isLoggedIn,
         )
     }
 
-    // region handleEvent
+    // region handle Event
 
-    private fun handleLoggedInStateChanged(state: State, event: Event.LoggedInStateChanged): State {
-        return state.copy(isLoggedIn = event.isLoggedIn)
+    private fun handleLoggedInStateChecked(
+        state: State,
+        event: Event.LoggedInStateChecked,
+    ): State {
+        scope.launch {
+            if (event.isLoggedIn) {
+                postNavigationEvent(MainNavGraph.startDestination)
+            } else {
+                postNavigationEvent(AuthNavGraph.startDestination)
+            }
+        }
+        return state.copy(isInitialized = true)
     }
+
+    private fun handleCheckIfLoggedIn(state: State): State {
+        scope.launch {
+            val isLoggedIn = isLoggedInUseCase()
+            postEvent(Event.LoggedInStateChecked(isLoggedIn))
+        }
+        return state
+    }
+
+    // endregion handle Event
+
+    // region handle UiEvent
 
     private fun handleBackClicked(state: State): State {
         scope.launch {
@@ -105,23 +125,32 @@ class MainViewModel(
         state: State,
         event: UiEvent.NavDestinationChanged,
     ): State {
-        if (RootNavGraph.destinations.none { it.baseRoute == event.route }) {
+        if (!validateNavDestination(event.route)) {
             error("Unknown destination - ${event.route}")
+        }
+        // When !state.isInitialized
+        // this event is the first navigation destination after displaying the nav host
+        scope.launch {
+            if (!state.isInitialized) {
+                postEvent(Event.CheckIfLoggedIn)
+            } else {
+                _isInitialLoading.emit(false)
+            }
         }
         return state.copy(currentDestination = event.route)
     }
 
-    // endregion handleEvent
+    // endregion handle UiEvent
 
     private suspend fun postNavigationUpEvent() {
         postNavigationEvent(Optional.empty())
     }
 
-    private suspend fun postNavigationEvent(direction: Direction) {
+    private suspend fun postNavigationEvent(direction: DestinationSpec) {
         postNavigationEvent(Optional.of(direction))
     }
 
-    private suspend fun postNavigationEvent(direction: Optional<Direction>) {
+    private suspend fun postNavigationEvent(direction: Optional<DestinationSpec>) {
         _navigationEvents.emit(direction)
     }
 
@@ -131,24 +160,30 @@ class MainViewModel(
         _showSnackBar.emit(SnackBarData.empty())
     }
 
+    private fun validateNavDestination(route: String): Boolean {
+        return RootNavGraph.nestedNavGraphs.any { graph ->
+            graph.destinations.any { it.baseRoute == route }
+        }
+    }
+
     data class State(
         val currentDestination: String? = null,
-        val isLoggedIn: Boolean = false,
+        val isInitialized: Boolean = false,
     )
 
     data class UiState(
         val actions: List<TopBarAction>,
         val isBackVisible: Boolean,
-        val isLoggedIn: Boolean,
     )
 
     sealed interface Event {
-        data class LoggedInStateChanged(val isLoggedIn: Boolean) : Event
+        data class LoggedInStateChecked(val isLoggedIn: Boolean) : Event
+        data object CheckIfLoggedIn : Event
     }
 
     sealed interface UiEvent : Event {
-        object BackClicked : UiEvent
-        object RegisterClicked : UiEvent
+        data object BackClicked : UiEvent
+        data object RegisterClicked : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
     }
 }

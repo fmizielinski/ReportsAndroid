@@ -1,0 +1,12 @@
+---
+title: Main Navigation Graph
+---
+%%{init: {'theme':'base', 'themeVariables': { 'primaryTextColor': '#fff' }}%%
+graph TD
+main(["MainGraph"]) -- "start" --- Reports("ReportsScreen")
+
+
+classDef destination fill:#5383EC,stroke:#ffffff;
+class Reports destination;
+classDef navgraph fill:#63BC76,stroke:#ffffff;
+class main navgraph;

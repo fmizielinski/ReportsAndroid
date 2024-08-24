@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui.base
 
+import androidx.annotation.CallSuper
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -10,11 +11,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
+import timber.log.Timber
 
 abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
     protected val dispatcher: CoroutineDispatcher,
     mState: State,
 ) : ViewModel() {
+
+    private val tag = this::class.java.simpleName
 
     protected val scope = CoroutineScope(dispatcher)
     private val events = MutableSharedFlow<Event>()
@@ -44,9 +48,15 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
         events.emit(event)
     }
 
-    open suspend fun onStart(): Unit = Unit
+    @CallSuper
+    open suspend fun onStart() {
+        Timber.tag(tag).i("onStart")
+    }
 
-    open suspend fun onStop(): Unit = Unit
+    @CallSuper
+    open suspend fun onStop() {
+        Timber.tag(tag).i("onStart")
+    }
 
     override fun onCleared() {
         scope.cancel("onCleared")

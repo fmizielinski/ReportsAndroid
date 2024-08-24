@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.domain.usecase.auth
 
-import kotlinx.coroutines.flow.Flow
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 
@@ -9,7 +8,7 @@ class IsLoggedInUseCase(
     private val tokenDao: TokenDao,
 ) {
 
-    operator fun invoke(): Flow<Boolean> {
+    suspend operator fun invoke(): Boolean {
         return tokenDao.hasToken()
     }
 }

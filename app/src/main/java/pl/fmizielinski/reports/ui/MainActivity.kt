@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val splashScreen = installSplashScreen()
-        splashScreen.setKeepOnScreenCondition { viewModel.isLoading.value }
+        splashScreen.setKeepOnScreenCondition { viewModel.isInitialLoading.value }
         enableEdgeToEdge()
         setContent {
             ReportsApp()
@@ -191,7 +192,6 @@ fun ReportsAppPreview() {
 private val previewUiState = UiState(
     actions = emptyList(),
     isBackVisible = false,
-    isLoggedIn = false,
 )
 
 private val emptyCallbacks = MainCallbacks(
