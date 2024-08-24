@@ -1,5 +1,7 @@
 package pl.fmizielinski.reports.ui.register
 
+import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
+import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -9,6 +11,7 @@ import pl.fmizielinski.reports.domain.model.RegistrationData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.RegisterUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.Event
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.State
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
@@ -91,6 +94,9 @@ class RegisterViewModel(
     }
 
     private fun handleRegisterSuccess(state: State): State {
+        scope.launch {
+            eventsRepository.postNavEvent(MainNavGraph.startDestination.toDestinationData())
+        }
         return state.copy(registerInProgress = false)
     }
 
