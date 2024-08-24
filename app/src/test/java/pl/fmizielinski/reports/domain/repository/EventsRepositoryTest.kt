@@ -5,6 +5,7 @@ import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 
@@ -14,9 +15,10 @@ class EventsRepositoryTest {
     @Test
     fun postNavEvent() = runTest {
         eventsRepository.navigationEvent.test {
-            eventsRepository.postNavEvent(LoginDestination)
+            val destinationData = LoginDestination.toDestinationData()
+            eventsRepository.postNavEvent(destinationData)
 
-            expectThat(awaitItem().get()) isEqualTo LoginDestination
+            expectThat(awaitItem().get()) isEqualTo destinationData
             cancel()
         }
     }
