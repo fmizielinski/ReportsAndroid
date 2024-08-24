@@ -10,11 +10,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.Event
 import pl.fmizielinski.reports.ui.MainViewModel.State
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
@@ -28,7 +31,11 @@ import java.util.concurrent.TimeUnit
 class MainViewModel(
     dispatcher: CoroutineDispatcher,
     private val eventsRepository: EventsRepository,
+    private val isLoggedInUseCase: IsLoggedInUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _showSnackBar = MutableSharedFlow<SnackBarData>()
     val showSnackBar: SharedFlow<SnackBarData> = _showSnackBar
@@ -43,10 +50,17 @@ class MainViewModel(
         scope.launch {
             eventsRepository.showSnackBar.collect(::postSnackBarEvent)
         }
+        scope.launch {
+            isLoggedInUseCase().collect { isLoggedIn ->
+                postEvent(Event.LoggedInStateChanged(isLoggedIn))
+                _isLoading.emit(isLoggedIn)
+            }
+        }
     }
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
+            is Event.LoggedInStateChanged -> handleLoggedInStateChanged(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.RegisterClicked -> handleRegisterClicked(state)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -63,10 +77,15 @@ class MainViewModel(
         return UiState(
             actions = actions,
             isBackVisible = isBackVisible,
+            isLoggedIn = state.isLoggedIn,
         )
     }
 
     // region handleEvent
+
+    private fun handleLoggedInStateChanged(state: State, event: Event.LoggedInStateChanged): State {
+        return state.copy(isLoggedIn = event.isLoggedIn)
+    }
 
     private fun handleBackClicked(state: State): State {
         scope.launch {
@@ -114,14 +133,18 @@ class MainViewModel(
 
     data class State(
         val currentDestination: String? = null,
+        val isLoggedIn: Boolean = false,
     )
 
     data class UiState(
         val actions: List<TopBarAction>,
         val isBackVisible: Boolean,
+        val isLoggedIn: Boolean,
     )
 
-    sealed interface Event
+    sealed interface Event {
+        data class LoggedInStateChanged(val isLoggedIn: Boolean) : Event
+    }
 
     sealed interface UiEvent : Event {
         object BackClicked : UiEvent

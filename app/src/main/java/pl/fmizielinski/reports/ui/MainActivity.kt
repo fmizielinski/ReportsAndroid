@@ -25,6 +25,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
@@ -32,6 +33,7 @@ import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
@@ -43,8 +45,13 @@ import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val splashScreen = installSplashScreen()
+        splashScreen.setKeepOnScreenCondition { viewModel.isLoading.value }
         enableEdgeToEdge()
         setContent {
             ReportsApp()
@@ -184,6 +191,7 @@ fun ReportsAppPreview() {
 private val previewUiState = UiState(
     actions = emptyList(),
     isBackVisible = false,
+    isLoggedIn = false,
 )
 
 private val emptyCallbacks = MainCallbacks(
