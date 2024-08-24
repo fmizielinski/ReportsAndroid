@@ -4,6 +4,7 @@ import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.RootNavGraph
+import com.ramcosta.composedestinations.spec.RouteOrDirection
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -89,7 +90,7 @@ class MainViewModel(
             if (event.isLoggedIn) {
                 postNavigationEvent(MainNavGraph.startDestination.toDestinationData())
             } else {
-                _isInitialLoading.emit(false)
+                setInitialLoadingFinished()
             }
         }
         return state.copy(isInitialized = true)
@@ -134,7 +135,7 @@ class MainViewModel(
             if (!state.isInitialized) {
                 postEvent(Event.CheckIfLoggedIn)
             } else {
-                _isInitialLoading.emit(false)
+                setInitialLoadingFinished()
             }
         }
         return state.copy(currentDestination = event.route)
@@ -166,6 +167,12 @@ class MainViewModel(
         }
     }
 
+    private suspend fun setInitialLoadingFinished() {
+        // Delay needed to prevent blinking initial navigation after splash screen
+        delay(POST_INITIALIZATION_DELAY)
+        _isInitialLoading.value = false
+    }
+
     data class State(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
@@ -185,6 +192,10 @@ class MainViewModel(
         data object BackClicked : UiEvent
         data object RegisterClicked : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
+    }
+
+    companion object {
+        private const val POST_INITIALIZATION_DELAY = 500L
     }
 }
 
