@@ -36,7 +36,7 @@ import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
-import pl.fmizielinski.reports.ui.navigation.AuthGraph
+import pl.fmizielinski.reports.ui.navigation.graph.AuthGraph
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @Destination<AuthGraph>(route = "Login", start = true)

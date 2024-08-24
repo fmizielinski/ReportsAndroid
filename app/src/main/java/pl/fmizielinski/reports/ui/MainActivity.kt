@@ -69,7 +69,7 @@ fun ReportsApp() {
         BaseScreen<MainViewModel, UiState, UiEvent> {
             val navController = rememberNavController()
             val currentDestination = navController.currentDestinationAsState().value
-                ?: NavGraphs.root.startDestination
+                ?: NavGraphs.reports.startDestination
             val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
 
             val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
@@ -125,7 +125,7 @@ fun MainScreen(
         },
     ) {
         DestinationsNavHost(
-            navGraph = NavGraphs.root,
+            navGraph = NavGraphs.reports,
             navController = navController,
             modifier = Modifier.fillMaxWidth()
                 .padding(it),

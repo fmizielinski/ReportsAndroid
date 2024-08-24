@@ -3,8 +3,7 @@ package pl.fmizielinski.reports.ui
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
-import com.ramcosta.composedestinations.generated.navgraphs.RootNavGraph
-import com.ramcosta.composedestinations.spec.RouteOrDirection
+import com.ramcosta.composedestinations.generated.navgraphs.ReportsNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -71,7 +70,7 @@ class MainViewModel(
                 add(TopBarAction.REGISTER)
             }
         }
-        val isBackVisible = RootNavGraph.nestedNavGraphs.none { graph ->
+        val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
         return UiState(
@@ -162,7 +161,7 @@ class MainViewModel(
     }
 
     private fun validateNavDestination(route: String): Boolean {
-        return RootNavGraph.nestedNavGraphs.any { graph ->
+        return ReportsNavGraph.nestedNavGraphs.any { graph ->
             graph.destinations.any { it.baseRoute == route }
         }
     }

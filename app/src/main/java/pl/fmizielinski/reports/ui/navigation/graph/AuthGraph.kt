@@ -1,9 +1,9 @@
-package pl.fmizielinski.reports.ui.navigation
+package pl.fmizielinski.reports.ui.navigation.graph
 
 import com.ramcosta.composedestinations.annotation.NavGraph
 import com.ramcosta.composedestinations.annotation.RootGraph
 
-@NavGraph<RootGraph>(
+@NavGraph<ReportsGraph>(
     route = "auth",
     start = true,
 )
