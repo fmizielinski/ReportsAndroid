@@ -2,10 +2,8 @@ package pl.fmizielinski.reports.ui
 
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
-import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.RootNavGraph
-import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -26,6 +24,8 @@ import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.model.TopBarAction
+import pl.fmizielinski.reports.ui.navigation.DestinationData
+import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 
@@ -42,8 +42,8 @@ class MainViewModel(
     private val _showSnackBar = MutableSharedFlow<SnackBarData>()
     val showSnackBar: SharedFlow<SnackBarData> = _showSnackBar
 
-    private val _navigationEvents = MutableSharedFlow<Optional<DestinationSpec>>()
-    val navigationEvents: SharedFlow<Optional<DestinationSpec>> = _navigationEvents
+    private val _navigationEvents = MutableSharedFlow<Optional<DestinationData>>()
+    val navigationEvents: SharedFlow<Optional<DestinationData>> = _navigationEvents
 
     init {
         scope.launch {
@@ -70,7 +70,7 @@ class MainViewModel(
                 add(TopBarAction.REGISTER)
             }
         }
-        val isBackVisible = RootNavGraph.nestedNavGraphs.any { graph ->
+        val isBackVisible = RootNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
         return UiState(
@@ -87,9 +87,9 @@ class MainViewModel(
     ): State {
         scope.launch {
             if (event.isLoggedIn) {
-                postNavigationEvent(MainNavGraph.startDestination)
+                postNavigationEvent(MainNavGraph.startDestination.toDestinationData())
             } else {
-                postNavigationEvent(AuthNavGraph.startDestination)
+                _isInitialLoading.emit(false)
             }
         }
         return state.copy(isInitialized = true)
@@ -116,7 +116,7 @@ class MainViewModel(
 
     private fun handleRegisterClicked(state: State): State {
         scope.launch {
-            postNavigationEvent(RegisterDestination)
+            postNavigationEvent(RegisterDestination.toDestinationData())
         }
         return state
     }
@@ -146,12 +146,12 @@ class MainViewModel(
         postNavigationEvent(Optional.empty())
     }
 
-    private suspend fun postNavigationEvent(direction: DestinationSpec) {
-        postNavigationEvent(Optional.of(direction))
+    private suspend fun postNavigationEvent(destination: DestinationData) {
+        postNavigationEvent(Optional.of(destination))
     }
 
-    private suspend fun postNavigationEvent(direction: Optional<DestinationSpec>) {
-        _navigationEvents.emit(direction)
+    private suspend fun postNavigationEvent(destination: Optional<DestinationData>) {
+        _navigationEvents.emit(destination)
     }
 
     private suspend fun postSnackBarEvent(snackBarData: SnackBarData) {

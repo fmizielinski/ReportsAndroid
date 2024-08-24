@@ -31,7 +31,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
+import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -68,11 +70,12 @@ fun ReportsApp() {
             val navController = rememberNavController()
             val currentDestination = navController.currentDestinationAsState().value
                 ?: NavGraphs.root.startDestination
+            val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
 
             val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
 
             LaunchedEffect(Unit) {
-                viewModel.navigationEvents.collectDestination(navController::consumeNavEvent)
+                viewModel.navigationEvents.collectDestination(navigator::consumeNavEvent)
             }
             LaunchedEffect(currentDestination) {
                 coroutineScope.launch {
