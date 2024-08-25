@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
+import pl.fmizielinski.reports.domain.error.CompositeErrorException
+import pl.fmizielinski.reports.domain.error.ErrorException
+import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import timber.log.Timber
 
 abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
@@ -61,5 +64,13 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
     override fun onCleared() {
         scope.cancel("onCleared")
         super.onCleared()
+    }
+
+    protected fun logError(exception: ErrorException) {
+        if (exception is SimpleErrorException) {
+            Timber.tag(tag).e(exception)
+        } else if (exception is CompositeErrorException) {
+            exception.exceptions.forEach { Timber.tag(tag).e(it) }
+        }
     }
 }

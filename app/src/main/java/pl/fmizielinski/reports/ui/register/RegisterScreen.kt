@@ -137,6 +137,9 @@ fun LoginData(
     passwordConfirmationFocusRequester: FocusRequester,
     nameFocusRequester: FocusRequester,
 ) {
+    val passwordError = uiState.passwordVerificationError?.let {
+        stringResource(it.messageResId)
+    }
     ReportsTextField(
         value = uiState.email,
         onValueChange = callbacks.onEmailChanged,
@@ -150,6 +153,9 @@ fun LoginData(
         keyboardActions = KeyboardActions { passwordFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
+        error = uiState.emailVerificationError?.let {
+            stringResource(it.messageResId)
+        },
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_password,
@@ -159,6 +165,7 @@ fun LoginData(
         onShowPasswordClicked = callbacks.onShowPasswordClicked,
         focusRequester = passwordFocusRequester,
         nextFocusRequester = passwordConfirmationFocusRequester,
+        error = passwordError,
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_passwordConfirmation,
@@ -168,7 +175,7 @@ fun LoginData(
         onShowPasswordClicked = callbacks.onShowPasswordClicked,
         focusRequester = passwordConfirmationFocusRequester,
         nextFocusRequester = nameFocusRequester,
-        passwordVerificationError = uiState.passwordVerificationError,
+        error = passwordError,
     )
 }
 
@@ -179,9 +186,9 @@ fun PasswordTextField(
     nextFocusRequester: FocusRequester,
     password: String,
     showPassword: Boolean,
-    passwordVerificationError: Boolean = false,
     onPasswordChanged: (String) -> Unit,
     onShowPasswordClicked: () -> Unit,
+    error: String? = null,
 ) {
     val passwordVisualTransformation = if (showPassword) {
         VisualTransformation.None
@@ -210,9 +217,7 @@ fun PasswordTextField(
                 onShowPasswordClicked,
             )
         },
-        error = stringResource(R.string.registerScreen_error_password).takeIf {
-            passwordVerificationError
-        },
+        error = error,
     )
 }
 
@@ -268,6 +273,9 @@ fun UserData(
         keyboardActions = KeyboardActions { surnameFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
+        error = uiState.nameVerificationError?.let {
+            stringResource(it.messageResId)
+        },
     )
     ReportsTextField(
         value = uiState.surname,
@@ -286,6 +294,9 @@ fun UserData(
         },
         singleLine = true,
         limit = 254,
+        error = uiState.surnameVerificationError?.let {
+            stringResource(it.messageResId)
+        },
     )
 }
 
@@ -330,11 +341,14 @@ private val previewUiState = UiState(
         password = "password",
         passwordConfirmation = "password",
         showPassword = false,
-        passwordVerificationError = false,
+        emailVerificationError = null,
+        passwordVerificationError = null,
     ),
     userData = UiState.UserData(
         name = "John",
         surname = "Doe",
+        nameVerificationError = null,
+        surnameVerificationError = null,
     ),
     isRegisterButtonEnabled = true,
 )

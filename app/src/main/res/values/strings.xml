@@ -13,8 +13,13 @@
     <string name="registerScreen_button_hidePassword">Hide password</string>
     <string name="registerScreen_button_register">Sign up</string>
     <string name="registerScreen_button_showPassword">Show password</string>
+    <string name="registerScreen_error_emailNotValid">Invalid email</string>
+    <string name="registerScreen_error_nameEmpty">Empty name</string>
     <string name="registerScreen_error_password">Passwords doesn\'t match</string>
+    <string name="registerScreen_error_passwordEmpty">Empty password</string>
     <string name="registerScreen_error_register">Unable to sign up. Try again</string>
+    <string name="registerScreen_error_surnameEmpty">Empty surname</string>
+    <string name="registerScreen_error_userAlreadyExists">Email address already used</string>
     <string name="registerScreen_label_name">Name</string>
     <string name="registerScreen_label_password">Password</string>
     <string name="registerScreen_label_passwordConfirmation">Confirm password</string>

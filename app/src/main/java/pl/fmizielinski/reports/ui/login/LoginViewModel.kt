@@ -5,7 +5,7 @@ import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
-import pl.fmizielinski.reports.domain.error.ErrorException
+import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
@@ -15,7 +15,6 @@ import pl.fmizielinski.reports.ui.login.LoginViewModel.State
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
-import timber.log.Timber
 
 @KoinViewModel
 class LoginViewModel(
@@ -87,8 +86,8 @@ class LoginViewModel(
             try {
                 loginUseCase(state.email, state.password)
                 postEvent(Event.LoginSuccess)
-            } catch (error: ErrorException) {
-                Timber.e(error)
+            } catch (error: SimpleErrorException) {
+                logError(error)
                 postEvent(Event.LoginFailed(error))
             }
         }
@@ -117,7 +116,7 @@ class LoginViewModel(
 
     sealed interface Event {
         data object LoginSuccess : Event
-        data class LoginFailed(val error: ErrorException) : Event
+        data class LoginFailed(val error: SimpleErrorException) : Event
     }
 
     sealed interface UiEvent : Event {
