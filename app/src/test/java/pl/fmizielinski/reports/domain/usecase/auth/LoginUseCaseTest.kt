@@ -10,6 +10,7 @@ import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.domain.error.ErrorException
+import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.loginResponseModel
 import pl.fmizielinski.reports.fixtures.data.tokenModel
@@ -41,7 +42,7 @@ class LoginUseCaseTest {
             val exception = httpException<LoginResponseModel>(401)
             coEvery { authService.login(any()) } throws exception
 
-            expectThrows<ErrorException> {
+            expectThrows<SimpleErrorException> {
                 useCase("username", "password")
             }.and {
                 get { uiMessage } isEqualTo R.string.loginScreen_error_invalidCredentials
@@ -53,7 +54,7 @@ class LoginUseCaseTest {
     fun `GIVEN unknown error WHEN login THEN throw unknown error exception`() = runTest {
         coEvery { authService.login(any()) } throws Exception()
 
-        expectThrows<ErrorException> {
+        expectThrows<SimpleErrorException> {
             useCase("username", "password")
         }.and {
             get { uiMessage } isEqualTo R.string.loginScreen_error_login
@@ -66,7 +67,7 @@ class LoginUseCaseTest {
         val exception = httpException<LoginResponseModel>(999)
         coEvery { authService.login(any()) } throws exception
 
-        expectThrows<ErrorException> {
+        expectThrows<SimpleErrorException> {
             useCase("username", "password")
         }.and {
             get { uiMessage } isEqualTo R.string.loginScreen_error_login
@@ -81,7 +82,7 @@ class LoginUseCaseTest {
         coEvery { authService.login(any()) } returns loginResponseModel(token = token)
         coEvery { tokenDao.addToken(tokenModel) } returns false
 
-        expectThrows<ErrorException> {
+        expectThrows<SimpleErrorException> {
             useCase("username", "password")
         }.and {
             get { uiMessage } isEqualTo R.string.loginScreen_error_login

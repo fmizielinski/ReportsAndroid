@@ -7,21 +7,27 @@ import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.EMAIL_NOT_VALID
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.NAME_EMPTY
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.PASSWORD_EMPTY
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.SURNAME_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.RegisterUseCase
-import pl.fmizielinski.reports.fixtures.domain.errorException
+import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
+import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.fixtures.domain.registrationData
 import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
+import strikt.assertions.isNotNull
 import strikt.assertions.isTrue
 
 class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
@@ -128,9 +134,14 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         val uiState = postData(email, password, passwordConfirmation, name, surname)
         uiState.skipItems(1)
         viewModel.postUiEvent(UiEvent.RegisterClicked)
+        uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.loginData.passwordVerificationError).isFalse()
+        expectThat(result.loginData.passwordVerificationError)
+            .isNotNull()
+            .and {
+                get { messageResId } isEqualTo R.string.registerScreen_error_password
+            }
 
         uiState.cancelAndIgnoreRemainingEvents()
     }
@@ -162,7 +173,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         val passwordConfirmation = "password"
         val name = "name"
         val surname = "surname"
-        val errorException = errorException()
+        val errorException = simpleErrorException(isVerificationError = false)
         val snackBarData = errorException.toSnackBarData()
         coEvery { registerUseCase.invoke(registrationData(email, name, surname, password)) } throws errorException
 
@@ -173,6 +184,62 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `GIVEN valid data passed WHEN register clicked AND register verification errors THEN show verification errors`() = runTurbineTest {
+        val email = "email"
+        val password = "password"
+        val passwordConfirmation = "password"
+        val name = "name"
+        val surname = "surname"
+        val errorException = compositeErrorException(
+            exceptions = listOf(
+                simpleErrorException(code = EMAIL_NOT_VALID, isVerificationError = true),
+                simpleErrorException(code = PASSWORD_EMPTY, isVerificationError = true),
+                simpleErrorException(code = NAME_EMPTY, isVerificationError = true),
+                simpleErrorException(code = SURNAME_EMPTY, isVerificationError = true),
+            ),
+        )
+        coEvery { registerUseCase.invoke(registrationData(email, name, surname, password)) } throws errorException
+
+        val uiState = postData(email, password, passwordConfirmation, name, surname)
+        uiState.skipItems(1)
+
+        viewModel.postUiEvent(UiEvent.RegisterClicked)
+        uiState.skipItems(3)
+
+        val result = uiState.awaitItem()
+        expectThat(result) {
+            get { loginData.emailVerificationError }.isNotNull()
+            get { loginData.passwordVerificationError }.isNotNull()
+            get { userData.nameVerificationError }.isNotNull()
+            get { userData.surnameVerificationError }.isNotNull()
+        }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `GIVEN valid data passed WHEN register clicked AND register verification error THEN show verification error`() = runTurbineTest {
+        val email = "email"
+        val password = "password"
+        val passwordConfirmation = "password"
+        val name = "name"
+        val surname = "surname"
+        val errorException = simpleErrorException(code = EMAIL_NOT_VALID, isVerificationError = true)
+        coEvery { registerUseCase.invoke(registrationData(email, name, surname, password)) } throws errorException
+
+        val uiState = postData(email, password, passwordConfirmation, name, surname)
+        uiState.skipItems(1)
+
+        viewModel.postUiEvent(UiEvent.RegisterClicked)
+        uiState.skipItems(3)
+
+        val result = uiState.awaitItem()
+        expectThat(result.loginData.emailVerificationError).isNotNull()
 
         uiState.cancelAndIgnoreRemainingEvents()
     }
