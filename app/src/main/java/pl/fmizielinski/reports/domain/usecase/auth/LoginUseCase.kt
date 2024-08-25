@@ -6,7 +6,7 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
-import pl.fmizielinski.reports.domain.error.ErrorException
+import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
 import retrofit2.HttpException
 
@@ -16,7 +16,7 @@ class LoginUseCase(
     private val tokenDao: TokenDao,
 ) {
 
-    @Throws(ErrorException::class)
+    @Throws(SimpleErrorException::class)
     suspend operator fun invoke(
         username: String,
         password: String,
@@ -25,7 +25,7 @@ class LoginUseCase(
         val loginResponseModel = login(credentials)
         val tokenModel = loginResponseModel.toTokenModel()
         if (!tokenDao.addToken(tokenModel)) {
-            throw ErrorException(
+            throw SimpleErrorException(
                 uiMessage = R.string.loginScreen_error_login,
                 message = "Cannot save credentials",
             )
@@ -33,7 +33,7 @@ class LoginUseCase(
     }
 
     @Suppress("TooGenericExceptionCaught")
-    @Throws(ErrorException::class)
+    @Throws(SimpleErrorException::class)
     private suspend fun login(credentials: String): LoginResponseModel {
         return try {
             authService.login(credentials)
@@ -44,9 +44,9 @@ class LoginUseCase(
         }
     }
 
-    private fun HttpException.toErrorException(): ErrorException {
+    private fun HttpException.toErrorException(): SimpleErrorException {
         return when (code()) {
-            401 -> ErrorException(
+            401 -> SimpleErrorException(
                 uiMessage = R.string.loginScreen_error_invalidCredentials,
                 message = "Invalid credentials",
                 cause = this,
@@ -56,8 +56,8 @@ class LoginUseCase(
         }
     }
 
-    private fun genericErrorException(cause: Throwable): ErrorException {
-        return ErrorException(
+    private fun genericErrorException(cause: Throwable): SimpleErrorException {
+        return SimpleErrorException(
             uiMessage = R.string.loginScreen_error_login,
             message = "Unknown login error",
             cause = cause,

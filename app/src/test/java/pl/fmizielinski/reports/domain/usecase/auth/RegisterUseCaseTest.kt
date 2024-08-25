@@ -9,12 +9,21 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.RegisterResponseModel
-import pl.fmizielinski.reports.domain.error.ErrorException
+import pl.fmizielinski.reports.domain.error.CompositeErrorException
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.EMAIL_NOT_VALID
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.INVALID_CREDENTIALS
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.NAME_EMPTY
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.PASSWORD_EMPTY
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.SURNAME_EMPTY
+import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.USER_ALREADY_EXISTS
+import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.registerResponseModel
 import pl.fmizielinski.reports.fixtures.data.tokenModel
+import pl.fmizielinski.reports.fixtures.domain.networkError
 import pl.fmizielinski.reports.fixtures.domain.registrationData
 import strikt.api.expectThrows
+import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 
 class RegisterUseCaseTest {
@@ -37,28 +46,140 @@ class RegisterUseCaseTest {
     }
 
     @Test
-    fun `GIVEN invalid registration data WHEN register THEN throw invalid credentials exception`() =
-        runTest {
-            val exception = httpException<RegisterResponseModel>(400)
-            coEvery { authService.register(any()) } throws exception
+    fun `GIVEN invalid registration data WHEN register THEN throw invalid credentials exception`() = runTest {
+        val message = "Invalid credentials"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError(INVALID_CREDENTIALS, message),
+        )
+        coEvery { authService.register(any()) } throws exception
 
-            expectThrows<ErrorException> {
-                useCase(registrationData())
-            }.and {
-                get { uiMessage } isEqualTo R.string.registerScreen_error_register
-                get { message } isEqualTo "Invalid credentials"
-            }
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_register
+            get { message } isEqualTo message
+            get { isVerificationError } isEqualTo false
         }
+    }
+
+    @Test
+    fun `GIVEN invalid registration data WHEN register THEN throw user already exists exception`() = runTest {
+        val message = "User already exists"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError(USER_ALREADY_EXISTS, message),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_userAlreadyExists
+            get { message } isEqualTo message
+            get { isVerificationError } isEqualTo false
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid registration data WHEN register THEN throw email not valid exception`() = runTest {
+        val message = "Email not valid"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError(EMAIL_NOT_VALID, message),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_emailNotValid
+            get { message } isEqualTo message
+            get { isVerificationError } isEqualTo true
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid registration data WHEN register THEN throw name empty exception`() = runTest {
+        val message = "Name empty"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError(NAME_EMPTY, message),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_nameEmpty
+            get { message } isEqualTo message
+            get { isVerificationError } isEqualTo true
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid registration data WHEN register THEN throw surname empty exception`() = runTest {
+        val message = "Surname empty"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError(SURNAME_EMPTY, message),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_surnameEmpty
+            get { message } isEqualTo message
+            get { isVerificationError } isEqualTo true
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid registration data WHEN register THEN throw password empty exception`() = runTest {
+        val message = "Surname empty"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError(PASSWORD_EMPTY, message),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_passwordEmpty
+            get { message } isEqualTo message
+            get { isVerificationError } isEqualTo true
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid registration data WHEN register THEN throw composite exception`() = runTest {
+        val message = "message"
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            errors = listOf(
+                networkError(PASSWORD_EMPTY, message),
+                networkError(EMAIL_NOT_VALID, message),
+            ),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<CompositeErrorException> {
+            useCase(registrationData())
+        }.get { exceptions }.hasSize(2)
+    }
 
     @Test
     fun `GIVEN unknown error WHEN register THEN throw unknown error exception`() = runTest {
         coEvery { authService.register(any()) } throws Exception()
 
-        expectThrows<ErrorException> {
+        expectThrows<SimpleErrorException> {
             useCase(registrationData())
         }.and {
             get { uiMessage } isEqualTo R.string.registerScreen_error_register
             get { message } isEqualTo "Unknown register error"
+            get { isVerificationError } isEqualTo false
         }
     }
 
@@ -67,11 +188,29 @@ class RegisterUseCaseTest {
         val exception = httpException<RegisterResponseModel>(999)
         coEvery { authService.register(any()) } throws exception
 
-        expectThrows<ErrorException> {
+        expectThrows<SimpleErrorException> {
             useCase(registrationData())
         }.and {
             get { uiMessage } isEqualTo R.string.registerScreen_error_register
             get { message } isEqualTo "Unknown register error"
+            get { isVerificationError } isEqualTo false
+        }
+    }
+
+    @Test
+    fun `GIVEN unknown 400 http error WHEN register THEN throw unknown error exception`() = runTest {
+        val exception = httpException<RegisterResponseModel>(
+            code = 400,
+            error = networkError("unknown", "Unknown error"),
+        )
+        coEvery { authService.register(any()) } throws exception
+
+        expectThrows<SimpleErrorException> {
+            useCase(registrationData())
+        }.and {
+            get { uiMessage } isEqualTo R.string.registerScreen_error_register
+            get { message } isEqualTo "Unknown register error"
+            get { isVerificationError } isEqualTo false
         }
     }
 
@@ -82,11 +221,12 @@ class RegisterUseCaseTest {
         coEvery { authService.register(any()) } returns registerResponseModel(token = token)
         coEvery { tokenDao.addToken(tokenModel) } returns false
 
-        expectThrows<ErrorException> {
+        expectThrows<SimpleErrorException> {
             useCase(registrationData())
         }.and {
             get { uiMessage } isEqualTo R.string.registerScreen_error_register
             get { message } isEqualTo "Cannot save credentials"
+            get { isVerificationError } isEqualTo false
         }
     }
 }

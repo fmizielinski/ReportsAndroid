@@ -3,10 +3,18 @@ package pl.fmizielinski.reports.domain.error
 import androidx.annotation.StringRes
 import pl.fmizielinski.reports.domain.model.SnackBarData
 
-open class ErrorException(
+abstract class ErrorException : Exception()
+
+class SimpleErrorException(
     @StringRes val uiMessage: Int,
+    val code: String = "",
     override val message: String,
     override val cause: Throwable? = null,
-) : Exception()
+    val isVerificationError: Boolean = false,
+) : ErrorException()
 
-fun ErrorException.toSnackBarData() = SnackBarData(uiMessage)
+class CompositeErrorException(
+    val exceptions: List<SimpleErrorException>,
+) : ErrorException()
+
+fun SimpleErrorException.toSnackBarData() = SnackBarData(uiMessage)

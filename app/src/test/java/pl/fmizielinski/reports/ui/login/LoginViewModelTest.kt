@@ -14,7 +14,7 @@ import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
-import pl.fmizielinski.reports.fixtures.domain.errorException
+import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import strikt.api.expectThat
 import strikt.assertions.isBlank
@@ -84,7 +84,7 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
     fun `GIVEN valid credentials WHEN login clicked AND login error THEN show snackbar AND clear password`() = runTurbineTest {
         val email = "email"
         val password = "password"
-        val errorException = errorException()
+        val errorException = simpleErrorException()
         val snackBarData = errorException.toSnackBarData()
         coEvery { loginUseCase(email, password) } throws errorException
 
