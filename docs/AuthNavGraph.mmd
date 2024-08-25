@@ -1,0 +1,13 @@
+---
+title: Auth Navigation Graph
+---
+%%{init: {'theme':'base', 'themeVariables': { 'primaryTextColor': '#fff' }}%%
+graph TD
+auth(["AuthGraph"]) -- "start" --- Login("LoginScreen")
+auth(["AuthGraph"]) --- Register("RegisterScreen")
+
+
+classDef destination fill:#5383EC,stroke:#ffffff;
+class Login,Register destination;
+classDef navgraph fill:#63BC76,stroke:#ffffff;
+class auth navgraph;

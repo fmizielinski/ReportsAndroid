@@ -1,12 +1,16 @@
 package pl.fmizielinski.reports.ui.common
 
-import androidx.navigation.NavHostController
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.spec.Direction
+import pl.fmizielinski.reports.ui.navigation.DestinationData
 
-fun NavHostController.consumeNavEvent(direction: Direction?) {
-    if (direction == null) {
+fun DestinationsNavigator.consumeNavEvent(destinationData: DestinationData?) {
+    if (destinationData == null) {
         navigateUp()
     } else {
-        navigate(direction.route)
+        navigate(
+            direction = Direction(destinationData.destination.route),
+            navOptions = destinationData.navOptions,
+        )
     }
 }

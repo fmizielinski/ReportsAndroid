@@ -1,0 +1,16 @@
+---
+title: Reports Navigation Graph
+---
+%%{init: {'theme':'base', 'themeVariables': { 'primaryTextColor': '#fff' }}%%
+graph TD
+reports(["ReportsGraph"]) -- "start" --- auth(["AuthGraph"])
+reports(["ReportsGraph"]) --- main(["MainGraph"])
+auth(["AuthGraph"]) -- "start" --- Login("LoginScreen")
+auth(["AuthGraph"]) --- Register("RegisterScreen")
+main(["MainGraph"]) -- "start" --- Reports("ReportsScreen")
+
+
+classDef destination fill:#5383EC,stroke:#ffffff;
+class Login,Register,Reports destination;
+classDef navgraph fill:#63BC76,stroke:#ffffff;
+class auth,main,reports,auth,main navgraph;

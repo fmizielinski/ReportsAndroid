@@ -20,18 +20,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
+import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
@@ -43,8 +48,13 @@ import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
+
+    private val viewModel: MainViewModel by viewModel()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val splashScreen = installSplashScreen()
+        splashScreen.setKeepOnScreenCondition { viewModel.isInitialLoading.value }
         enableEdgeToEdge()
         setContent {
             ReportsApp()
@@ -59,12 +69,13 @@ fun ReportsApp() {
         BaseScreen<MainViewModel, UiState, UiEvent> {
             val navController = rememberNavController()
             val currentDestination = navController.currentDestinationAsState().value
-                ?: NavGraphs.root.startDestination
+                ?: NavGraphs.reports.startDestination
+            val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
 
             val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
 
             LaunchedEffect(Unit) {
-                viewModel.navigationEvents.collectDestination(navController::consumeNavEvent)
+                viewModel.navigationEvents.collectDestination(navigator::consumeNavEvent)
             }
             LaunchedEffect(currentDestination) {
                 coroutineScope.launch {
@@ -114,7 +125,7 @@ fun MainScreen(
         },
     ) {
         DestinationsNavHost(
-            navGraph = NavGraphs.root,
+            navGraph = NavGraphs.reports,
             navController = navController,
             modifier = Modifier.fillMaxWidth()
                 .padding(it),

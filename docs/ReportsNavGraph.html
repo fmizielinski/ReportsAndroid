@@ -2,23 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Root Navigation Graph</title>
+    <title>Reports Navigation Graph</title>
 </head>
 <body>
 <pre id='scene' class="mermaid">
 ---
-title: Root Navigation Graph
+title: Reports Navigation Graph
 ---
 %%{init: {'theme':'base', 'themeVariables': { 'primaryTextColor': '#fff' }}%%
 graph TD
-root(["RootGraph"]) -- "start" --- Login("LoginScreen")
-root(["RootGraph"]) --- Register("RegisterScreen")
+reports(["ReportsGraph"]) -- "start" --- auth(["AuthGraph"])
+reports(["ReportsGraph"]) --- main(["MainGraph"])
+auth(["AuthGraph"]) -- "start" --- Login("LoginScreen")
+auth(["AuthGraph"]) --- Register("RegisterScreen")
+main(["MainGraph"]) -- "start" --- Reports("ReportsScreen")
 
 
 classDef destination fill:#5383EC,stroke:#ffffff;
-class Login,Register destination;
+class Login,Register,Reports destination;
 classDef navgraph fill:#63BC76,stroke:#ffffff;
-class root navgraph;
+class auth,main,reports,auth,main navgraph;
 
 </pre>
 <script src='https://unpkg.com/panzoom@9.4.0/dist/panzoom.min.js'></script>

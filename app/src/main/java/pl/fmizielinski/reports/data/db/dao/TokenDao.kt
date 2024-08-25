@@ -10,8 +10,11 @@ import pl.fmizielinski.reports.data.db.model.TokenModel
 @Dao
 interface TokenDao {
 
+    @Query("SELECT COUNT(*) > 0 FROM Token")
+    suspend fun hasToken(): Boolean
+
     @Query("SELECT * FROM Token LIMIT 1")
-    fun getToken(): Flow<TokenModel>
+    suspend fun getToken(): TokenModel
 
     /**
      * Adds a new user to the database. Removes old user if exists.

@@ -1,5 +1,7 @@
 package pl.fmizielinski.reports.ui.login
 
+import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
+import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
@@ -12,6 +14,7 @@ import pl.fmizielinski.reports.ui.login.LoginViewModel.Event
 import pl.fmizielinski.reports.ui.login.LoginViewModel.State
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
+import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import timber.log.Timber
 
 @KoinViewModel
@@ -49,6 +52,9 @@ class LoginViewModel(
     // region handleEvent
 
     private fun handleLoginSuccess(state: State): State {
+        scope.launch {
+            eventsRepository.postNavEvent(MainNavGraph.startDestination.toDestinationData())
+        }
         return state.copy(password = "", loginInProgress = false)
     }
 
