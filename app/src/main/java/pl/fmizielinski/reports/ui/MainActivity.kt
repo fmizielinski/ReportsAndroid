@@ -20,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -113,7 +112,7 @@ fun MainScreen(
         topBar = {
             ReportsTopBar(
                 uiState = uiState,
-                callbacks = callbacks
+                callbacks = callbacks,
             )
         },
         snackbarHost = {
