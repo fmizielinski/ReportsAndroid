@@ -24,4 +24,5 @@
     <string name="registerScreen_label_password">Password</string>
     <string name="registerScreen_label_passwordConfirmation">Confirm password</string>
     <string name="registerScreen_label_surname">Surname</string>
+    <string name="reportsScreen_label_emptyList">No reports available</string>
 </resources>

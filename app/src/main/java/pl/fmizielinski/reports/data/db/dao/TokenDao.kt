@@ -14,7 +14,7 @@ interface TokenDao {
     suspend fun hasToken(): Boolean
 
     @Query("SELECT * FROM Token LIMIT 1")
-    suspend fun getToken(): TokenModel
+    fun getTokenBlocking(): TokenModel
 
     /**
      * Adds a new user to the database. Removes old user if exists.
