@@ -12,9 +12,11 @@ fun reportModel(
     title: String = "title",
     description: String = "description",
     reportDate: LocalDateTime = LocalDateTime.now(),
+    comments: Int = 0,
 ) = ReportsResponseModel.ReportModel(
     id = id,
     title = title,
     description = description,
     reportDate = reportDate,
+    comments = comments,
 )
