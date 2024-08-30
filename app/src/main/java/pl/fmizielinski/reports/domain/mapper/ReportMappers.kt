@@ -12,4 +12,5 @@ fun ReportsResponseModel.ReportModel.toReport(dataFormatter: DataFormatter) = Re
     title = title,
     description = description,
     reportDate = dataFormatter.formatReportListDate(reportDate),
+    comments = comments,
 )

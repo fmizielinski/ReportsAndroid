@@ -14,5 +14,6 @@ data class ReportsResponseModel(
         val title: String,
         val description: String,
         val reportDate: LocalDateTimeAsString,
+        val comments: Int,
     )
 }

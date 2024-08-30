@@ -8,4 +8,5 @@ data class Report(
     val title: String,
     val description: String,
     val reportDate: String,
+    val comments: Int,
 )

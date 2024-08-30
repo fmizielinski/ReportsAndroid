@@ -31,6 +31,7 @@ class ReportsViewModel(
                 title = report.title,
                 description = report.description,
                 reportDate = report.reportDate,
+                comments = report.comments,
             )
         }
         return UiState(reports)
@@ -70,6 +71,7 @@ class ReportsViewModel(
             val title: String,
             val description: String,
             val reportDate: String,
+            val comments: Int,
         )
     }
 
