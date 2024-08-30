@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -146,7 +148,7 @@ fun ReportsTopBar(
                     onClick = callbacks.onBackClicked,
                 ) {
                     Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_arrow_back_24dp),
+                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
                         contentDescription = stringResource(R.string.common_button_back),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
