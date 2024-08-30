@@ -126,12 +126,14 @@ koverReport {
                 "*BuildConfig*",
                 "*Callbacks*",
                 "*ComposableSingletons*",
+                "*ErrorMappersKt*",
                 "*Ext*",
+                "*Interceptor*",
+                "*MainViewModelKt*",
                 "*ReportsApplication*",
                 "*ReportsDatabase*",
+                "*Serializer*",
                 "*Screen*",
-                "*MainViewModelKt*",
-                "*ErrorMappersKt*",
             )
             packages(
                 "*.model",
