@@ -92,9 +92,12 @@ class NetworkModule {
 
     @Factory
     @Named("jsonConverterFactory")
-    fun jsonConverterFactory(): Converter.Factory = Json.asConverterFactory(
-        "application/json; charset=UTF8".toMediaType(),
-    )
+    fun jsonConverterFactory(json: Json): Converter.Factory = json.asConverterFactory(
+            "application/json; charset=UTF8".toMediaType(),
+        )
+
+    @Factory
+    fun json(): Json = Json { ignoreUnknownKeys = true }
 
     @Single
     fun trustManager(context: Context): X509TrustManager {
