@@ -6,10 +6,15 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.data.network.report.ReportService
+import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
+import pl.fmizielinski.reports.domain.error.UnauthorizedErrorException
 import pl.fmizielinski.reports.domain.mapper.DataFormatter
+import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
+import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.reportModel
 import pl.fmizielinski.reports.fixtures.data.reportsResponseModel
 import strikt.api.expectThat
+import strikt.api.expectThrows
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 import strikt.assertions.withFirst
@@ -50,5 +55,12 @@ class GetReportsUseCaseTest {
                 get { description } isEqualTo expectedDescription
                 get { this.reportDate } isEqualTo formattedDate
             }
+    }
+
+    @Test
+    fun `BIVEN 401 error WHEN invoke THEN throw unauthorized error exception`() = runTest {
+        coEvery { reportService.getReports() } throws httpException<ReportsResponseModel>(401)
+
+        expectThrows<UnauthorizedErrorException> { useCase() }
     }
 }

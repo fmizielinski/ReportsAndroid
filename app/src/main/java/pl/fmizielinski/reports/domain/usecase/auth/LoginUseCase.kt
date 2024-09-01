@@ -8,13 +8,14 @@ import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
+import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory
 class LoginUseCase(
     private val authService: AuthService,
     private val tokenDao: TokenDao,
-) {
+): BaseUseCase() {
 
     @Throws(SimpleErrorException::class)
     suspend operator fun invoke(
@@ -35,13 +36,10 @@ class LoginUseCase(
     @Suppress("TooGenericExceptionCaught")
     @Throws(SimpleErrorException::class)
     private suspend fun login(credentials: String): LoginResponseModel {
-        return try {
-            authService.login(credentials)
-        } catch (e: HttpException) {
-            throw e.toErrorException()
-        } catch (e: Exception) {
-            throw genericErrorException(e)
-        }
+        return catchHttpExceptions(
+            body = { authService.login(credentials) },
+            handler = { it.toErrorException() },
+        )
     }
 
     private fun HttpException.toErrorException(): SimpleErrorException {
@@ -56,7 +54,7 @@ class LoginUseCase(
         }
     }
 
-    private fun genericErrorException(cause: Throwable): SimpleErrorException {
+    override fun genericErrorException(cause: Throwable): SimpleErrorException {
         return SimpleErrorException(
             uiMessage = R.string.loginScreen_error_login,
             message = "Unknown login error",

@@ -16,13 +16,14 @@ import pl.fmizielinski.reports.domain.mapper.parseErrorBody
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
 import pl.fmizielinski.reports.domain.model.RegistrationData
 import pl.fmizielinski.reports.domain.model.toRegisterRequestModel
+import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory
 class RegisterUseCase(
     private val authService: AuthService,
     private val tokenDao: TokenDao,
-) {
+): BaseUseCase() {
 
     @Suppress("TooGenericExceptionCaught")
     @Throws(ErrorException::class)
@@ -41,13 +42,10 @@ class RegisterUseCase(
     @Suppress("TooGenericExceptionCaught")
     @Throws(ErrorException::class)
     private suspend fun register(requestModel: RegisterRequestModel): RegisterResponseModel {
-        return try {
-            authService.register(requestModel)
-        } catch (e: HttpException) {
-            throw e.toErrorException()
-        } catch (e: Exception) {
-            throw genericErrorException(e)
-        }
+        return catchHttpExceptions(
+            body = { authService.register(requestModel) },
+            handler = { it.toErrorException() },
+        )
     }
 
     private fun HttpException.toErrorException(): ErrorException {
@@ -114,7 +112,7 @@ class RegisterUseCase(
         )
     }
 
-    private fun genericErrorException(cause: Throwable): SimpleErrorException {
+    override fun genericErrorException(cause: Throwable): SimpleErrorException {
         return SimpleErrorException(
             uiMessage = R.string.registerScreen_error_register,
             message = "Unknown register error",

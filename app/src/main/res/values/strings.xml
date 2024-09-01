@@ -3,6 +3,8 @@
 
     <string name="common_button_back">Back</string>
     <string name="common_button_register">Sign up</string>
+    <string name="common_error_unauthorized">You have been logged out</string>
+    <string name="common_error_unknown">Unknown</string>
     <string name="loginScreen_button_hidePassword">Hide password</string>
     <string name="loginScreen_button_login">Sign in</string>
     <string name="loginScreen_button_showPassword">Show password</string>

@@ -3,8 +3,9 @@ package pl.fmizielinski.reports.ui.reports
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
+import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.model.Report
-import pl.fmizielinski.reports.domain.usecase.auth.report.GetReportsUseCase
+import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.reports.ReportsViewModel.Event
 import pl.fmizielinski.reports.ui.reports.ReportsViewModel.State
@@ -46,8 +47,12 @@ class ReportsViewModel(
 
     private fun handleLoadReports(state: State): State {
         scope.launch {
-            val reports = getReportsUseCase()
-            postEvent(Event.ReportsLoaded(reports))
+            try {
+                val reports = getReportsUseCase()
+                postEvent(Event.ReportsLoaded(reports))
+            } catch (error: ErrorException) {
+                logError(error)
+            }
         }
         return state
     }

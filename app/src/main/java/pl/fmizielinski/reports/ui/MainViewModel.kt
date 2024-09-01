@@ -2,6 +2,7 @@ package pl.fmizielinski.reports.ui
 
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
+import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.ReportsNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
@@ -15,9 +16,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
+import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.Event
 import pl.fmizielinski.reports.ui.MainViewModel.State
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
@@ -34,6 +37,7 @@ class MainViewModel(
     dispatcher: CoroutineDispatcher,
     private val eventsRepository: EventsRepository,
     private val isLoggedInUseCase: IsLoggedInUseCase,
+    private val logoutUseCase: LogoutUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
 
     private val _isInitialLoading = MutableStateFlow(true)
@@ -52,12 +56,17 @@ class MainViewModel(
         scope.launch {
             eventsRepository.showSnackBar.collect(::postSnackBarEvent)
         }
+        scope.launch {
+            eventsRepository.logoutEvent.collect { postLogoutEvent() }
+        }
     }
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.LoggedInStateChecked -> handleLoggedInStateChecked(state, event)
             is Event.CheckIfLoggedIn -> handleCheckIfLoggedIn(state)
+            is Event.Logout -> handleLogout(state)
+            is Event.LogoutSuccess -> handleLogoutSuccess(state)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.RegisterClicked -> handleRegisterClicked(state)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -99,6 +108,26 @@ class MainViewModel(
         scope.launch {
             val isLoggedIn = isLoggedInUseCase()
             postEvent(Event.LoggedInStateChecked(isLoggedIn))
+        }
+        return state
+    }
+
+    private fun handleLogout(state: State): State {
+        scope.launch {
+            logoutUseCase()
+            postEvent(Event.LogoutSuccess)
+        }
+        return state
+    }
+
+    private fun handleLogoutSuccess(state: State): State {
+        scope.launch {
+            postNavigationEvent(AuthNavGraph.startDestination.toDestinationData())
+
+            val snackBarData = SnackBarData(
+                messageResId = R.string.common_error_unauthorized,
+            )
+            postSnackBarEvent(snackBarData)
         }
         return state
     }
@@ -160,6 +189,10 @@ class MainViewModel(
         _showSnackBar.emit(SnackBarData.empty())
     }
 
+    private suspend fun postLogoutEvent() {
+        postEvent(Event.Logout)
+    }
+
     private fun validateNavDestination(route: String): Boolean {
         return ReportsNavGraph.nestedNavGraphs.any { graph ->
             graph.destinations.any { it.baseRoute == route }
@@ -185,6 +218,8 @@ class MainViewModel(
     sealed interface Event {
         data class LoggedInStateChecked(val isLoggedIn: Boolean) : Event
         data object CheckIfLoggedIn : Event
+        data object Logout : Event
+        data object LogoutSuccess : Event
     }
 
     sealed interface UiEvent : Event {

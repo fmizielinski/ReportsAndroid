@@ -14,6 +14,7 @@ import pl.fmizielinski.reports.BuildConfig
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.interceptor.BearerInterceptor
+import pl.fmizielinski.reports.data.network.interceptor.UnauthorizedInterceptor
 import pl.fmizielinski.reports.data.network.report.ReportService
 import retrofit2.Converter
 import retrofit2.Retrofit
@@ -83,18 +84,20 @@ class NetworkModule {
         hostnameVerifier: HostnameVerifier,
         loggingInterceptor: HttpLoggingInterceptor,
         bearerInterceptor: BearerInterceptor,
+        unauthorizedInterceptor: UnauthorizedInterceptor,
     ): OkHttpClient = OkHttpClient.Builder()
         .sslSocketFactory(sslSocketFactory, trustManager)
         .hostnameVerifier(hostnameVerifier)
         .addInterceptor(bearerInterceptor)
+        .addInterceptor(unauthorizedInterceptor)
         .addInterceptor(loggingInterceptor)
         .build()
 
     @Factory
     @Named("jsonConverterFactory")
     fun jsonConverterFactory(json: Json): Converter.Factory = json.asConverterFactory(
-            "application/json; charset=UTF8".toMediaType(),
-        )
+        "application/json; charset=UTF8".toMediaType(),
+    )
 
     @Factory
     fun json(): Json = Json { ignoreUnknownKeys = true }

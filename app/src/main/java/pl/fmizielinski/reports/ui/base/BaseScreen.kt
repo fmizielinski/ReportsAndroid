@@ -31,14 +31,14 @@ inline fun <
         state = state,
     )
 
+    scope.content()
+
     DisposableEffect(key1 = viewModel) {
         coroutineScope.launch { viewModel.onStart() }
         onDispose {
             coroutineScope.launch { viewModel.onStop() }
         }
     }
-
-    scope.content()
 }
 
 data class ScreenScope<ViewModel : BaseViewModel<*, *, UiState, *>, UiState>(

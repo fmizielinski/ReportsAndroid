@@ -17,4 +17,8 @@ class CompositeErrorException(
     val exceptions: List<SimpleErrorException>,
 ) : ErrorException()
 
+class UnauthorizedErrorException(
+    override val cause: Throwable? = null,
+) : ErrorException()
+
 fun SimpleErrorException.toSnackBarData() = SnackBarData(uiMessage)
