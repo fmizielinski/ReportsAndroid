@@ -54,11 +54,11 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         val result = uiState.awaitItem()
         expectThat(result.isLoginButtonEnabled) isEqualTo expected
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
     @Test
-    fun `GIVEN valid credentials WHEN login clicked THEN disable login button AND clear password`() = runTurbineTest {
+    fun `GIVEN valid credentials WHEN login clicked THEN disable login button`() = runTurbineTest {
         val email = "email"
         val password = "password"
         coJustRun { loginUseCase(email, password) }
@@ -72,16 +72,14 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         uiState.skipItems(1)
         viewModel.postUiEvent(UiEvent.LoginClicked)
 
-        var result = uiState.awaitItem()
+        val result = uiState.awaitItem()
         expectThat(result.isLoginButtonEnabled).isFalse()
-        result = uiState.awaitItem()
-        expectThat(result.password).isBlank()
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
     @Test
-    fun `GIVEN valid credentials WHEN login clicked AND login error THEN show snackbar AND clear password`() = runTurbineTest {
+    fun `GIVEN valid credentials WHEN login clicked AND login error THEN show snackbar`() = runTurbineTest {
         val email = "email"
         val password = "password"
         val errorException = simpleErrorException()
@@ -98,8 +96,6 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         viewModel.postUiEvent(UiEvent.LoginClicked)
         uiState.skipItems(1)
 
-        val result = uiState.awaitItem()
-        expectThat(result.password).isBlank()
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
@@ -124,6 +120,6 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         result = uiState.awaitItem()
         expectThat(result.showPassword).isFalse()
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 }

@@ -52,7 +52,7 @@ class LoginViewModel(
         scope.launch {
             eventsRepository.postNavEvent(MainNavGraph.startDestination.toDestinationData())
         }
-        return state.copy(password = "", loginInProgress = false)
+        return state.copy(loginInProgress = false)
     }
 
     private fun handleLoginFailed(
@@ -62,7 +62,7 @@ class LoginViewModel(
         scope.launch {
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
         }
-        return state.copy(password = "", loginInProgress = false)
+        return state.copy(loginInProgress = false)
     }
 
     private fun handleEmailChanged(
