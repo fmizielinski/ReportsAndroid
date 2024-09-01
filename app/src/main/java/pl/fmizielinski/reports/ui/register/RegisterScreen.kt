@@ -141,7 +141,6 @@ fun LoginData(
         stringResource(it.messageResId)
     }
     ReportsTextField(
-        value = uiState.email,
         onValueChange = callbacks.onEmailChanged,
         modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth(),
@@ -159,7 +158,6 @@ fun LoginData(
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_password,
-        password = uiState.password,
         showPassword = uiState.showPassword,
         onPasswordChanged = callbacks.onPasswordChanged,
         onShowPasswordClicked = callbacks.onShowPasswordClicked,
@@ -169,7 +167,6 @@ fun LoginData(
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_passwordConfirmation,
-        password = uiState.passwordConfirmation,
         showPassword = uiState.showPassword,
         onPasswordChanged = callbacks.onPasswordConfirmationChanged,
         onShowPasswordClicked = callbacks.onShowPasswordClicked,
@@ -184,7 +181,6 @@ fun PasswordTextField(
     @StringRes labelResId: Int,
     focusRequester: FocusRequester,
     nextFocusRequester: FocusRequester,
-    password: String,
     showPassword: Boolean,
     onPasswordChanged: (String) -> Unit,
     onShowPasswordClicked: () -> Unit,
@@ -197,7 +193,6 @@ fun PasswordTextField(
     }
 
     ReportsTextField(
-        value = password,
         onValueChange = onPasswordChanged,
         modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth()
@@ -260,7 +255,6 @@ fun UserData(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     ReportsTextField(
-        value = uiState.name,
         onValueChange = callbacks.onNameChanged,
         modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth()
@@ -278,7 +272,6 @@ fun UserData(
         },
     )
     ReportsTextField(
-        value = uiState.surname,
         onValueChange = callbacks.onSurnameChanged,
         modifier = Modifier.padding(bottom = 16.dp)
             .fillMaxWidth()
@@ -337,16 +330,11 @@ fun RegisterScreenPreview() {
 
 private val previewUiState = UiState(
     loginData = UiState.LoginData(
-        email = "test@test.com",
-        password = "password",
-        passwordConfirmation = "password",
         showPassword = false,
         emailVerificationError = null,
         passwordVerificationError = null,
     ),
     userData = UiState.UserData(
-        name = "John",
-        surname = "Doe",
         nameVerificationError = null,
         surnameVerificationError = null,
     ),

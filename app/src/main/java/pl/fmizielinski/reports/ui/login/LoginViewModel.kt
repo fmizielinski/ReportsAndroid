@@ -41,8 +41,6 @@ class LoginViewModel(
         val isLoginButtonEnabled =
             state.email.isNotBlank() && state.password.isNotBlank() && !state.loginInProgress
         return UiState(
-            email = state.email,
-            password = state.password,
             isLoginButtonEnabled = isLoginButtonEnabled,
             showPassword = state.showPassword,
         )
@@ -54,7 +52,7 @@ class LoginViewModel(
         scope.launch {
             eventsRepository.postNavEvent(MainNavGraph.startDestination.toDestinationData())
         }
-        return state.copy(password = "", loginInProgress = false)
+        return state.copy(loginInProgress = false)
     }
 
     private fun handleLoginFailed(
@@ -64,7 +62,7 @@ class LoginViewModel(
         scope.launch {
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
         }
-        return state.copy(password = "", loginInProgress = false)
+        return state.copy(loginInProgress = false)
     }
 
     private fun handleEmailChanged(
@@ -108,8 +106,6 @@ class LoginViewModel(
     )
 
     data class UiState(
-        val email: String,
-        val password: String,
         val isLoginButtonEnabled: Boolean,
         val showPassword: Boolean,
     )

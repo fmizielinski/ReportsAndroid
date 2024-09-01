@@ -12,13 +12,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 
 @Composable
 fun ReportsTextField(
-    value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
@@ -30,17 +28,14 @@ fun ReportsTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     error: String? = null,
 ) {
-    var fieldRange by remember { mutableStateOf(TextRange.Zero) }
-    val fieldValue = TextFieldValue(
-        text = value,
-        selection = fieldRange,
-    )
+    var fieldValue by remember { mutableStateOf(TextFieldValue()) }
 
     TextField(
         value = fieldValue,
         onValueChange = {
+            fieldValue = it
             if (it.text.length <= limit) {
-                fieldRange = it.selection
+                fieldValue = it
                 onValueChange(it.text)
             }
         },

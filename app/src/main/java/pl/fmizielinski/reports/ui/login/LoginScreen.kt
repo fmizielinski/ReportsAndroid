@@ -77,8 +77,6 @@ fun LoginForm(
         ) {
             val keyboardController = LocalSoftwareKeyboardController.current
             Credentials(
-                email = uiState.email,
-                password = uiState.password,
                 showPassword = uiState.showPassword,
                 callbacks = callbacks,
             )
@@ -99,8 +97,6 @@ fun LoginForm(
 
 @Composable
 fun Credentials(
-    email: String,
-    password: String,
     showPassword: Boolean,
     callbacks: LoginCallbacks,
 ) {
@@ -113,7 +109,6 @@ fun Credentials(
     val focusRequester = remember { FocusRequester() }
 
     ReportsTextField(
-        value = email,
         onValueChange = callbacks.onEmailChanged,
         modifier = Modifier.padding(vertical = 4.dp)
             .fillMaxWidth(),
@@ -127,7 +122,6 @@ fun Credentials(
         limit = 254,
     )
     ReportsTextField(
-        value = password,
         onValueChange = callbacks.onPasswordChanged,
         modifier = Modifier.padding(vertical = 4.dp)
             .fillMaxWidth()
@@ -175,7 +169,7 @@ fun ShowPasswordButton(
                 contentDescription = stringResource(contentDescriptionResId),
                 tint = MaterialTheme.colorScheme.onSurface,
             )
-        }
+        },
     )
 }
 
@@ -199,8 +193,6 @@ fun LoginScreenPreview() {
 
 private val previewUiState =
     UiState(
-        email = "test@test.com",
-        password = "password",
         isLoginButtonEnabled = true,
         showPassword = false,
     )

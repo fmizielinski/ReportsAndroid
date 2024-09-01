@@ -73,16 +73,11 @@ class RegisterViewModel(
             ?.let { UiState.VerificationError(it.messageResId) }
         return UiState(
             loginData = UiState.LoginData(
-                email = state.email,
-                password = state.password,
-                passwordConfirmation = state.passwordConfirmation,
                 showPassword = state.showPassword,
                 emailVerificationError = emailVerificationError,
                 passwordVerificationError = passwordVerificationError,
             ),
             userData = UiState.UserData(
-                name = state.name,
-                surname = state.surname,
                 nameVerificationError = nameVerificationError,
                 surnameVerificationError = surnameVerificationError,
             ),
@@ -246,17 +241,12 @@ class RegisterViewModel(
         val isRegisterButtonEnabled: Boolean,
     ) {
         data class LoginData(
-            val email: String,
-            val password: String,
-            val passwordConfirmation: String,
             val showPassword: Boolean,
             val emailVerificationError: VerificationError?,
             val passwordVerificationError: VerificationError?,
         )
 
         data class UserData(
-            val name: String,
-            val surname: String,
             val nameVerificationError: VerificationError?,
             val surnameVerificationError: VerificationError?,
         )
