@@ -16,7 +16,7 @@ import pl.fmizielinski.reports.domain.mapper.parseErrorBody
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
 import pl.fmizielinski.reports.domain.model.RegistrationData
 import pl.fmizielinski.reports.domain.model.toRegisterRequestModel
-import pl.fmizielinski.reports.domain.usecase.BaseUseCase
+import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory

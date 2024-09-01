@@ -4,7 +4,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.ErrorException
-import pl.fmizielinski.reports.domain.error.UnauthorizedException
 import pl.fmizielinski.reports.domain.model.Report
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel

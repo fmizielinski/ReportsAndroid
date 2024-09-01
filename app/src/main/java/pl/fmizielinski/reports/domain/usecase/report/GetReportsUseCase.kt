@@ -3,11 +3,11 @@ package pl.fmizielinski.reports.domain.usecase.report
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.error.ErrorException
-import pl.fmizielinski.reports.domain.error.UnauthorizedException
+import pl.fmizielinski.reports.domain.error.UnauthorizedErrorException
 import pl.fmizielinski.reports.domain.mapper.DataFormatter
 import pl.fmizielinski.reports.domain.mapper.toReports
 import pl.fmizielinski.reports.domain.model.Report
-import pl.fmizielinski.reports.domain.usecase.BaseUseCase
+import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory
@@ -27,7 +27,7 @@ class GetReportsUseCase(
 
     private fun HttpException.toErrorException(): ErrorException {
         return when (code()) {
-            401 -> UnauthorizedException(cause = this)
+            401 -> UnauthorizedErrorException(cause = this)
             else -> genericErrorException(this)
         }
     }

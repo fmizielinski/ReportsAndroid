@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase
+package pl.fmizielinski.reports.domain.usecase.base
 
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.error.ErrorException

@@ -42,4 +42,14 @@ class EventsRepositoryTest {
             cancel()
         }
     }
+
+    @Test
+    fun postLogoutEvent() = runTest {
+        eventsRepository.logoutEvent.test {
+            eventsRepository.postLogoutEvent()
+
+            expectThat(awaitItem()) isEqualTo Unit
+            cancel()
+        }
+    }
 }

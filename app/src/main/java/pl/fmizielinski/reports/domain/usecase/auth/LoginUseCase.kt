@@ -8,7 +8,7 @@ import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
-import pl.fmizielinski.reports.domain.usecase.BaseUseCase
+import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory

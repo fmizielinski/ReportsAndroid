@@ -17,7 +17,7 @@ class CompositeErrorException(
     val exceptions: List<SimpleErrorException>,
 ) : ErrorException()
 
-class UnauthorizedException(
+class UnauthorizedErrorException(
     override val cause: Throwable? = null,
 ) : ErrorException()
 

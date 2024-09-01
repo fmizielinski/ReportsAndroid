@@ -132,8 +132,8 @@ koverReport {
                 "*MainViewModelKt*",
                 "*ReportsApplication*",
                 "*ReportsDatabase*",
-                "*Serializer*",
                 "*Screen*",
+                "*Serializer*",
             )
             packages(
                 "*.model",
@@ -141,6 +141,7 @@ koverReport {
                 "pl.fmizielinski.reports.data.db.dao",
                 "pl.fmizielinski.reports.di",
                 "pl.fmizielinski.reports.domain.error",
+                "pl.fmizielinski.reports.domain.usecase.base",
                 "pl.fmizielinski.reports.ui.base",
                 "pl.fmizielinski.reports.ui.common.composables",
                 "pl.fmizielinski.reports.ui.theme",

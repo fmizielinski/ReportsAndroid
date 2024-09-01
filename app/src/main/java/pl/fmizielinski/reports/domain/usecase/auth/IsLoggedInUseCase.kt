@@ -2,7 +2,7 @@ package pl.fmizielinski.reports.domain.usecase.auth
 
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.db.dao.TokenDao
-import pl.fmizielinski.reports.domain.usecase.BaseUseCase
+import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 
 @Factory
 class IsLoggedInUseCase(

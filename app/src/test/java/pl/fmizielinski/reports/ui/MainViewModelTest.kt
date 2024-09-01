@@ -7,6 +7,7 @@ import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -16,6 +17,7 @@ import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
+import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.model.TopBarAction
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
@@ -28,11 +30,13 @@ import strikt.assertions.isTrue
 class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     private val eventsRepository: EventsRepository = EventsRepository()
     private val isLoggedInUseCase: IsLoggedInUseCase = mockk()
+    private val logoutUseCase: LogoutUseCase = mockk()
 
     override fun createViewModel(dispatcher: TestDispatcher): MainViewModel = MainViewModel(
         dispatcher = dispatcher,
         eventsRepository = eventsRepository,
         isLoggedInUseCase = isLoggedInUseCase,
+        logoutUseCase = logoutUseCase,
     )
 
     @Test
@@ -73,6 +77,22 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         expectThat(navigationEvents.awaitItem().isPresent).isFalse()
 
         navigationEvents.cancel()
+    }
+
+    @Test
+    fun `WHEN Logout event is posted THEN navigate to AuthNavGraph start destination AND Show Snackbar`() = runTurbineTest {
+        coJustRun { logoutUseCase() }
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
+
+        context.launch { eventsRepository.postLogoutEvent() }
+        scheduler.advanceUntilIdle()
+
+        expectThat(navigationEvents.awaitItem().get()) isEqualTo AuthNavGraph.startDestination.toDestinationData()
+
+        navigationEvents.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
     }
 
     @Test
@@ -171,7 +191,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `GIVEN user is not logged in WHEN app starts THEN navigate to AuthNavGraph start destination`() = runTurbineTest {
+    fun `GIVEN user is not logged in WHEN app starts THEN Don't navigate further`() = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
