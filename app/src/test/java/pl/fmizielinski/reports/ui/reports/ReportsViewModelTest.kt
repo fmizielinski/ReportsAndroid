@@ -6,7 +6,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.base.BaseViewModelTest
-import pl.fmizielinski.reports.domain.usecase.auth.report.GetReportsUseCase
+import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
 import strikt.api.expectThat
 import strikt.assertions.hasSize

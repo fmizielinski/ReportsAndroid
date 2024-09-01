@@ -3,18 +3,22 @@ package pl.fmizielinski.reports.domain.repository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.core.annotation.Single
+import pl.fmizielinski.reports.data.network.interceptor.UnauthorizedHandler
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import java.util.Optional
 
 @Single
-class EventsRepository {
+class EventsRepository : UnauthorizedHandler {
 
     private val _showSnackBar = MutableSharedFlow<SnackBarData>()
     val showSnackBar: SharedFlow<SnackBarData> = _showSnackBar
 
     private val _navigationEvent = MutableSharedFlow<Optional<DestinationData>>()
     val navigationEvent: SharedFlow<Optional<DestinationData>> = _navigationEvent
+
+    private val _logoutEvent = MutableSharedFlow<Unit>()
+    val logoutEvent: SharedFlow<Unit> = _logoutEvent
 
     suspend fun postSnackBarEvent(data: SnackBarData) {
         _showSnackBar.emit(data)
@@ -26,5 +30,9 @@ class EventsRepository {
 
     suspend fun postNavUpEvent() {
         _navigationEvent.emit(Optional.empty())
+    }
+
+    override suspend fun postLogoutEvent() {
+        _logoutEvent.emit(Unit)
     }
 }

@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.mapper.DataFormatter
+import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.data.reportModel
 import pl.fmizielinski.reports.fixtures.data.reportsResponseModel
 import strikt.api.expectThat
