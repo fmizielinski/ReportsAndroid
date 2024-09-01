@@ -16,7 +16,7 @@ data class DestinationData(
         }
         return if (isStartDestination) {
             NavOptions.Builder()
-                .setPopUpTo(destination.route, inclusive = true)
+                .setPopUpTo(ReportsNavGraph.route, inclusive = true)
                 .build()
         } else {
             null
