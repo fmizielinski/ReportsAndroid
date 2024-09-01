@@ -41,8 +41,6 @@ class LoginViewModel(
         val isLoginButtonEnabled =
             state.email.isNotBlank() && state.password.isNotBlank() && !state.loginInProgress
         return UiState(
-            email = state.email,
-            password = state.password,
             isLoginButtonEnabled = isLoginButtonEnabled,
             showPassword = state.showPassword,
         )
@@ -108,8 +106,6 @@ class LoginViewModel(
     )
 
     data class UiState(
-        val email: String,
-        val password: String,
         val isLoginButtonEnabled: Boolean,
         val showPassword: Boolean,
     )
