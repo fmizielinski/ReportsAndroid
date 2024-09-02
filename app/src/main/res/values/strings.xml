@@ -2,7 +2,9 @@
     <string name="app_name">Reports</string>
 
     <string name="common_button_back">Back</string>
+    <string name="common_button_createReport">Create report</string>
     <string name="common_button_register">Sign up</string>
+    <string name="common_button_saveReport">Save report</string>
     <string name="common_error_unauthorized">You have been logged out</string>
     <string name="common_error_unknown">Unknown</string>
     <string name="createReportScreen_label_description">Description</string>
