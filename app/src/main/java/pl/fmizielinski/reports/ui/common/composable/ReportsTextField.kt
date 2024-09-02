@@ -1,6 +1,8 @@
 package pl.fmizielinski.reports.ui.common.composable
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
@@ -10,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
@@ -27,6 +30,7 @@ fun ReportsTextField(
     limit: Int = Int.MAX_VALUE,
     trailingIcon: @Composable (() -> Unit)? = null,
     error: String? = null,
+    supportingText: String? = null,
 ) {
     var fieldValue by remember { mutableStateOf(TextFieldValue()) }
 
@@ -47,6 +51,18 @@ fun ReportsTextField(
         visualTransformation = visualTransformation,
         trailingIcon = trailingIcon,
         isError = error != null,
-        supportingText = { error?.let { Text(it) } },
+        supportingText = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                supportingText?.let {
+                    Text(
+                        text = it,
+                        modifier = Modifier.align(Alignment.End),
+                    )
+                }
+                error?.let { Text(it) }
+            }
+        },
     )
 }

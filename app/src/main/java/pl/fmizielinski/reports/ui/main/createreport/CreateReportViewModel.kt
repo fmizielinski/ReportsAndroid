@@ -20,7 +20,12 @@ class CreateReportViewModel(
         }
     }
 
-    override fun mapState(state: State): UiState = UiState()
+    override fun mapState(state: State): UiState {
+        return UiState(
+            titleLength = state.title.length,
+            descriptionLength = state.description.length,
+        )
+    }
 
     // region handle Event
 
@@ -39,7 +44,10 @@ class CreateReportViewModel(
         val description: String = "",
     )
 
-    class UiState
+    data class UiState(
+        val titleLength: Int,
+        val descriptionLength: Int,
+    )
 
     sealed interface Event
 

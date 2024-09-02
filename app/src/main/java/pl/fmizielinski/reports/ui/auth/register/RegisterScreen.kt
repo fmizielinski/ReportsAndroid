@@ -33,11 +33,11 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.navigation.graph.AuthGraph
-import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
-import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @Destination<AuthGraph>(route = "Register")

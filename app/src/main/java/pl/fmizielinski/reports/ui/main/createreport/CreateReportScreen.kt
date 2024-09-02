@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.BuildConfig
@@ -43,22 +45,37 @@ fun ReportContent(
     uiState: UiState,
     callbacks: CreateReportCallbacks,
 ) {
+    val titleSupportingText = stringResource(
+        R.string.common_label_characterCounter,
+        uiState.titleLength,
+        BuildConfig.REPORT_TITLE_LENGTH,
+    )
+
+    val descriptionSupportingText = stringResource(
+        R.string.common_label_characterCounter,
+        uiState.descriptionLength,
+        BuildConfig.REPORT_DESCRIPTION_LENGTH,
+    )
+
     Column(
         modifier = Modifier.fillMaxSize()
             .padding(Margin),
     ) {
         ReportsTextField(
             onValueChange = callbacks.onTitleChanged,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .padding(bottom = 16.dp),
             singleLine = true,
             labelResId = R.string.createReportScreen_label_title,
             limit = BuildConfig.REPORT_TITLE_LENGTH,
+            supportingText = titleSupportingText,
         )
         ReportsTextField(
             onValueChange = callbacks.onDescriptionChanged,
             modifier = Modifier.fillMaxWidth(),
             labelResId = R.string.createReportScreen_label_description,
             limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
+            supportingText = descriptionSupportingText,
         )
     }
 }
@@ -79,7 +96,10 @@ fun CreateReportScreenPreview() {
     }
 }
 
-private val previewUiState = UiState()
+private val previewUiState = UiState(
+    titleLength = 12,
+    descriptionLength = 120,
+)
 
 private val emptyCallbacks = CreateReportCallbacks(
     onTitleChanged = {},
