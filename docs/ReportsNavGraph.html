@@ -16,10 +16,11 @@ reports(["ReportsGraph"]) --- main(["MainGraph"])
 auth(["AuthGraph"]) -- "start" --- Login("LoginScreen")
 auth(["AuthGraph"]) --- Register("RegisterScreen")
 main(["MainGraph"]) -- "start" --- Reports("ReportsScreen")
+main(["MainGraph"]) --- CreateReport("CreateReportScreen")
 
 
 classDef destination fill:#5383EC,stroke:#ffffff;
-class Login,Register,Reports destination;
+class Login,Register,CreateReport,Reports destination;
 classDef navgraph fill:#63BC76,stroke:#ffffff;
 class auth,main,reports,auth,main navgraph;
 

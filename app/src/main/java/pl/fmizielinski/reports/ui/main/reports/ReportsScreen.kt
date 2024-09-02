@@ -155,7 +155,7 @@ fun CommentsIndicator(
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_4)
+@Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 fun ReportsScreenPreview() {
     ReportsTheme {
@@ -163,7 +163,7 @@ fun ReportsScreenPreview() {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_4)
+@Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 fun ReportsScreenEmptyPreview() {
     ReportsTheme {

@@ -180,7 +180,7 @@ data class LoginCallbacks(
     val onShowPasswordClicked: () -> Unit = {},
 )
 
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_4)
+@Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 fun LoginScreenPreview() {
     ReportsTheme {

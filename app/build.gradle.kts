@@ -23,7 +23,21 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "HOST", "${project.properties["hostDev"]}")
+        buildConfigField(
+            type = "String",
+            name = "HOST",
+            value = "${project.properties["hostDev"]}",
+        )
+        buildConfigField(
+            type = "int",
+            name = "REPORT_DESCRIPTION_LENGTH",
+            value = "${project.properties["reportDescriptionLength"]}",
+        )
+        buildConfigField(
+            type = "int",
+            name = "REPORT_TITLE_LENGTH",
+            value = "${project.properties["reportTitleLength"]}",
+        )
     }
 
     buildTypes {

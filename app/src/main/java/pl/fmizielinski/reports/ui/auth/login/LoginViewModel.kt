@@ -9,11 +9,11 @@ import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
-import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.Event
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.State
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiState
+import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 
 @KoinViewModel
@@ -46,7 +46,7 @@ class LoginViewModel(
         )
     }
 
-    // region handleEvent
+    // region handle Event
 
     private fun handleLoginSuccess(state: State): State {
         scope.launch {
@@ -64,6 +64,10 @@ class LoginViewModel(
         }
         return state.copy(loginInProgress = false)
     }
+
+    // endregion handle Event
+
+    // region handle UiEvent
 
     private fun handleEmailChanged(
         state: State,
@@ -96,7 +100,7 @@ class LoginViewModel(
         return state.copy(showPassword = !state.showPassword)
     }
 
-    // endregion handleEvent
+    // endregion handle UiEvent
 
     data class State(
         val email: String = "",

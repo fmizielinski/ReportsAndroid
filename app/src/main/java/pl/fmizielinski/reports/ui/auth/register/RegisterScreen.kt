@@ -317,7 +317,7 @@ private const val PASSWORD_CONFIRMATION_FOCUS_REQUESTER = "passwordConfirmationF
 private const val NAME_FOCUS_REQUESTER = "nameFocusRequester"
 private const val SURNAME_FOCUS_REQUESTER = "surnameFocusRequester"
 
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_4)
+@Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 fun RegisterScreenPreview() {
     ReportsTheme {

@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.ui
 
 import androidx.annotation.StringRes
+import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
 import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
@@ -85,6 +86,7 @@ class MainViewModel(
             graph.startDestination.baseRoute == state.currentDestination
         }
         val title = when (state.currentDestination) {
+            CreateReportDestination.baseRoute -> R.string.createReportScreen_title
             RegisterDestination.baseRoute -> R.string.registerScreen_title
             ReportsDestination.baseRoute -> R.string.reportsScreen_title
             else -> null
