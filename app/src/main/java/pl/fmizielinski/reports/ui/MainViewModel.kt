@@ -1,7 +1,9 @@
 package pl.fmizielinski.reports.ui
 
+import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
+import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.ReportsNavGraph
@@ -82,9 +84,15 @@ class MainViewModel(
         val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
+        val title = when (state.currentDestination) {
+            RegisterDestination.baseRoute -> R.string.registerScreen_title
+            ReportsDestination.baseRoute -> R.string.reportsScreen_title
+            else -> null
+        }
         return UiState(
             actions = actions,
             isBackVisible = isBackVisible,
+            title = title,
         )
     }
 
@@ -213,6 +221,7 @@ class MainViewModel(
     data class UiState(
         val actions: List<TopBarAction>,
         val isBackVisible: Boolean,
+        @StringRes val title: Int?,
     )
 
     sealed interface Event {
