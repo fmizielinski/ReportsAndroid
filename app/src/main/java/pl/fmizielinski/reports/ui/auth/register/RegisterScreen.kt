@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.register
+package pl.fmizielinski.reports.ui.auth.register
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
@@ -36,8 +36,8 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.navigation.graph.AuthGraph
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiState
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @Destination<AuthGraph>(route = "Register")

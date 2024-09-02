@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.login
+package pl.fmizielinski.reports.ui.auth.login
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +34,8 @@ import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
-import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
-import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.graph.AuthGraph
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 

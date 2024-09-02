@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.reports
+package pl.fmizielinski.reports.ui.main.reports
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -28,8 +28,8 @@ import com.ramcosta.composedestinations.annotation.Destination
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
-import pl.fmizielinski.reports.ui.reports.ReportsViewModel.UiEvent
-import pl.fmizielinski.reports.ui.reports.ReportsViewModel.UiState
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 

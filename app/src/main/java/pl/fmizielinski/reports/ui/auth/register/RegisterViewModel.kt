@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.register
+package pl.fmizielinski.reports.ui.auth.register
 
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
@@ -20,14 +20,14 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.RegisterUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.Event
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.State
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.State.VerificationError.Email
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.State.VerificationError.Name
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.State.VerificationError.Password
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.State.VerificationError.Surname
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiState
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.Event
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.State
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.State.VerificationError.Email
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.State.VerificationError.Name
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.State.VerificationError.Password
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.State.VerificationError.Surname
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiState
 
 @KoinViewModel
 class RegisterViewModel(

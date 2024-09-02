@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.login
+package pl.fmizielinski.reports.ui.auth.login
 
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
@@ -10,10 +10,10 @@ import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
-import pl.fmizielinski.reports.ui.login.LoginViewModel.Event
-import pl.fmizielinski.reports.ui.login.LoginViewModel.State
-import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
-import pl.fmizielinski.reports.ui.login.LoginViewModel.UiState
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.Event
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.State
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 
 @KoinViewModel

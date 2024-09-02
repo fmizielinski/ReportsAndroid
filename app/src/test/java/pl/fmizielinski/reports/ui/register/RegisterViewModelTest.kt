@@ -23,7 +23,8 @@ import pl.fmizielinski.reports.domain.usecase.auth.RegisterUseCase
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.fixtures.domain.registrationData
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
