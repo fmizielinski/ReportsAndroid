@@ -1,8 +1,5 @@
 package pl.fmizielinski.reports.domain.model
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class Report(
     val id: Int,
     val title: String,

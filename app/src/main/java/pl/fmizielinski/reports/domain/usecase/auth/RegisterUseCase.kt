@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.domain.usecase.auth
 
-import androidx.annotation.StringRes
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.db.dao.TokenDao
@@ -10,8 +9,8 @@ import pl.fmizielinski.reports.data.network.auth.model.RegisterResponseModel
 import pl.fmizielinski.reports.domain.error.CompositeErrorException
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.ErrorReasons
-import pl.fmizielinski.reports.domain.error.NetworkError
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
+import pl.fmizielinski.reports.domain.error.errorException
 import pl.fmizielinski.reports.domain.mapper.parseErrorBody
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
 import pl.fmizielinski.reports.domain.model.RegistrationData
@@ -23,9 +22,8 @@ import retrofit2.HttpException
 class RegisterUseCase(
     private val authService: AuthService,
     private val tokenDao: TokenDao,
-): BaseUseCase() {
+) : BaseUseCase() {
 
-    @Suppress("TooGenericExceptionCaught")
     @Throws(ErrorException::class)
     suspend operator fun invoke(data: RegistrationData) {
         val requestModel = data.toRegisterRequestModel()
@@ -39,7 +37,6 @@ class RegisterUseCase(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     @Throws(ErrorException::class)
     private suspend fun register(requestModel: RegisterRequestModel): RegisterResponseModel {
         return catchHttpExceptions(
@@ -89,27 +86,10 @@ class RegisterUseCase(
                     else -> genericErrorException(this)
                 }
             }
-            when {
-                exceptions.size == 1 -> exceptions.first()
-                else -> CompositeErrorException(exceptions)
-            }
+            exceptions.asErrorException()
         } else {
             genericErrorException(this)
         }
-    }
-
-    private fun NetworkError.errorException(
-        @StringRes uiMessage: Int,
-        exception: HttpException,
-        isVerificationError: Boolean = false,
-    ): SimpleErrorException {
-        return SimpleErrorException(
-            uiMessage = uiMessage,
-            code = code,
-            message = message,
-            cause = exception,
-            isVerificationError = isVerificationError,
-        )
     }
 
     override fun genericErrorException(cause: Throwable): SimpleErrorException {

@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.domain.usecase.base
 
 import pl.fmizielinski.reports.R
+import pl.fmizielinski.reports.domain.error.CompositeErrorException
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import retrofit2.HttpException
@@ -26,5 +27,12 @@ abstract class BaseUseCase {
             message = "Unknown error",
             cause = cause,
         )
+    }
+
+    protected fun List<SimpleErrorException>.asErrorException(): ErrorException {
+        return when {
+            size == 1 -> first()
+            else -> CompositeErrorException(this)
+        }
     }
 }

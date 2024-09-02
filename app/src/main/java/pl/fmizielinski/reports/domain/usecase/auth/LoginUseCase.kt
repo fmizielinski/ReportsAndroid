@@ -33,7 +33,6 @@ class LoginUseCase(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     @Throws(SimpleErrorException::class)
     private suspend fun login(credentials: String): LoginResponseModel {
         return catchHttpExceptions(

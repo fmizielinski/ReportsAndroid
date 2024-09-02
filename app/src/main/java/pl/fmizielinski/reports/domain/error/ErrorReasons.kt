@@ -13,4 +13,13 @@ object ErrorReasons {
             const val PASSWORD_EMPTY = "auth.register.validation.password-empty"
         }
     }
+
+    object Report {
+
+        object Create {
+            const val INVALID_DATA = "report.create.invalid-data"
+            const val TITLE_EMPTY = "report.create.validation.title-empty"
+            const val DESCRIPTION_EMPTY = "report.create.validation.description-empty"
+        }
+    }
 }
