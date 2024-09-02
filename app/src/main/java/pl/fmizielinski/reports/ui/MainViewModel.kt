@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
@@ -61,7 +62,9 @@ class MainViewModel(
             eventsRepository.showSnackBar.collect(::postSnackBarEvent)
         }
         scope.launch {
-            eventsRepository.logoutEvent.collect { postLogoutEvent() }
+            eventsRepository.globalEvent
+                .filterIsInstance<EventsRepository.GlobalEvent.Logout>()
+                .collect { postLogoutEvent() }
         }
     }
 
@@ -180,8 +183,9 @@ class MainViewModel(
         scope.launch {
             when (state.currentDestination) {
                 CreateReportDestination.baseRoute -> {
-                    // TODO handle save report
+                    eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
                 }
+
                 ReportsDestination.baseRoute -> {
                     postNavigationEvent(CreateReportDestination.toDestinationData())
                 }
@@ -238,10 +242,12 @@ class MainViewModel(
             icon = R.drawable.ic_save_24dp,
             contentDescription = R.string.common_button_saveReport,
         )
+
         ReportsDestination.baseRoute -> UiState.FabConfig(
             icon = R.drawable.ic_add_24dp,
             contentDescription = R.string.common_button_createReport,
         )
+
         else -> null
     }
 

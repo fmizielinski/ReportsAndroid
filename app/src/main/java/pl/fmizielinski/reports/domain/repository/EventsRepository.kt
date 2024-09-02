@@ -17,8 +17,8 @@ class EventsRepository : UnauthorizedHandler {
     private val _navigationEvent = MutableSharedFlow<Optional<DestinationData>>()
     val navigationEvent: SharedFlow<Optional<DestinationData>> = _navigationEvent
 
-    private val _logoutEvent = MutableSharedFlow<Unit>()
-    val logoutEvent: SharedFlow<Unit> = _logoutEvent
+    private val _globalEvent = MutableSharedFlow<GlobalEvent>()
+    val globalEvent: SharedFlow<GlobalEvent> = _globalEvent
 
     suspend fun postSnackBarEvent(data: SnackBarData) {
         _showSnackBar.emit(data)
@@ -33,6 +33,15 @@ class EventsRepository : UnauthorizedHandler {
     }
 
     override suspend fun postLogoutEvent() {
-        _logoutEvent.emit(Unit)
+        postGlobalEvent(GlobalEvent.Logout)
+    }
+
+    suspend fun postGlobalEvent(event: GlobalEvent) {
+        _globalEvent.emit(event)
+    }
+
+    sealed interface GlobalEvent {
+        data object Logout : GlobalEvent
+        data object SaveReport : GlobalEvent
     }
 }

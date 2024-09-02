@@ -39,11 +39,13 @@ class CreateReportUseCase(
                     ErrorReasons.Report.Create.TITLE_EMPTY -> error.errorException(
                         uiMessage = R.string.createReportScreen_error_titleEmpty,
                         exception = this,
+                        isVerificationError = true,
                     )
 
                     ErrorReasons.Report.Create.DESCRIPTION_EMPTY -> error.errorException(
                         uiMessage = R.string.createReportScreen_error_descriptionEmpty,
                         exception = this,
+                        isVerificationError = true,
                     )
 
                     else -> genericErrorException(this)

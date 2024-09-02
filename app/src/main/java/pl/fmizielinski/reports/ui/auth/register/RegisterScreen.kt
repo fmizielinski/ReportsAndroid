@@ -137,9 +137,7 @@ fun LoginData(
     passwordConfirmationFocusRequester: FocusRequester,
     nameFocusRequester: FocusRequester,
 ) {
-    val passwordError = uiState.passwordVerificationError?.let {
-        stringResource(it.messageResId)
-    }
+    val passwordError = uiState.passwordVerificationError?.let { stringResource(it) }
     ReportsTextField(
         onValueChange = callbacks.onEmailChanged,
         modifier = Modifier.padding(bottom = 16.dp)
@@ -152,9 +150,7 @@ fun LoginData(
         keyboardActions = KeyboardActions { passwordFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
-        error = uiState.emailVerificationError?.let {
-            stringResource(it.messageResId)
-        },
+        error = uiState.emailVerificationError?.let { stringResource(it) },
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_password,
@@ -267,9 +263,7 @@ fun UserData(
         keyboardActions = KeyboardActions { surnameFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
-        error = uiState.nameVerificationError?.let {
-            stringResource(it.messageResId)
-        },
+        error = uiState.nameVerificationError?.let { stringResource(it) },
     )
     ReportsTextField(
         onValueChange = callbacks.onSurnameChanged,
@@ -287,9 +281,7 @@ fun UserData(
         },
         singleLine = true,
         limit = 254,
-        error = uiState.surnameVerificationError?.let {
-            stringResource(it.messageResId)
-        },
+        error = uiState.surnameVerificationError?.let { stringResource(it) },
     )
 }
 
