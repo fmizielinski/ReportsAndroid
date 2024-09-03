@@ -8,7 +8,7 @@ import java.util.Locale
 @Factory
 class DataFormatter(locale: Locale = Locale.getDefault()) {
 
-    private val formatter by lazy { DateTimeFormatter.ofPattern("dd LLL", locale) }
+    private val formatter by lazy { DateTimeFormatter.ofPattern("d LLL", locale) }
 
     fun formatReportListDate(date: LocalDateTime): String {
         return formatter.format(date)

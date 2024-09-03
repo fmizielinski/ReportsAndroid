@@ -69,6 +69,7 @@ fun ReportContent(
             labelResId = R.string.createReportScreen_label_title,
             limit = BuildConfig.REPORT_TITLE_LENGTH,
             supportingText = titleSupportingText,
+            error = uiState.titleVerificationError?.let { stringResource(it) },
         )
         ReportsTextField(
             onValueChange = callbacks.onDescriptionChanged,
@@ -76,6 +77,7 @@ fun ReportContent(
             labelResId = R.string.createReportScreen_label_description,
             limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
             supportingText = descriptionSupportingText,
+            error = uiState.descriptionVerificationError?.let { stringResource(it) },
         )
     }
 }
@@ -99,6 +101,8 @@ fun CreateReportScreenPreview() {
 private val previewUiState = UiState(
     titleLength = 12,
     descriptionLength = 120,
+    titleVerificationError = null,
+    descriptionVerificationError = null,
 )
 
 private val emptyCallbacks = CreateReportCallbacks(

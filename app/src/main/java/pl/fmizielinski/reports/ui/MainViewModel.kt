@@ -66,6 +66,13 @@ class MainViewModel(
                 .filterIsInstance<EventsRepository.GlobalEvent.Logout>()
                 .collect { postLogoutEvent() }
         }
+        scope.launch {
+            eventsRepository.globalEvent
+                .filterIsInstance<EventsRepository.GlobalEvent.SaveReportFailed>()
+                .collect {
+                    postEvent(Event.ChangeFabVisibility(isHidden = false))
+                }
+        }
     }
 
     override fun handleEvent(state: State, event: Event): State {
@@ -74,6 +81,7 @@ class MainViewModel(
             is Event.CheckIfLoggedIn -> handleCheckIfLoggedIn(state)
             is Event.Logout -> handleLogout(state)
             is Event.LogoutSuccess -> handleLogoutSuccess(state)
+            is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.RegisterClicked -> handleRegisterClicked(state)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -94,7 +102,7 @@ class MainViewModel(
             actions = actions,
             isBackVisible = isBackVisible,
             title = getTitle(state.currentDestination),
-            fabConfig = getFabConfig(state.currentDestination),
+            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
         )
     }
 
@@ -142,6 +150,10 @@ class MainViewModel(
         return state
     }
 
+    private fun handleChangeFabVisibility(state: State, event: Event.ChangeFabVisibility): State {
+        return state.copy(isFabHidden = event.isHidden)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -176,13 +188,14 @@ class MainViewModel(
                 setInitialLoadingFinished()
             }
         }
-        return state.copy(currentDestination = event.route)
+        return state.copy(currentDestination = event.route, isFabHidden = false)
     }
 
     private fun handleFabClicked(state: State): State {
         scope.launch {
             when (state.currentDestination) {
                 CreateReportDestination.baseRoute -> {
+                    postEvent(Event.ChangeFabVisibility(isHidden = true))
                     eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
                 }
 
@@ -237,23 +250,26 @@ class MainViewModel(
         else -> null
     }
 
-    private fun getFabConfig(currentDestination: String?) = when (currentDestination) {
-        CreateReportDestination.baseRoute -> UiState.FabConfig(
-            icon = R.drawable.ic_save_24dp,
-            contentDescription = R.string.common_button_saveReport,
-        )
+    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
+        return when (currentDestination) {
+            CreateReportDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_save_24dp,
+                contentDescription = R.string.common_button_saveReport,
+            )
 
-        ReportsDestination.baseRoute -> UiState.FabConfig(
-            icon = R.drawable.ic_add_24dp,
-            contentDescription = R.string.common_button_createReport,
-        )
+            ReportsDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_add_24dp,
+                contentDescription = R.string.common_button_createReport,
+            )
 
-        else -> null
+            else -> null
+        }
     }
 
     data class State(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
+        val isFabHidden: Boolean = false,
     )
 
     data class UiState(
@@ -274,6 +290,7 @@ class MainViewModel(
         data object CheckIfLoggedIn : Event
         data object Logout : Event
         data object LogoutSuccess : Event
+        data class ChangeFabVisibility(val isHidden: Boolean) : Event
     }
 
     sealed interface UiEvent : Event {

@@ -43,5 +43,6 @@ class EventsRepository : UnauthorizedHandler {
     sealed interface GlobalEvent {
         data object Logout : GlobalEvent
         data object SaveReport : GlobalEvent
+        data object SaveReportFailed : GlobalEvent
     }
 }
