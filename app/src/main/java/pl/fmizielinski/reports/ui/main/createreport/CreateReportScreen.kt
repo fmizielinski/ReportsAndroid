@@ -4,9 +4,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,6 +53,11 @@ fun ReportContent(
     uiState: UiState,
     callbacks: CreateReportCallbacks,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val descriptionConfirmationFocusRequester = remember {
+        FocusRequester()
+    }
+
     val titleSupportingText = stringResource(
         R.string.common_label_characterCounter,
         uiState.titleLength,
@@ -67,14 +80,27 @@ fun ReportContent(
                 .padding(bottom = 16.dp),
             singleLine = true,
             labelResId = R.string.createReportScreen_label_title,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Next,
+            ),
+            keyboardActions = KeyboardActions {
+                descriptionConfirmationFocusRequester.requestFocus()
+            },
             limit = BuildConfig.REPORT_TITLE_LENGTH,
             supportingText = titleSupportingText,
             error = uiState.titleVerificationError?.let { stringResource(it) },
         )
         ReportsTextField(
             onValueChange = callbacks.onDescriptionChanged,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .focusRequester(descriptionConfirmationFocusRequester),
             labelResId = R.string.createReportScreen_label_description,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Done,
+            ),
+            keyboardActions = KeyboardActions { keyboardController?.hide() },
             limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
             supportingText = descriptionSupportingText,
             error = uiState.descriptionVerificationError?.let { stringResource(it) },
