@@ -1,34 +1,42 @@
 package pl.fmizielinski.reports.ui
 
 import app.cash.turbine.testIn
+import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
+import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
 import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import io.mockk.coEvery
 import io.mockk.coJustRun
+import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
+import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.model.TopBarAction
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
-import strikt.assertions.isTrue
+import strikt.assertions.isNull
 
 @ExperimentalCoroutinesApi
 class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
-    private val eventsRepository: EventsRepository = EventsRepository()
+    private val eventsRepository: EventsRepository = spyk { EventsRepository() }
     private val isLoggedInUseCase: IsLoggedInUseCase = mockk()
     private val logoutUseCase: LogoutUseCase = mockk()
 
@@ -95,55 +103,67 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.cancelAndIgnoreRemainingEvents()
     }
 
-    @Test
-    fun `WHEN Current destination is 'LoginScreen' THEN hide back button`() = runTurbineTest {
+    @ParameterizedTest
+    @MethodSource("destinationBackButton")
+    fun `WHEN Destination changed  THEN change back button visibility`(
+        destination: String,
+        isBackVisible: Boolean,
+    ) = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute)) }
+        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.isBackVisible).isFalse()
+        expectThat(result.isBackVisible) isEqualTo isBackVisible
 
         uiState.cancel()
         navigationEvents.cancel()
     }
 
-    @Test
-    fun `WHEN Current destination is 'LoginScreen' THEN show register action`() = runTurbineTest {
+    @ParameterizedTest
+    @MethodSource("destinationActions")
+    fun `WHEN Destination changed THEN change actions`(
+        destination: String,
+        action: List<TopBarAction>,
+    ) = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute)) }
+        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.actions).isEqualTo(listOf(TopBarAction.REGISTER))
+        expectThat(result.actions) isEqualTo action
 
         uiState.cancel()
         navigationEvents.cancel()
     }
 
-    @Test
-    fun `WHEN Current destination is 'RegisterScreen' THEN show back button`() = runTurbineTest {
+    @ParameterizedTest
+    @MethodSource("destinationFabConfig")
+    fun `WHEN Destination changed THEN change fab configuration`(
+        destination: String,
+        fabConfig: UiState.FabConfig?,
+    ) = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(RegisterDestination.baseRoute)) }
+        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.isBackVisible).isTrue()
+        expectThat(result.fabConfig) isEqualTo fabConfig
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -203,5 +223,116 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
 
         navigationEvents.cancel()
         uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `GIVEN Current destination is Reports WHEN fab clicked THEN Navigate to CreateReport`() = runTurbineTest {
+        coEvery { isLoggedInUseCase() } returns true
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
+            viewModel.postUiEvent(UiEvent.NavDestinationChanged(ReportsDestination.baseRoute))
+            navigationEvents.skipItems(1)
+            viewModel.postUiEvent(UiEvent.FabClicked)
+            navigationEvents.skipItems(1)
+        }
+        scheduler.advanceUntilIdle()
+
+        expectThat(navigationEvents.awaitItem().get()) isEqualTo CreateReportDestination.toDestinationData()
+
+        navigationEvents.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `GIVEN Current destination is CreateReport WHEN fab clicked THEN Post save event AND hide fab`() = runTurbineTest {
+        coEvery { isLoggedInUseCase() } returns true
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        uiState.skipItems(1)
+        val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
+            viewModel.postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
+            viewModel.postUiEvent(UiEvent.FabClicked)
+        }
+        scheduler.advanceUntilIdle()
+        uiState.skipItems(7)
+
+        expectThat(uiState.awaitItem().fabConfig).isNull()
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport) }
+
+        navigationEvents.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
+    }
+
+    @Test
+    fun `GIVEN Current destination is CreateReport AND fab is hidden WHEN SaveReportFailed event posted THEN show fab`() = runTurbineTest {
+        coEvery { isLoggedInUseCase() } returns true
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        uiState.skipItems(1)
+        val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
+            viewModel.postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
+            viewModel.postUiEvent(UiEvent.FabClicked)
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed)
+        }
+        scheduler.advanceUntilIdle()
+        uiState.skipItems(8)
+
+        expectThat(uiState.awaitItem().fabConfig) isEqualTo UiState.FabConfig(
+            icon = R.drawable.ic_save_24dp,
+            contentDescription = R.string.common_button_saveReport,
+        )
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport) }
+
+        navigationEvents.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
+    }
+
+    companion object {
+
+        @JvmStatic
+        fun destinationActions() = listOf(
+            arrayOf("Login", listOf(TopBarAction.REGISTER)),
+            arrayOf("Register", emptyList<TopBarAction>()),
+            arrayOf("Reports", emptyList<TopBarAction>()),
+            arrayOf("CreateReport", emptyList<TopBarAction>()),
+        )
+
+        @JvmStatic
+        fun destinationBackButton() = listOf(
+            arrayOf("Login", false),
+            arrayOf("Register", true),
+            arrayOf("Reports", false),
+            arrayOf("CreateReport", true),
+        )
+
+        @JvmStatic
+        fun destinationFabConfig() = listOf(
+            arrayOf("Login", null),
+            arrayOf("Register", null),
+            arrayOf(
+                "Reports",
+                UiState.FabConfig(
+                    icon = R.drawable.ic_add_24dp,
+                    contentDescription = R.string.common_button_createReport,
+                ),
+            ),
+            arrayOf(
+                "CreateReport",
+                UiState.FabConfig(
+                    icon = R.drawable.ic_save_24dp,
+                    contentDescription = R.string.common_button_saveReport,
+                ),
+            ),
+        )
     }
 }

@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.register
+package pl.fmizielinski.reports.ui.auth.register
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
@@ -33,11 +33,11 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.navigation.graph.AuthGraph
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiEvent
-import pl.fmizielinski.reports.ui.register.RegisterViewModel.UiState
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @Destination<AuthGraph>(route = "Register")
@@ -137,9 +137,7 @@ fun LoginData(
     passwordConfirmationFocusRequester: FocusRequester,
     nameFocusRequester: FocusRequester,
 ) {
-    val passwordError = uiState.passwordVerificationError?.let {
-        stringResource(it.messageResId)
-    }
+    val passwordError = uiState.passwordVerificationError?.let { stringResource(it) }
     ReportsTextField(
         onValueChange = callbacks.onEmailChanged,
         modifier = Modifier.padding(bottom = 16.dp)
@@ -152,9 +150,7 @@ fun LoginData(
         keyboardActions = KeyboardActions { passwordFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
-        error = uiState.emailVerificationError?.let {
-            stringResource(it.messageResId)
-        },
+        error = uiState.emailVerificationError?.let { stringResource(it) },
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_password,
@@ -267,9 +263,7 @@ fun UserData(
         keyboardActions = KeyboardActions { surnameFocusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
-        error = uiState.nameVerificationError?.let {
-            stringResource(it.messageResId)
-        },
+        error = uiState.nameVerificationError?.let { stringResource(it) },
     )
     ReportsTextField(
         onValueChange = callbacks.onSurnameChanged,
@@ -287,9 +281,7 @@ fun UserData(
         },
         singleLine = true,
         limit = 254,
-        error = uiState.surnameVerificationError?.let {
-            stringResource(it.messageResId)
-        },
+        error = uiState.surnameVerificationError?.let { stringResource(it) },
     )
 }
 
@@ -317,7 +309,7 @@ private const val PASSWORD_CONFIRMATION_FOCUS_REQUESTER = "passwordConfirmationF
 private const val NAME_FOCUS_REQUESTER = "nameFocusRequester"
 private const val SURNAME_FOCUS_REQUESTER = "surnameFocusRequester"
 
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_4)
+@Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 fun RegisterScreenPreview() {
     ReportsTheme {

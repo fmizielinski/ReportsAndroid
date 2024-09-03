@@ -15,9 +15,9 @@ import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
-import pl.fmizielinski.reports.ui.login.LoginViewModel.UiEvent
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel
+import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
 import strikt.api.expectThat
-import strikt.assertions.isBlank
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import strikt.assertions.isTrue

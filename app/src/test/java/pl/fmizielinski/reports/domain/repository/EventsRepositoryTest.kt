@@ -45,10 +45,20 @@ class EventsRepositoryTest {
 
     @Test
     fun postLogoutEvent() = runTest {
-        eventsRepository.logoutEvent.test {
+        eventsRepository.globalEvent.test {
             eventsRepository.postLogoutEvent()
 
-            expectThat(awaitItem()) isEqualTo Unit
+            expectThat(awaitItem()) isEqualTo EventsRepository.GlobalEvent.Logout
+            cancel()
+        }
+    }
+
+    @Test
+    fun postGlobalEvent() = runTest {
+        eventsRepository.globalEvent.test {
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
+
+            expectThat(awaitItem()) isEqualTo EventsRepository.GlobalEvent.SaveReport
             cancel()
         }
     }

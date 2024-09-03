@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.reports
+package pl.fmizielinski.reports.ui.main.reports
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -7,10 +7,10 @@ import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.model.Report
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
-import pl.fmizielinski.reports.ui.reports.ReportsViewModel.Event
-import pl.fmizielinski.reports.ui.reports.ReportsViewModel.State
-import pl.fmizielinski.reports.ui.reports.ReportsViewModel.UiEvent
-import pl.fmizielinski.reports.ui.reports.ReportsViewModel.UiState
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.Event
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.State
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
 
 @KoinViewModel
 class ReportsViewModel(

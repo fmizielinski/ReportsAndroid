@@ -1,6 +1,8 @@
 package pl.fmizielinski.reports.ui
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
 import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
 import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
@@ -59,7 +62,16 @@ class MainViewModel(
             eventsRepository.showSnackBar.collect(::postSnackBarEvent)
         }
         scope.launch {
-            eventsRepository.logoutEvent.collect { postLogoutEvent() }
+            eventsRepository.globalEvent
+                .filterIsInstance<EventsRepository.GlobalEvent.Logout>()
+                .collect { postLogoutEvent() }
+        }
+        scope.launch {
+            eventsRepository.globalEvent
+                .filterIsInstance<EventsRepository.GlobalEvent.SaveReportFailed>()
+                .collect {
+                    postEvent(Event.ChangeFabVisibility(isHidden = false))
+                }
         }
     }
 
@@ -69,9 +81,11 @@ class MainViewModel(
             is Event.CheckIfLoggedIn -> handleCheckIfLoggedIn(state)
             is Event.Logout -> handleLogout(state)
             is Event.LogoutSuccess -> handleLogoutSuccess(state)
+            is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.RegisterClicked -> handleRegisterClicked(state)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
+            is UiEvent.FabClicked -> handleFabClicked(state)
         }
     }
 
@@ -84,15 +98,11 @@ class MainViewModel(
         val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
-        val title = when (state.currentDestination) {
-            RegisterDestination.baseRoute -> R.string.registerScreen_title
-            ReportsDestination.baseRoute -> R.string.reportsScreen_title
-            else -> null
-        }
         return UiState(
             actions = actions,
             isBackVisible = isBackVisible,
-            title = title,
+            title = getTitle(state.currentDestination),
+            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
         )
     }
 
@@ -140,6 +150,10 @@ class MainViewModel(
         return state
     }
 
+    private fun handleChangeFabVisibility(state: State, event: Event.ChangeFabVisibility): State {
+        return state.copy(isFabHidden = event.isHidden)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -174,7 +188,23 @@ class MainViewModel(
                 setInitialLoadingFinished()
             }
         }
-        return state.copy(currentDestination = event.route)
+        return state.copy(currentDestination = event.route, isFabHidden = false)
+    }
+
+    private fun handleFabClicked(state: State): State {
+        scope.launch {
+            when (state.currentDestination) {
+                CreateReportDestination.baseRoute -> {
+                    postEvent(Event.ChangeFabVisibility(isHidden = true))
+                    eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
+                }
+
+                ReportsDestination.baseRoute -> {
+                    postNavigationEvent(CreateReportDestination.toDestinationData())
+                }
+            }
+        }
+        return state
     }
 
     // endregion handle UiEvent
@@ -213,28 +243,61 @@ class MainViewModel(
         _isInitialLoading.value = false
     }
 
+    private fun getTitle(currentDestination: String?) = when (currentDestination) {
+        CreateReportDestination.baseRoute -> R.string.createReportScreen_title
+        RegisterDestination.baseRoute -> R.string.registerScreen_title
+        ReportsDestination.baseRoute -> R.string.reportsScreen_title
+        else -> null
+    }
+
+    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
+        return when (currentDestination) {
+            CreateReportDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_save_24dp,
+                contentDescription = R.string.common_button_saveReport,
+            )
+
+            ReportsDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_add_24dp,
+                contentDescription = R.string.common_button_createReport,
+            )
+
+            else -> null
+        }
+    }
+
     data class State(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
+        val isFabHidden: Boolean = false,
     )
 
     data class UiState(
         val actions: List<TopBarAction>,
         val isBackVisible: Boolean,
         @StringRes val title: Int?,
-    )
+        val fabConfig: FabConfig?,
+    ) {
+
+        data class FabConfig(
+            @DrawableRes val icon: Int,
+            @StringRes val contentDescription: Int,
+        )
+    }
 
     sealed interface Event {
         data class LoggedInStateChecked(val isLoggedIn: Boolean) : Event
         data object CheckIfLoggedIn : Event
         data object Logout : Event
         data object LogoutSuccess : Event
+        data class ChangeFabVisibility(val isHidden: Boolean) : Event
     }
 
     sealed interface UiEvent : Event {
         data object BackClicked : UiEvent
         data object RegisterClicked : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
+        data object FabClicked : UiEvent
     }
 
     companion object {
