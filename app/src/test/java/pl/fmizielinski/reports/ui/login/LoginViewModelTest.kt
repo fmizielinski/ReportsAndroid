@@ -18,7 +18,6 @@ import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
 import strikt.api.expectThat
-import strikt.assertions.isBlank
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import strikt.assertions.isTrue

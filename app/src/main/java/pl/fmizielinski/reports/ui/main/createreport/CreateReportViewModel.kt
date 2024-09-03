@@ -43,8 +43,8 @@ class CreateReportViewModel(
         return when (event) {
             is Event.SaveReport -> handleSaveReport(state)
             is Event.CreateReportSuccess -> handleCreateReportSuccess(state)
-            is Event.PostVerificationError -> handleVerificationError(state, event)
             is Event.CreateReportFailed -> handleCreateReportFailed(state, event)
+            is Event.PostVerificationError -> handleVerificationError(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
         }
