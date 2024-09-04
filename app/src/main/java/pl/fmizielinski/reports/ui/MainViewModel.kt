@@ -32,6 +32,8 @@ import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.model.TopBarAction
+import pl.fmizielinski.reports.ui.model.TopBarAction.PHOTO
+import pl.fmizielinski.reports.ui.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import java.util.Optional
@@ -83,17 +85,17 @@ class MainViewModel(
             is Event.LogoutSuccess -> handleLogoutSuccess(state)
             is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
-            is UiEvent.RegisterClicked -> handleRegisterClicked(state)
+            is UiEvent.ActionClicked -> handleActionClicked(state, event)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
             is UiEvent.FabClicked -> handleFabClicked(state)
         }
     }
 
     override fun mapState(state: State): UiState {
-        val actions = buildList {
-            if (state.currentDestination == LoginDestination.baseRoute) {
-                add(TopBarAction.REGISTER)
-            }
+        val actions = when (state.currentDestination) {
+            LoginDestination.baseRoute -> listOf(REGISTER)
+            CreateReportDestination.baseRoute -> listOf(PHOTO)
+            else -> emptyList()
         }
         val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
@@ -165,9 +167,12 @@ class MainViewModel(
         return state
     }
 
-    private fun handleRegisterClicked(state: State): State {
+    private fun handleActionClicked(state: State, event: UiEvent.ActionClicked): State {
         scope.launch {
-            postNavigationEvent(RegisterDestination.toDestinationData())
+            when (event.action) {
+                REGISTER -> postNavigationEvent(RegisterDestination.toDestinationData())
+                PHOTO -> Unit // FIXME
+            }
         }
         return state
     }
@@ -295,7 +300,7 @@ class MainViewModel(
 
     sealed interface UiEvent : Event {
         data object BackClicked : UiEvent
-        data object RegisterClicked : UiEvent
+        data class ActionClicked(val action: TopBarAction) : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
         data object FabClicked : UiEvent
     }

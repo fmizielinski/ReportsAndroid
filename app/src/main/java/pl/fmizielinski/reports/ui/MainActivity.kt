@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -95,8 +93,8 @@ fun ReportsApp() {
                     onBackClicked = {
                         coroutineScope.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
                     },
-                    onRegisterClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+                    onActionClicked = {
+                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.ActionClicked(it)) }
                     },
                     onFabClicked = {
                         coroutineScope.launch { viewModel.postUiEvent(UiEvent.FabClicked) }
@@ -191,18 +189,14 @@ fun ReportsTopBar(
         },
         actions = {
             uiState.actions.forEach { action ->
-                when (action) {
-                    TopBarAction.REGISTER -> {
-                        TextButton(
-                            onClick = callbacks.onRegisterClicked,
-                        ) {
-                            Text(
-                                text = stringResource(action.nameResId),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
+                IconButton(
+                    onClick = { callbacks.onActionClicked(action) },
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(action.iconResId),
+                        contentDescription = stringResource(action.nameResId),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
                 }
             }
         },
@@ -211,7 +205,7 @@ fun ReportsTopBar(
 
 data class MainCallbacks(
     val onBackClicked: () -> Unit,
-    val onRegisterClicked: () -> Unit,
+    val onActionClicked: (TopBarAction) -> Unit,
     val onFabClicked: () -> Unit,
 )
 
@@ -237,6 +231,6 @@ private val previewUiState = UiState(
 
 private val emptyCallbacks = MainCallbacks(
     onBackClicked = {},
-    onRegisterClicked = {},
+    onActionClicked = {},
     onFabClicked = {},
 )
