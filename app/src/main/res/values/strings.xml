@@ -8,7 +8,11 @@
     <string name="common_error_unauthorized">You have been logged out</string>
     <string name="common_error_unknown">Unknown</string>
     <string name="common_error_ups">Ups, something went wrong</string>
+    <string name="common_label_cameraPermissionRationale">Camera permission is required to add report attachments</string>
+    <string name="common_label_cancel">Cancel</string>
     <string name="common_label_characterCounter">%1$d/%2$d</string>
+    <string name="common_label_permission">Permission</string>
+    <string name="common_label_settings">Settings</string>
     <string name="createReportScreen_error_descriptionEmpty">Empty description</string>
     <string name="createReportScreen_error_save">Unable to create report. Try again</string>
     <string name="createReportScreen_error_titleEmpty">Empty title</string>

@@ -9,15 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
@@ -27,7 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -50,16 +44,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
-import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen
+import pl.fmizielinski.reports.ui.common.composable.AlertDialog
+import pl.fmizielinski.reports.ui.common.composable.AlertDialogCallbacks
+import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBar
+import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBarCallbacks
+import pl.fmizielinski.reports.ui.common.composable.emptyAlertDialogCallbacks
+import pl.fmizielinski.reports.ui.common.composable.emptyTopAppBarCallbacks
 import pl.fmizielinski.reports.ui.common.consumeNavEvent
-import pl.fmizielinski.reports.ui.model.TopBarAction
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 import pl.fmizielinski.reports.ui.utils.FileUtils
-import pl.fmizielinski.reports.ui.utils.requestPermission
 import java.io.File
 
 @ExperimentalPermissionsApi
@@ -97,14 +94,40 @@ fun ReportsApp() {
                 navController = navController,
                 snackBarData = snackBarData.value,
                 callbacks = MainCallbacks(
-                    onBackClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
-                    },
-                    onActionClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.ActionClicked(it)) }
-                    },
                     onFabClicked = {
                         coroutineScope.launch { viewModel.postUiEvent(UiEvent.FabClicked) }
+                    },
+                    topAppBarCallbacks = ReportsTopAppBarCallbacks(
+                        onBackClicked = {
+                            coroutineScope.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
+                        },
+                        onActionClicked = {
+                            coroutineScope.launch {
+                                viewModel.postUiEvent(UiEvent.ActionClicked(it))
+                            }
+                        },
+                        onShouldShowPermissionRationale = {
+                            coroutineScope.launch {
+                                viewModel.postUiEvent(UiEvent.ShowPermissionRationale(it))
+                            }
+                        },
+                    ),
+                ),
+                alertDialogCallbacks = AlertDialogCallbacks(
+                    onDismissRequest = {
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
+                        }
+                    },
+                    onNegativeClick = {
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
+                        }
+                    },
+                    onPositiveClick = {
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
+                        }
                     },
                 ),
             )
@@ -166,12 +189,13 @@ fun MainScreen(
     navController: NavHostController,
     snackBarData: SnackBarData = SnackBarData.empty(),
     callbacks: MainCallbacks,
+    alertDialogCallbacks: AlertDialogCallbacks,
 ) {
     Scaffold(
         topBar = {
-            ReportsTopBar(
+            ReportsTopAppBar(
                 uiState = uiState,
-                callbacks = callbacks,
+                callbacks = callbacks.topAppBarCallbacks,
             )
         },
         snackbarHost = {
@@ -197,6 +221,13 @@ fun MainScreen(
             modifier = Modifier.fillMaxWidth()
                 .padding(it),
         )
+
+        if (uiState.alertDialogUiState != null) {
+            AlertDialog(
+                uiState = uiState.alertDialogUiState,
+                callbacks = alertDialogCallbacks,
+            )
+        }
     }
 }
 
@@ -216,77 +247,9 @@ fun Fab(
     )
 }
 
-@ExperimentalPermissionsApi
-@ExperimentalMaterial3Api
-@Composable
-fun ReportsTopBar(
-    uiState: UiState,
-    callbacks: MainCallbacks,
-) {
-    val coroutineScope = rememberCoroutineScope()
-    CenterAlignedTopAppBar(
-        title = {
-            if (uiState.title != null) {
-                Text(text = stringResource(uiState.title))
-            }
-        },
-        navigationIcon = {
-            if (uiState.isBackVisible) {
-                IconButton(
-                    onClick = callbacks.onBackClicked,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                        contentDescription = stringResource(R.string.common_button_back),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-        },
-        actions = {
-            uiState.actions.forEach { action ->
-                if (action.requirePermission != null) {
-                    requestPermission(
-                        permission = action.requirePermission,
-                        onGrantedCallback = { callbacks.onActionClicked(action) },
-                    ) { onClick ->
-                        Action(
-                            action = action,
-                            onActionClicked = { onClick() },
-                        )
-                    }
-                } else {
-                    Action(
-                        action = action,
-                        onActionClicked = callbacks.onActionClicked,
-                    )
-                }
-            }
-        },
-    )
-}
-
-@ExperimentalPermissionsApi
-@Composable
-fun Action(
-    action: TopBarAction,
-    onActionClicked: ((TopBarAction) -> Unit)? = null,
-) {
-    IconButton(
-        onClick = { onActionClicked?.invoke(action) },
-    ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(action.iconResId),
-            contentDescription = stringResource(action.nameResId),
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
 data class MainCallbacks(
-    val onBackClicked: () -> Unit,
-    val onActionClicked: (TopBarAction) -> Unit,
     val onFabClicked: () -> Unit,
+    val topAppBarCallbacks: ReportsTopAppBarCallbacks,
 )
 
 @ExperimentalPermissionsApi
@@ -299,6 +262,7 @@ fun ReportsAppPreview() {
             uiState = previewUiState,
             navController = rememberNavController(),
             callbacks = emptyCallbacks,
+            alertDialogCallbacks = emptyAlertDialogCallbacks,
         )
     }
 }
@@ -308,10 +272,10 @@ private val previewUiState = UiState(
     isBackVisible = false,
     title = null,
     fabConfig = null,
+    alertDialogUiState = null,
 )
 
 private val emptyCallbacks = MainCallbacks(
-    onBackClicked = {},
-    onActionClicked = {},
     onFabClicked = {},
+    topAppBarCallbacks = emptyTopAppBarCallbacks,
 )

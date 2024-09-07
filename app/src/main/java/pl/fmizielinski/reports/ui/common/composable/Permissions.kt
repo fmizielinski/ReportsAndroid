@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.utils
+package pl.fmizielinski.reports.ui.common.composable
 
 import androidx.compose.runtime.Composable
 import com.google.accompanist.permissions.ExperimentalPermissionsApi

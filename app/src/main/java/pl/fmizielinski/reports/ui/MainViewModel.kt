@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui
 
+import android.Manifest
 import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -32,6 +33,7 @@ import pl.fmizielinski.reports.ui.MainViewModel.State
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.common.model.AlertDialogUiState
 import pl.fmizielinski.reports.ui.model.TopBarAction
 import pl.fmizielinski.reports.ui.model.TopBarAction.PHOTO
 import pl.fmizielinski.reports.ui.model.TopBarAction.REGISTER
@@ -95,6 +97,9 @@ class MainViewModel(
             is UiEvent.FabClicked -> handleFabClicked(state)
             is UiEvent.PictureTaken -> handlePictureTaken(state, event)
             is UiEvent.TakePictureFailed -> handleTakePictureFailed(state)
+            is UiEvent.ShowPermissionRationale -> handleShowPermissionRationale(state, event)
+            is UiEvent.AlertDialogDismissed -> handleAlertDialogDismissed(state)
+            is UiEvent.AlertDialogPositiveClicked -> handleAlertDialogPositiveClicked(state)
         }
     }
 
@@ -107,11 +112,21 @@ class MainViewModel(
         val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
+        val alertDialogUiState = state.permissionRationale?.let { rationale ->
+            AlertDialogUiState(
+                iconResId = R.drawable.ic_info_24dp,
+                titleResId = R.string.common_label_permission,
+                messageResId = rationale.messageResId,
+                positiveButtonResId = R.string.common_label_settings,
+                negativeButtonResId = R.string.common_label_cancel,
+            )
+        }
         return UiState(
             actions = actions,
             isBackVisible = isBackVisible,
             title = getTitle(state.currentDestination),
             fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
+            alertDialogUiState = alertDialogUiState,
         )
     }
 
@@ -235,6 +250,28 @@ class MainViewModel(
         return state
     }
 
+    private fun handleShowPermissionRationale(
+        state: State,
+        event: UiEvent.ShowPermissionRationale,
+    ): State {
+        val permissionRationale = when (event.permission) {
+            Manifest.permission.CAMERA -> R.string.common_label_cameraPermissionRationale
+            else -> null
+        }?.let(State::PermissionRationale)
+        return state.copy(permissionRationale = permissionRationale)
+    }
+
+    private fun handleAlertDialogDismissed(state: State): State {
+        return state.copy(permissionRationale = null)
+    }
+
+    private fun handleAlertDialogPositiveClicked(state: State): State {
+        scope.launch {
+            // TODO eventsRepository.openAppSettings()
+        }
+        return state.copy(permissionRationale = null)
+    }
+
     // endregion handle UiEvent
 
     private suspend fun postNavigationUpEvent() {
@@ -298,13 +335,20 @@ class MainViewModel(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
         val isFabHidden: Boolean = false,
-    )
+        val permissionRationale: PermissionRationale? = null,
+    ) {
+
+        data class PermissionRationale(
+            @StringRes val messageResId: Int,
+        )
+    }
 
     data class UiState(
         val actions: List<TopBarAction>,
         val isBackVisible: Boolean,
         @StringRes val title: Int?,
         val fabConfig: FabConfig?,
+        val alertDialogUiState: AlertDialogUiState?,
     ) {
 
         data class FabConfig(
@@ -328,6 +372,9 @@ class MainViewModel(
         data object FabClicked : UiEvent
         data class PictureTaken(val uri: Uri) : UiEvent
         data object TakePictureFailed : UiEvent
+        data class ShowPermissionRationale(val permission: String) : UiEvent
+        data object AlertDialogDismissed : UiEvent
+        data object AlertDialogPositiveClicked : UiEvent
     }
 
     companion object {
