@@ -5,22 +5,20 @@ import com.ramcosta.composedestinations.generated.destinations.ReportsDestinatio
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
-import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
-import org.junit.Assert.*
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.base.BaseViewModelTest
-import pl.fmizielinski.reports.domain.error.ErrorReasons
-import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.EMAIL_NOT_VALID
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.DESCRIPTION_EMPTY
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.INVALID_DATA
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.TITLE_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
+import pl.fmizielinski.reports.fixtures.data.createReportResponse
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
@@ -32,12 +30,14 @@ import strikt.assertions.isNotNull
 class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
 
     private val createReportUseCase: CreateReportUseCase = mockk()
+    private val addAttachmentUseCase: AddAttachmentUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
 
     override fun createViewModel(dispatcher: TestDispatcher) = CreateReportViewModel(
         dispatcher = dispatcher,
         eventsRepository = eventsRepository,
         createReportUseCase = createReportUseCase,
+        addAttachmentUseCase = addAttachmentUseCase,
     )
 
     @Test
@@ -75,7 +75,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
                 exceptions = listOf(
                     simpleErrorException(code = TITLE_EMPTY, isVerificationError = true),
                     simpleErrorException(code = DESCRIPTION_EMPTY, isVerificationError = true),
-                )
+                ),
             )
             coEvery { createReportUseCase(any()) } throws errorException
 
@@ -101,7 +101,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
     @Test
     fun `WHEN save event posted AND create report success THEH post Reports navigation event`() =
         runTurbineTest {
-            coJustRun { createReportUseCase(any()) }
+            coEvery { createReportUseCase(any()) } returns 1
 
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 

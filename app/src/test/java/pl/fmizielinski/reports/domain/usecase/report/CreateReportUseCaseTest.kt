@@ -1,7 +1,6 @@
 package pl.fmizielinski.reports.domain.usecase.report
 
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -10,6 +9,7 @@ import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.fixtures.common.httpException
+import pl.fmizielinski.reports.fixtures.data.createReportResponse
 import pl.fmizielinski.reports.fixtures.domain.createReportData
 import pl.fmizielinski.reports.fixtures.domain.networkError
 import strikt.api.expectDoesNotThrow
@@ -26,7 +26,7 @@ class CreateReportUseCaseTest {
 
     @Test
     fun `GIVEN valid report data WHEN invoke THEN no errors`() = runTest {
-        coJustRun { reportService.createReport(any()) }
+        coEvery { reportService.createReport(any()) } returns createReportResponse()
 
         expectDoesNotThrow { useCase(createReportData()) }
     }

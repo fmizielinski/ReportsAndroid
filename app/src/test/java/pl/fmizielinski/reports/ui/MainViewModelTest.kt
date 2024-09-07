@@ -119,7 +119,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.isBackVisible) isEqualTo isBackVisible
+        expectThat(result.appBarUiState.isBackVisible) isEqualTo isBackVisible
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -141,7 +141,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.actions) isEqualTo action
+        expectThat(result.appBarUiState.actions) isEqualTo action
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -183,11 +183,11 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `WHEN Register button is clicked THEN Navigate to RegisterScreen`() = runTurbineTest {
+    fun `WHEN Register action is clicked THEN Navigate to RegisterScreen`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.REGISTER)) }
 
         expectThat(navigationEvents.awaitItem().get()) isEqualTo RegisterDestination.toDestinationData()
 
@@ -304,7 +304,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             arrayOf("Login", listOf(TopBarAction.REGISTER)),
             arrayOf("Register", emptyList<TopBarAction>()),
             arrayOf("Reports", emptyList<TopBarAction>()),
-            arrayOf("CreateReport", emptyList<TopBarAction>()),
+            arrayOf("CreateReport", listOf(TopBarAction.PHOTO)),
         )
 
         @JvmStatic
