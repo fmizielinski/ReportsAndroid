@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +45,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
+import pl.fmizielinski.reports.android.CustomActivityResultContracts
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
@@ -89,6 +91,7 @@ fun ReportsApp() {
             val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
 
             viewModel.handleTakePicture(coroutineScope)
+            viewModel.handleOpenSettings()
 
             MainScreen(
                 uiState = state.value,
@@ -132,6 +135,19 @@ fun ReportsApp() {
                     },
                 ),
             )
+        }
+    }
+}
+
+@Composable
+fun MainViewModel.handleOpenSettings() {
+    val settingsLauncher = rememberLauncherForActivityResult(
+        contract = CustomActivityResultContracts.OpenAppSettings(),
+    ) { _ -> }
+
+    LaunchedEffect(Unit) {
+        openSettings.collect {
+            settingsLauncher.launch()
         }
     }
 }

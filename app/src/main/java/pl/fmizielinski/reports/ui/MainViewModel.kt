@@ -64,6 +64,9 @@ class MainViewModel(
     private val _takePicture = MutableSharedFlow<Unit>()
     val takePicture: SharedFlow<Unit> = _takePicture
 
+    private val _openSettings = MutableSharedFlow<Unit>()
+    val openSettings: SharedFlow<Unit> = _openSettings
+
     init {
         scope.launch {
             eventsRepository.navigationEvent.collect(::postNavigationEvent)
@@ -276,7 +279,7 @@ class MainViewModel(
 
     private fun handleAlertDialogPositiveClicked(state: State): State {
         scope.launch {
-            // TODO eventsRepository.openAppSettings()
+            _openSettings.emit(Unit)
         }
         return state.copy(permissionRationale = null)
     }
