@@ -65,6 +65,9 @@ fun CreateReportScreen() {
                 onDescriptionChanged = {
                     coroutineScope.launch { viewModel.postUiEvent(UiEvent.DescriptionChanged(it)) }
                 },
+                onDeleteAttachment = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.DeleteAttachment(it)) }
+                },
             ),
         )
     }
@@ -129,12 +132,18 @@ fun ReportContent(
             error = uiState.descriptionVerificationError?.let { stringResource(it) },
         )
 
-        Attachements(uiState.attachments)
+        Attachements(
+            attachments = uiState.attachments,
+            onDeleteAttachment = callbacks.onDeleteAttachment,
+        )
     }
 }
 
 @Composable
-fun Attachements(attachments: List<Uri>) {
+fun Attachements(
+    attachments: List<Uri>,
+    onDeleteAttachment: (Uri) -> Unit,
+) {
     val fileUtils = koinInject<FileUtils>()
     val density = LocalDensity.current
 
@@ -158,6 +167,7 @@ fun Attachements(attachments: List<Uri>) {
             AttachmentItem(
                 attachment = attachment,
                 fileUtils = fileUtils,
+                onDeleteAttachment = onDeleteAttachment,
             )
         }
     }
@@ -167,6 +177,7 @@ fun Attachements(attachments: List<Uri>) {
 fun AttachmentItem(
     attachment: Uri,
     fileUtils: FileUtils,
+    onDeleteAttachment: (Uri) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -189,7 +200,7 @@ fun AttachmentItem(
                 modifier = Modifier.fillMaxWidth(),
             )
             IconButton(
-                onClick = { /* TODO */ },
+                onClick = { onDeleteAttachment(attachment) },
                 modifier = Modifier.align(Alignment.End),
             ) {
                 Image(
@@ -209,6 +220,7 @@ const val ATTACHMENTS_GRID_COLUMNS = 3
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
     val onDescriptionChanged: (String) -> Unit,
+    val onDeleteAttachment: (Uri) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -227,26 +239,11 @@ private val previewUiState = UiState(
     descriptionLength = 120,
     titleVerificationError = null,
     descriptionVerificationError = null,
-    attachments = listOf(
-        Uri.parse(
-            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
-        ),
-        Uri.parse(
-            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
-        ),
-        Uri.parse(
-            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
-        ),
-        Uri.parse(
-            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
-        ),
-        Uri.parse(
-            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
-        ),
-    ),
+    attachments = emptyList(),
 )
 
 private val emptyCallbacks = CreateReportCallbacks(
     onTitleChanged = {},
     onDescriptionChanged = {},
+    onDeleteAttachment = {},
 )

@@ -54,6 +54,7 @@ class CreateReportViewModel(
             is Event.PictureTaken -> handlePictureTaken(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
+            is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
         }
     }
 
@@ -99,6 +100,18 @@ class CreateReportViewModel(
         return state
     }
 
+    private fun handleCreateReportFailed(state: State, event: Event.CreateReportFailed): State {
+        scope.launch {
+            handleError(event.error)
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed)
+        }
+        return state
+    }
+
+    private fun handleVerificationError(state: State, event: Event.PostVerificationError): State {
+        return state.copy(verificationErrors = event.errors)
+    }
+
     private fun handlePictureTaken(state: State, event: Event.PictureTaken): State {
         val attachments = buildList {
             addAll(state.attachments)
@@ -125,16 +138,9 @@ class CreateReportViewModel(
         )
     }
 
-    private fun handleCreateReportFailed(state: State, event: Event.CreateReportFailed): State {
-        scope.launch {
-            handleError(event.error)
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed)
-        }
-        return state
-    }
-
-    private fun handleVerificationError(state: State, event: Event.PostVerificationError): State {
-        return state.copy(verificationErrors = event.errors)
+    private fun handleDeleteAttachment(state: State, event: UiEvent.DeleteAttachment): State {
+        val attachments = state.attachments.filterNot { it == event.attachmentUri }
+        return state.copy(attachments = attachments)
     }
 
     // endregion handle UiEvent
@@ -185,6 +191,7 @@ class CreateReportViewModel(
     sealed interface UiEvent : Event {
         data class TitleChanged(val title: String) : UiEvent
         data class DescriptionChanged(val description: String) : UiEvent
+        data class DeleteAttachment(val attachmentUri: Uri) : UiEvent
     }
 
     data class Title(override val messageResId: Int) : VerificationError
