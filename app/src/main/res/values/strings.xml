@@ -16,6 +16,7 @@
     <string name="createReportScreen_button_deleteAttachment">Delete attachment</string>
     <string name="createReportScreen_error_descriptionEmpty">Empty description</string>
     <string name="createReportScreen_error_save">Unable to create report. Try again</string>
+    <string name="createReportScreen_error_addAttachment">Unable to save attachment</string>
     <string name="createReportScreen_error_titleEmpty">Empty title</string>
     <string name="createReportScreen_label_description">Description</string>
     <string name="createReportScreen_label_title">Title</string>

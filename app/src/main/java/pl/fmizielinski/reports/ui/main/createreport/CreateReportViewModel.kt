@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
-import android.net.Uri
 import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.filterIsInstance
@@ -12,6 +11,7 @@ import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.model.CreateReportData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.base.ErrorHandler
@@ -23,6 +23,7 @@ import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.State
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
+import java.io.File
 import java.time.LocalDateTime
 
 @KoinViewModel
@@ -30,6 +31,7 @@ class CreateReportViewModel(
     dispatcher: CoroutineDispatcher,
     private val eventsRepository: EventsRepository,
     private val createReportUseCase: CreateReportUseCase,
+    private val addAttachmentUseCase: AddAttachmentUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()), ErrorHandler {
 
     init {
@@ -41,17 +43,18 @@ class CreateReportViewModel(
         scope.launch {
             eventsRepository.globalEvent
                 .filterIsInstance<EventsRepository.GlobalEvent.PictureTaken>()
-                .collect { postEvent(Event.PictureTaken(it.photoUri)) }
+                .collect { postEvent(Event.PictureTaken(it.photoFile)) }
         }
     }
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.SaveReport -> handleSaveReport(state)
-            is Event.CreateReportSuccess -> handleCreateReportSuccess(state)
+            is Event.CreateReportSuccess -> handleCreateReportSuccess(state, event)
             is Event.CreateReportFailed -> handleCreateReportFailed(state, event)
             is Event.PostVerificationError -> handleVerificationError(state, event)
             is Event.PictureTaken -> handlePictureTaken(state, event)
+            is Event.AttachmentUploaded -> handleAttachmentUploaded(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
             is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
@@ -63,12 +66,13 @@ class CreateReportViewModel(
             .findVerificationError<Title>()
         val descriptionVerificationError = state.verificationErrors
             .findVerificationError<Description>()
+        val attachments = state.attachments.map { it.file }
         return UiState(
             titleLength = state.title.length,
             descriptionLength = state.description.length,
             titleVerificationError = titleVerificationError,
             descriptionVerificationError = descriptionVerificationError,
-            attachments = state.attachments,
+            attachments = attachments,
         )
     }
 
@@ -77,14 +81,14 @@ class CreateReportViewModel(
     private fun handleSaveReport(state: State): State {
         scope.launch {
             try {
-                createReportUseCase(
+                val reportId = createReportUseCase(
                     CreateReportData(
                         title = state.title,
                         description = state.description,
                         reportDate = LocalDateTime.now(),
                     ),
                 )
-                postEvent(Event.CreateReportSuccess)
+                postEvent(Event.CreateReportSuccess(reportId))
             } catch (error: ErrorException) {
                 logError(error)
                 postEvent(Event.CreateReportFailed(error))
@@ -93,9 +97,19 @@ class CreateReportViewModel(
         return state
     }
 
-    private fun handleCreateReportSuccess(state: State): State {
+    private fun handleCreateReportSuccess(state: State, event: Event.CreateReportSuccess): State {
         scope.launch {
-            eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
+            if (state.attachments.isNotEmpty()) {
+                state.attachments.forEach { attachment ->
+                    try {
+                        addAttachmentUseCase(event.reportId, attachment.file)
+                        postEvent(Event.AttachmentUploaded(attachment.file))
+                    } catch (error: ErrorException) {
+                        logError(error)
+                        //TODO handle error
+                    }
+                }
+            }
         }
         return state
     }
@@ -115,7 +129,23 @@ class CreateReportViewModel(
     private fun handlePictureTaken(state: State, event: Event.PictureTaken): State {
         val attachments = buildList {
             addAll(state.attachments)
-            add(event.photoUri)
+            add(State.Attachment(event.photoFile))
+        }
+        return state.copy(attachments = attachments)
+    }
+
+    private fun handleAttachmentUploaded(state: State, event: Event.AttachmentUploaded): State {
+        val attachments = state.attachments.map { attachment ->
+            if (attachment.file == event.attachmentFile) {
+                attachment.copy(isUploaded = true)
+            } else {
+                attachment
+            }
+        }
+        scope.launch {
+            if (attachments.all { it.isUploaded }) {
+                eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
+            }
         }
         return state.copy(attachments = attachments)
     }
@@ -139,7 +169,7 @@ class CreateReportViewModel(
     }
 
     private fun handleDeleteAttachment(state: State, event: UiEvent.DeleteAttachment): State {
-        val attachments = state.attachments.filterNot { it == event.attachmentUri }
+        val attachments = state.attachments.filterNot { it.file == event.attachmentFile }
         return state.copy(attachments = attachments)
     }
 
@@ -169,29 +199,33 @@ class CreateReportViewModel(
         val title: String = "",
         val description: String = "",
         val verificationErrors: List<VerificationError> = emptyList(),
-        val attachments: List<Uri> = emptyList(),
-    )
+        val attachments: List<Attachment> = emptyList(),
+    ) {
+
+        data class Attachment(val file: File, val isUploaded: Boolean = false)
+    }
 
     data class UiState(
         val titleLength: Int,
         val descriptionLength: Int,
         val titleVerificationError: Int?,
         val descriptionVerificationError: Int?,
-        val attachments: List<Uri>,
+        val attachments: List<File>,
     )
 
     sealed interface Event {
         data object SaveReport : Event
-        data object CreateReportSuccess : Event
+        data class CreateReportSuccess(val reportId: Int) : Event
         data class CreateReportFailed(val error: ErrorException) : Event
         data class PostVerificationError(val errors: List<VerificationError>) : Event
-        data class PictureTaken(val photoUri: Uri) : Event
+        data class PictureTaken(val photoFile: File) : Event
+        data class AttachmentUploaded(val attachmentFile: File) : Event
     }
 
     sealed interface UiEvent : Event {
         data class TitleChanged(val title: String) : UiEvent
         data class DescriptionChanged(val description: String) : UiEvent
-        data class DeleteAttachment(val attachmentUri: Uri) : UiEvent
+        data class DeleteAttachment(val attachmentFile: File) : UiEvent
     }
 
     data class Title(override val messageResId: Int) : VerificationError

@@ -1,12 +1,12 @@
 package pl.fmizielinski.reports.domain.repository
 
-import android.net.Uri
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.core.annotation.Single
 import pl.fmizielinski.reports.data.network.interceptor.UnauthorizedHandler
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.navigation.DestinationData
+import java.io.File
 import java.util.Optional
 
 @Single
@@ -45,6 +45,6 @@ class EventsRepository : UnauthorizedHandler {
         data object Logout : GlobalEvent
         data object SaveReport : GlobalEvent
         data object SaveReportFailed : GlobalEvent
-        data class PictureTaken(val photoUri: Uri) : GlobalEvent
+        data class PictureTaken(val photoFile: File) : GlobalEvent
     }
 }

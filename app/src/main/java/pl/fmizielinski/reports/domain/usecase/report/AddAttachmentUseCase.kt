@@ -3,50 +3,49 @@ package pl.fmizielinski.reports.domain.usecase.report
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.report.ReportService
+import pl.fmizielinski.reports.data.network.utils.createMultipartBody
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.errorException
 import pl.fmizielinski.reports.domain.mapper.parseErrorBody
-import pl.fmizielinski.reports.domain.model.CreateReportData
-import pl.fmizielinski.reports.domain.model.toCreateReportRequest
 import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
+import java.io.File
 
 @Factory
-class CreateReportUseCase(
+class AddAttachmentUseCase(
     private val reportService: ReportService,
 ) : BaseUseCase() {
 
     @Throws(ErrorException::class)
-    suspend operator fun invoke(data: CreateReportData): Int {
-        val requestModel = data.toCreateReportRequest()
-        val responseModel = catchHttpExceptions(
-            body = { reportService.createReport(requestModel) },
+    suspend operator fun invoke(reportId: Int, file: File) {
+        val attachment = file.createMultipartBody()
+        catchHttpExceptions(
+            body = { reportService.addAttachment(reportId, attachment) },
             handler = { it.toErrorException() },
         )
-        return responseModel.id
     }
 
     private fun HttpException.toErrorException(): ErrorException {
         return if (code() == 400) {
             val exceptions = parseErrorBody().map { error ->
                 when (error.code) {
-                    ErrorReasons.Report.Create.INVALID_DATA -> error.errorException(
-                        uiMessage = R.string.createReportScreen_error_save,
+                    ErrorReasons.Report.Create.UPLOAD_FAILED -> error.errorException(
+                        uiMessage = R.string.createReportScreen_error_addAttachment,
                         exception = this,
                     )
 
-                    ErrorReasons.Report.Create.TITLE_EMPTY -> error.errorException(
-                        uiMessage = R.string.createReportScreen_error_titleEmpty,
+                    else -> genericErrorException(this)
+                }
+            }
+            exceptions.asErrorException()
+        } else if (code() == 403) {
+            val exceptions = parseErrorBody().map { error ->
+                when (error.code) {
+                    ErrorReasons.Report.ACCESS_DENIED -> error.errorException(
+                        uiMessage = R.string.createReportScreen_error_addAttachment,
                         exception = this,
-                        isVerificationError = true,
-                    )
-
-                    ErrorReasons.Report.Create.DESCRIPTION_EMPTY -> error.errorException(
-                        uiMessage = R.string.createReportScreen_error_descriptionEmpty,
-                        exception = this,
-                        isVerificationError = true,
                     )
 
                     else -> genericErrorException(this)
@@ -60,8 +59,8 @@ class CreateReportUseCase(
 
     override fun genericErrorException(cause: Throwable): SimpleErrorException {
         return SimpleErrorException(
-            uiMessage = R.string.createReportScreen_error_save,
-            message = "Unknown create report error",
+            uiMessage = R.string.createReportScreen_error_addAttachment,
+            message = "Unknown add attachment error",
             cause = cause,
         )
     }

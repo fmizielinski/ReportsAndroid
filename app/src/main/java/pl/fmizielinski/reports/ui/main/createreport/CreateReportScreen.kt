@@ -1,6 +1,6 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
-import android.net.Uri
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,7 +28,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -40,7 +39,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
-import org.koin.compose.koinInject
 import pl.fmizielinski.reports.BuildConfig
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
@@ -50,7 +48,7 @@ import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiStat
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
-import pl.fmizielinski.reports.ui.utils.FileUtils
+import java.io.File
 
 @Destination<MainGraph>(route = "CreateReport")
 @Composable
@@ -141,10 +139,9 @@ fun ReportContent(
 
 @Composable
 fun Attachements(
-    attachments: List<Uri>,
-    onDeleteAttachment: (Uri) -> Unit,
+    attachments: List<File>,
+    onDeleteAttachment: (File) -> Unit,
 ) {
-    val fileUtils = koinInject<FileUtils>()
     val density = LocalDensity.current
 
     var width by remember { mutableStateOf(ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH) }
@@ -166,7 +163,6 @@ fun Attachements(
         items(attachments) { attachment ->
             AttachmentItem(
                 attachment = attachment,
-                fileUtils = fileUtils,
                 onDeleteAttachment = onDeleteAttachment,
             )
         }
@@ -175,14 +171,11 @@ fun Attachements(
 
 @Composable
 fun AttachmentItem(
-    attachment: Uri,
-    fileUtils: FileUtils,
-    onDeleteAttachment: (Uri) -> Unit,
+    attachment: File,
+    onDeleteAttachment: (File) -> Unit,
 ) {
-    val context = LocalContext.current
-
     val photoBitmap = remember(attachment) {
-        fileUtils.getBitmapFromUri(context, attachment)
+        BitmapFactory.decodeFile(attachment.absolutePath)
     }
 
     Card(
@@ -220,7 +213,7 @@ const val ATTACHMENTS_GRID_COLUMNS = 3
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
     val onDescriptionChanged: (String) -> Unit,
-    val onDeleteAttachment: (Uri) -> Unit,
+    val onDeleteAttachment: (File) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)

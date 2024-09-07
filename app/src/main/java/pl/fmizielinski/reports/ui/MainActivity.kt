@@ -164,7 +164,7 @@ fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
     ) { success ->
         scope.launch {
             if (success) {
-                postUiEvent(UiEvent.PictureTaken(requireNotNull(photoUri)))
+                postUiEvent(UiEvent.PictureTaken(requireNotNull(photoFile)))
             } else {
                 postUiEvent(UiEvent.TakePictureFailed)
             }

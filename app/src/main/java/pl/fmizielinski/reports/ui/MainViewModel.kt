@@ -41,6 +41,7 @@ import pl.fmizielinski.reports.ui.common.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import timber.log.Timber
+import java.io.File
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 
@@ -248,7 +249,7 @@ class MainViewModel(
 
     private fun handlePictureTaken(state: State, event: UiEvent.PictureTaken): State {
         scope.launch {
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(event.uri))
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(event.file))
         }
         return state
     }
@@ -380,7 +381,7 @@ class MainViewModel(
         data class ActionClicked(val action: TopBarAction) : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
         data object FabClicked : UiEvent
-        data class PictureTaken(val uri: Uri) : UiEvent
+        data class PictureTaken(val file: File) : UiEvent
         data object TakePictureFailed : UiEvent
         data class ShowPermissionRationale(val permission: String) : UiEvent
         data object AlertDialogDismissed : UiEvent
