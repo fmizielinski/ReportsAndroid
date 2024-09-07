@@ -55,6 +55,7 @@ class CreateReportViewModel(
             is Event.PostVerificationError -> handleVerificationError(state, event)
             is Event.PictureTaken -> handlePictureTaken(state, event)
             is Event.AttachmentUploaded -> handleAttachmentUploaded(state, event)
+            is Event.AttachmentUploadFailed -> handleAttachmentUploadFailed(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
             is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
@@ -106,9 +107,11 @@ class CreateReportViewModel(
                         postEvent(Event.AttachmentUploaded(attachment.file))
                     } catch (error: ErrorException) {
                         logError(error)
-                        //TODO handle error
+                        postEvent(Event.AttachmentUploadFailed(attachment.file, error))
                     }
                 }
+            } else {
+                eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
             }
         }
         return state
@@ -135,15 +138,23 @@ class CreateReportViewModel(
     }
 
     private fun handleAttachmentUploaded(state: State, event: Event.AttachmentUploaded): State {
-        val attachments = state.attachments.map { attachment ->
-            if (attachment.file == event.attachmentFile) {
-                attachment.copy(isUploaded = true)
-            } else {
-                attachment
-            }
-        }
+        val attachments = state.attachments.updateUploaded(event.attachmentFile)
         scope.launch {
             if (attachments.all { it.isUploaded }) {
+                eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
+            }
+        }
+        return state.copy(attachments = attachments)
+    }
+
+    private fun handleAttachmentUploadFailed(
+        state: State,
+        event: Event.AttachmentUploadFailed,
+    ): State {
+        val attachments = state.attachments.updateUploaded(event.attachmentFile)
+        scope.launch {
+            if (attachments.all { it.isUploaded }) {
+                handleError(event.error)
                 eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
             }
         }
@@ -195,6 +206,16 @@ class CreateReportViewModel(
 
     // endregion ErrorHandler
 
+    private fun List<State.Attachment>.updateUploaded(attachmentFile: File): List<State.Attachment> {
+        return map { attachment ->
+            if (attachment.file == attachmentFile) {
+                attachment.copy(isUploaded = true)
+            } else {
+                attachment
+            }
+        }
+    }
+
     data class State(
         val title: String = "",
         val description: String = "",
@@ -220,6 +241,10 @@ class CreateReportViewModel(
         data class PostVerificationError(val errors: List<VerificationError>) : Event
         data class PictureTaken(val photoFile: File) : Event
         data class AttachmentUploaded(val attachmentFile: File) : Event
+        data class AttachmentUploadFailed(
+            val attachmentFile: File,
+            val error: ErrorException,
+        ) : Event
     }
 
     sealed interface UiEvent : Event {
