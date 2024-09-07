@@ -7,6 +7,7 @@
     <string name="common_button_saveReport">Save report</string>
     <string name="common_error_unauthorized">You have been logged out</string>
     <string name="common_error_unknown">Unknown</string>
+    <string name="common_error_ups">Ups, something went wrong</string>
     <string name="common_label_characterCounter">%1$d/%2$d</string>
     <string name="createReportScreen_error_descriptionEmpty">Empty description</string>
     <string name="createReportScreen_error_save">Unable to create report. Try again</string>

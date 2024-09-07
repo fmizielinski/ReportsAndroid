@@ -1,9 +1,14 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
@@ -11,6 +16,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -20,6 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import pl.fmizielinski.reports.BuildConfig
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
@@ -29,6 +37,7 @@ import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiStat
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
+import pl.fmizielinski.reports.ui.utils.FileUtils
 
 @Destination<MainGraph>(route = "CreateReport")
 @Composable
@@ -105,6 +114,32 @@ fun ReportContent(
             supportingText = descriptionSupportingText,
             error = uiState.descriptionVerificationError?.let { stringResource(it) },
         )
+
+        Attachements(uiState.attachments)
+    }
+}
+
+@Composable
+fun Attachements(attachments: List<Uri>) {
+    val fileUtils = koinInject<FileUtils>()
+    val context = LocalContext.current
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(4),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        items(attachments) { attachment ->
+            val photoBitmap = remember(attachment) {
+                fileUtils.getBitmapFromUri(context, attachment)
+            }
+
+            Image(
+                bitmap = photoBitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(4.dp),
+            )
+        }
     }
 }
 
@@ -129,6 +164,23 @@ private val previewUiState = UiState(
     descriptionLength = 120,
     titleVerificationError = null,
     descriptionVerificationError = null,
+    attachments = listOf(
+        Uri.parse(
+            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
+        ),
+        Uri.parse(
+            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
+        ),
+        Uri.parse(
+            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
+        ),
+        Uri.parse(
+            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
+        ),
+        Uri.parse(
+            "android.resource://pl.fmizielinski.reports/mipmap-xxxhdpi/ic_launcher.webp",
+        ),
+    ),
 )
 
 private val emptyCallbacks = CreateReportCallbacks(

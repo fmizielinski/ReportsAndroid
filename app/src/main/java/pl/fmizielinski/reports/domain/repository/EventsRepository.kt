@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.domain.repository
 
+import android.net.Uri
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.core.annotation.Single
@@ -44,5 +45,6 @@ class EventsRepository : UnauthorizedHandler {
         data object Logout : GlobalEvent
         data object SaveReport : GlobalEvent
         data object SaveReportFailed : GlobalEvent
+        data class PictureTaken(val photoUri: Uri) : GlobalEvent
     }
 }

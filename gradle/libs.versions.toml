@@ -1,8 +1,8 @@
 [versions]
-activityCompose = "1.9.1"
+accompanist = "0.36.0"
+activityCompose = "1.9.2"
 agp = "8.7.0-alpha09"
-composeBom = "2024.06.00"
-composeCompiler = "1.5.14"
+composeBom = "2024.09.00"
 composeConstraintLayout = "1.0.1"
 composeDestinations = "2.1.0-beta11"
 coreKtx = "1.13.1"
@@ -14,9 +14,9 @@ koinAnnotations = "1.4.0-RC3"
 kotlin = "2.0.0"
 kover = "0.7.6"
 ksp = "2.0.0-1.0.24"
-lifecycleRuntimeKtx = "2.8.4"
+lifecycleRuntimeKtx = "2.8.5"
 mockk = "1.13.12"
-navigation = "2.7.7"
+navigation = "2.8.0"
 okHttp = "4.12.0"
 retrofit = "2.11.0"
 room = "2.6.1"
@@ -25,9 +25,10 @@ splashScreen = "1.0.1"
 strikt = "0.35.1"
 timber = "5.0.1"
 turbine = "1.1.0"
-uiTooling = "1.6.8"
+uiTooling = "1.7.0"
 
 [libraries]
+accompanist = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-splashScreen = { module = "androidx.core:core-splashscreen", version.ref = "splashScreen" }

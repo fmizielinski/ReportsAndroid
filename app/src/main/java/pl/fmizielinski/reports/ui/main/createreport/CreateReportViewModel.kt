@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
+import android.net.Uri
 import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.filterIsInstance
@@ -35,7 +36,10 @@ class CreateReportViewModel(
         scope.launch {
             eventsRepository.globalEvent
                 .filterIsInstance<EventsRepository.GlobalEvent.SaveReport>()
-                .collect { postSaveEvent() }
+                .collect { postEvent(Event.SaveReport) }
+            eventsRepository.globalEvent
+                .filterIsInstance<EventsRepository.GlobalEvent.PictureTaken>()
+                .collect { postEvent(Event.PictureTaken(it.photoUri)) }
         }
     }
 
@@ -45,6 +49,7 @@ class CreateReportViewModel(
             is Event.CreateReportSuccess -> handleCreateReportSuccess(state)
             is Event.CreateReportFailed -> handleCreateReportFailed(state, event)
             is Event.PostVerificationError -> handleVerificationError(state, event)
+            is Event.PictureTaken -> handlePictureTaken(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
         }
@@ -60,6 +65,7 @@ class CreateReportViewModel(
             descriptionLength = state.description.length,
             titleVerificationError = titleVerificationError,
             descriptionVerificationError = descriptionVerificationError,
+            attachments = state.attachments,
         )
     }
 
@@ -89,6 +95,14 @@ class CreateReportViewModel(
             eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
         }
         return state
+    }
+
+    private fun handlePictureTaken(state: State, event: Event.PictureTaken): State {
+        val attachments = buildList {
+            addAll(state.attachments)
+            add(event.photoUri)
+        }
+        return state.copy(attachments = attachments)
     }
 
     // endregion handle Event
@@ -143,14 +157,11 @@ class CreateReportViewModel(
 
     // endregion ErrorHandler
 
-    private suspend fun postSaveEvent() {
-        postEvent(Event.SaveReport)
-    }
-
     data class State(
         val title: String = "",
         val description: String = "",
         val verificationErrors: List<VerificationError> = emptyList(),
+        val attachments: List<Uri> = emptyList(),
     )
 
     data class UiState(
@@ -158,6 +169,7 @@ class CreateReportViewModel(
         val descriptionLength: Int,
         val titleVerificationError: Int?,
         val descriptionVerificationError: Int?,
+        val attachments: List<Uri>,
     )
 
     sealed interface Event {
@@ -165,6 +177,7 @@ class CreateReportViewModel(
         data object CreateReportSuccess : Event
         data class CreateReportFailed(val error: ErrorException) : Event
         data class PostVerificationError(val errors: List<VerificationError>) : Event
+        data class PictureTaken(val photoUri: Uri) : Event
     }
 
     sealed interface UiEvent : Event {

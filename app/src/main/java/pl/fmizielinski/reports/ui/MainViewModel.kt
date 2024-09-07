@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui
 
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
@@ -36,6 +37,7 @@ import pl.fmizielinski.reports.ui.model.TopBarAction.PHOTO
 import pl.fmizielinski.reports.ui.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
+import timber.log.Timber
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 
@@ -55,6 +57,9 @@ class MainViewModel(
 
     private val _navigationEvents = MutableSharedFlow<Optional<DestinationData>>()
     val navigationEvents: SharedFlow<Optional<DestinationData>> = _navigationEvents
+
+    private val _takePicture = MutableSharedFlow<Unit>()
+    val takePicture: SharedFlow<Unit> = _takePicture
 
     init {
         scope.launch {
@@ -88,6 +93,8 @@ class MainViewModel(
             is UiEvent.ActionClicked -> handleActionClicked(state, event)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
             is UiEvent.FabClicked -> handleFabClicked(state)
+            is UiEvent.PictureTaken -> handlePictureTaken(state, event)
+            is UiEvent.TakePictureFailed -> handleTakePictureFailed(state)
         }
     }
 
@@ -171,7 +178,7 @@ class MainViewModel(
         scope.launch {
             when (event.action) {
                 REGISTER -> postNavigationEvent(RegisterDestination.toDestinationData())
-                PHOTO -> Unit // FIXME
+                PHOTO -> _takePicture.emit(Unit)
             }
         }
         return state
@@ -208,6 +215,22 @@ class MainViewModel(
                     postNavigationEvent(CreateReportDestination.toDestinationData())
                 }
             }
+        }
+        return state
+    }
+
+    private fun handlePictureTaken(state: State, event: UiEvent.PictureTaken): State {
+        scope.launch {
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(event.uri))
+        }
+        return state
+    }
+
+    private fun handleTakePictureFailed(state: State): State {
+        scope.launch {
+            Timber.e("Take picture failed")
+            val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+            postSnackBarEvent(snackBarData)
         }
         return state
     }
@@ -303,6 +326,8 @@ class MainViewModel(
         data class ActionClicked(val action: TopBarAction) : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
         data object FabClicked : UiEvent
+        data class PictureTaken(val uri: Uri) : UiEvent
+        data object TakePictureFailed : UiEvent
     }
 
     companion object {
