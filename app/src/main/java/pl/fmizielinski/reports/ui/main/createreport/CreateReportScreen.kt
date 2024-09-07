@@ -2,24 +2,37 @@ package pl.fmizielinski.reports.ui.main.createreport
 
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices
@@ -103,6 +116,7 @@ fun ReportContent(
         ReportsTextField(
             onValueChange = callbacks.onDescriptionChanged,
             modifier = Modifier.fillMaxWidth()
+                .padding(bottom = 16.dp)
                 .focusRequester(descriptionConfirmationFocusRequester),
             labelResId = R.string.createReportScreen_label_description,
             keyboardOptions = KeyboardOptions(
@@ -122,26 +136,75 @@ fun ReportContent(
 @Composable
 fun Attachements(attachments: List<Uri>) {
     val fileUtils = koinInject<FileUtils>()
-    val context = LocalContext.current
+    val density = LocalDensity.current
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        modifier = Modifier.fillMaxWidth(),
+    var width by remember { mutableStateOf(ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH) }
+    val cardMinWidth = remember(width) {
+        with(density) {
+            (width.toFloat() / ATTACHMENTS_GRID_COLUMNS).toDp()
+        }
+    }
+
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Adaptive(cardMinWidth),
+        modifier = Modifier.fillMaxWidth()
+            .onGloballyPositioned { coordinates ->
+                width = coordinates.size.width
+            },
+        verticalItemSpacing = 8.dp,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(attachments) { attachment ->
-            val photoBitmap = remember(attachment) {
-                fileUtils.getBitmapFromUri(context, attachment)
-            }
-
-            Image(
-                bitmap = photoBitmap.asImageBitmap(),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth()
-                    .padding(4.dp),
+            AttachmentItem(
+                attachment = attachment,
+                fileUtils = fileUtils,
             )
         }
     }
 }
+
+@Composable
+fun AttachmentItem(
+    attachment: Uri,
+    fileUtils: FileUtils,
+) {
+    val context = LocalContext.current
+
+    val photoBitmap = remember(attachment) {
+        fileUtils.getBitmapFromUri(context, attachment)
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Image(
+                bitmap = photoBitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            IconButton(
+                onClick = { /* TODO */ },
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Image(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_delete_24dp),
+                    contentDescription = stringResource(
+                        R.string.createReportScreen_button_deleteAttachment,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+const val ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH = 100
+const val ATTACHMENTS_GRID_COLUMNS = 3
 
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,

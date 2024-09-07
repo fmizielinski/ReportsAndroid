@@ -37,6 +37,8 @@ class CreateReportViewModel(
             eventsRepository.globalEvent
                 .filterIsInstance<EventsRepository.GlobalEvent.SaveReport>()
                 .collect { postEvent(Event.SaveReport) }
+        }
+        scope.launch {
             eventsRepository.globalEvent
                 .filterIsInstance<EventsRepository.GlobalEvent.PictureTaken>()
                 .collect { postEvent(Event.PictureTaken(it.photoUri)) }
