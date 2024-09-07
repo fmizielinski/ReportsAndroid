@@ -12,16 +12,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import pl.fmizielinski.reports.R
-import pl.fmizielinski.reports.ui.MainViewModel.UiState
-import pl.fmizielinski.reports.ui.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
+import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @ExperimentalPermissionsApi
 @ExperimentalMaterial3Api
 @Composable
 fun ReportsTopAppBar(
-    uiState: UiState,
+    uiState: ReportsTopAppBarUiState,
     callbacks: ReportsTopAppBarCallbacks,
 ) {
     CenterAlignedTopAppBar(
@@ -90,6 +93,25 @@ data class ReportsTopAppBarCallbacks(
     val onBackClicked: () -> Unit,
     val onActionClicked: (TopBarAction) -> Unit,
     val onShouldShowPermissionRationale: (String) -> Unit,
+)
+
+@ExperimentalMaterial3Api
+@ExperimentalPermissionsApi
+@Preview(device = Devices.PIXEL_4)
+@Composable
+fun ReportsTopAppBarPreview() {
+    ReportsTheme {
+        ReportsTopAppBar(
+            uiState = previewTopAppBarUiState,
+            callbacks = emptyTopAppBarCallbacks,
+        )
+    }
+}
+
+val previewTopAppBarUiState = ReportsTopAppBarUiState(
+    title = R.string.common_label_permission,
+    isBackVisible = true,
+    actions = listOf(TopBarAction.REGISTER),
 )
 
 val emptyTopAppBarCallbacks = ReportsTopAppBarCallbacks(

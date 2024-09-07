@@ -34,9 +34,10 @@ import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.common.model.AlertDialogUiState
-import pl.fmizielinski.reports.ui.model.TopBarAction
-import pl.fmizielinski.reports.ui.model.TopBarAction.PHOTO
-import pl.fmizielinski.reports.ui.model.TopBarAction.REGISTER
+import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
+import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarAction.PHOTO
+import pl.fmizielinski.reports.ui.common.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import timber.log.Timber
@@ -112,7 +113,22 @@ class MainViewModel(
         val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
-        val alertDialogUiState = state.permissionRationale?.let { rationale ->
+        val appBarUiState = ReportsTopAppBarUiState(
+            title = getTitle(state.currentDestination),
+            isBackVisible = isBackVisible,
+            actions = actions,
+        )
+        return UiState(
+            appBarUiState = appBarUiState,
+            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
+            alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
+        )
+    }
+
+    private fun getAlertDialogUiState(
+        permissionRationale: State.PermissionRationale?,
+    ): AlertDialogUiState? {
+        return permissionRationale?.let { rationale ->
             AlertDialogUiState(
                 iconResId = R.drawable.ic_info_24dp,
                 titleResId = R.string.common_label_permission,
@@ -121,13 +137,6 @@ class MainViewModel(
                 negativeButtonResId = R.string.common_label_cancel,
             )
         }
-        return UiState(
-            actions = actions,
-            isBackVisible = isBackVisible,
-            title = getTitle(state.currentDestination),
-            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
-            alertDialogUiState = alertDialogUiState,
-        )
     }
 
     // region handle Event
@@ -344,9 +353,7 @@ class MainViewModel(
     }
 
     data class UiState(
-        val actions: List<TopBarAction>,
-        val isBackVisible: Boolean,
-        @StringRes val title: Int?,
+        val appBarUiState: ReportsTopAppBarUiState,
         val fabConfig: FabConfig?,
         val alertDialogUiState: AlertDialogUiState?,
     ) {

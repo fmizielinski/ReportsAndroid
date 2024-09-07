@@ -27,7 +27,7 @@ import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
-import pl.fmizielinski.reports.ui.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarAction
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo

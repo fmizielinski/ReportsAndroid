@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.model
+package pl.fmizielinski.reports.ui.common.model
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes

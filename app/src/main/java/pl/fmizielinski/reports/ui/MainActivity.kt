@@ -54,6 +54,7 @@ import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBar
 import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBarCallbacks
 import pl.fmizielinski.reports.ui.common.composable.emptyAlertDialogCallbacks
 import pl.fmizielinski.reports.ui.common.composable.emptyTopAppBarCallbacks
+import pl.fmizielinski.reports.ui.common.composable.previewTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.consumeNavEvent
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 import pl.fmizielinski.reports.ui.utils.FileUtils
@@ -194,7 +195,7 @@ fun MainScreen(
     Scaffold(
         topBar = {
             ReportsTopAppBar(
-                uiState = uiState,
+                uiState = uiState.appBarUiState,
                 callbacks = callbacks.topAppBarCallbacks,
             )
         },
@@ -268,9 +269,7 @@ fun ReportsAppPreview() {
 }
 
 private val previewUiState = UiState(
-    actions = emptyList(),
-    isBackVisible = false,
-    title = null,
+    appBarUiState = previewTopAppBarUiState,
     fabConfig = null,
     alertDialogUiState = null,
 )
