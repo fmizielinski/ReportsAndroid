@@ -2,15 +2,19 @@ package pl.fmizielinski.reports.ui.reports
 
 import app.cash.turbine.testIn
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
@@ -57,5 +61,33 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel>() {
             }
 
         uiState.cancel()
+    }
+
+    @Test
+    fun `WHEN list scrolled with first index 0 THEN post ChangeFabVisibility true event`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ListScrolled(0))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(true)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN list scrolled with first index not 0 THEN post ChangeFabVisibility false event`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ListScrolled(10))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
     }
 }
