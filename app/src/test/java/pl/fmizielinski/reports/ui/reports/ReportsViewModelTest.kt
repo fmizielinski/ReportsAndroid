@@ -3,9 +3,11 @@ package pl.fmizielinski.reports.ui.reports
 import app.cash.turbine.testIn
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.base.BaseViewModelTest
+import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
@@ -17,10 +19,12 @@ import strikt.assertions.withFirst
 class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel>() {
 
     private val getReportsUseCase: GetReportsUseCase = mockk()
+    private val eventsRepository = spyk(EventsRepository())
 
     override fun createViewModel(dispatcher: TestDispatcher): ReportsViewModel = ReportsViewModel(
         dispatcher = dispatcher,
         getReportsUseCase = getReportsUseCase,
+        eventsRepository = eventsRepository,
     )
 
     @Test

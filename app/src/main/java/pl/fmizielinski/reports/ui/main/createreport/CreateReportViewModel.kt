@@ -121,7 +121,7 @@ class CreateReportViewModel(
     private fun handleCreateReportFailed(state: State, event: Event.CreateReportFailed): State {
         scope.launch {
             handleError(event.error)
-            eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = false))
+            eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = true))
         }
         return state
     }
