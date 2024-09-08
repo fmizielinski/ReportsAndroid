@@ -89,6 +89,7 @@ class MainViewModel(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.LoggedInStateChecked -> handleLoggedInStateChecked(state, event)
