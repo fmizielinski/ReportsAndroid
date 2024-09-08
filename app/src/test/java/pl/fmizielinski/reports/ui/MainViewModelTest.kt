@@ -39,7 +39,7 @@ import java.io.File
 
 @ExperimentalCoroutinesApi
 class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
-    private val eventsRepository: EventsRepository = spyk { EventsRepository() }
+    private val eventsRepository = spyk(EventsRepository())
     private val isLoggedInUseCase: IsLoggedInUseCase = mockk()
     private val logoutUseCase: LogoutUseCase = mockk()
 
@@ -288,7 +288,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `GIVEN Current destination is CreateReport AND fab is hidden WHEN SaveReportFailed event posted THEN show fab`() = runTurbineTest {
+    fun `GIVEN Current destination is CreateReport AND fab is hidden WHEN ChangeFabVisibility event posted THEN show fab`() = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns true
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
@@ -299,7 +299,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
             viewModel.postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
             viewModel.postUiEvent(UiEvent.FabClicked)
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed)
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.ChangeFabVisibility(isVisible = true))
         }
         scheduler.advanceUntilIdle()
         uiState.skipItems(8)

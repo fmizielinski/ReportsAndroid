@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -25,11 +28,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
-import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
+import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
@@ -37,26 +41,50 @@ import pl.fmizielinski.reports.ui.theme.ReportsTheme
 @Composable
 fun ReportsScreen() {
     BaseScreen<ReportsViewModel, UiState, UiEvent> {
-        ReportsList(uiState = state.value)
+        ReportsList(
+            uiState = state.value,
+            callbacks = ReportsCallbacks(
+                onListScrolled = { firstItemIndex ->
+                    coroutineScope.launch {
+                        viewModel.postUiEvent(UiEvent.ListScrolled(firstItemIndex))
+                    }
+                },
+            ),
+        )
     }
 }
 
 @Composable
 fun ReportsList(
     uiState: UiState,
+    callbacks: ReportsCallbacks,
 ) {
     if (uiState.reports.isEmpty()) {
         EmptyListPlaceholder()
     } else {
-        ReportsListContent(uiState = uiState)
+        ReportsListContent(
+            uiState = uiState,
+            callbacks = callbacks,
+        )
     }
 }
 
 @Composable
 fun ReportsListContent(
     uiState: UiState,
+    callbacks: ReportsCallbacks,
 ) {
-    LazyColumn {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect(callbacks.onListScrolled)
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxSize(),
+    ) {
         itemsIndexed(uiState.reports) { index, report ->
             ReportItem(uiState = report)
             if (index != uiState.reports.lastIndex) {
@@ -155,11 +183,18 @@ fun CommentsIndicator(
     }
 }
 
+data class ReportsCallbacks(
+    val onListScrolled: (firstItemIndex: Int) -> Unit,
+)
+
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 fun ReportsScreenPreview() {
     ReportsTheme {
-        ReportsList(uiState = previewUiState)
+        ReportsList(
+            uiState = previewUiState,
+            callbacks = emptyCallbacks,
+        )
     }
 }
 
@@ -167,7 +202,10 @@ fun ReportsScreenPreview() {
 @Composable
 fun ReportsScreenEmptyPreview() {
     ReportsTheme {
-        ReportsList(uiState = previewUiStateEmpty)
+        ReportsList(
+            uiState = previewUiStateEmpty,
+            callbacks = emptyCallbacks,
+        )
     }
 }
 
@@ -181,6 +219,10 @@ private val previewUiState = UiState(
 
 private val previewUiStateEmpty = UiState(
     reports = emptyList(),
+)
+
+private val emptyCallbacks = ReportsCallbacks(
+    onListScrolled = {},
 )
 
 private fun previewReport() = UiState.Report(

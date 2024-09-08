@@ -5,6 +5,8 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.model.Report
+import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.Event
@@ -16,12 +18,14 @@ import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
 class ReportsViewModel(
     dispatcher: CoroutineDispatcher,
     private val getReportsUseCase: GetReportsUseCase,
+    private val eventsRepository: EventsRepository,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.LoadReports -> handleLoadReports(state)
             is Event.ReportsLoaded -> handleReportsLoaded(state, event)
+            is UiEvent.ListScrolled -> handleListScrolled(state, event)
         }
     }
 
@@ -63,6 +67,18 @@ class ReportsViewModel(
 
     // endregion handle Event
 
+    // region handle UiEvent
+
+    private fun handleListScrolled(state: State, event: UiEvent.ListScrolled): State {
+        scope.launch {
+            val globalEvent = GlobalEvent.ChangeFabVisibility(event.firstItemIndex == 0)
+            eventsRepository.postGlobalEvent(globalEvent)
+        }
+        return state
+    }
+
+    // endregion handle UiEvent
+
     data class State(
         val reports: List<Report> = emptyList(),
     )
@@ -85,5 +101,7 @@ class ReportsViewModel(
         data class ReportsLoaded(val reports: List<Report>) : Event
     }
 
-    sealed interface UiEvent : Event
+    sealed interface UiEvent : Event {
+        data class ListScrolled(val firstItemIndex: Int) : UiEvent
+    }
 }

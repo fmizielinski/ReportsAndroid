@@ -44,7 +44,7 @@ class EventsRepository : UnauthorizedHandler {
     sealed interface GlobalEvent {
         data object Logout : GlobalEvent
         data object SaveReport : GlobalEvent
-        data object SaveReportFailed : GlobalEvent
+        data class ChangeFabVisibility(val isVisible: Boolean) : GlobalEvent
         data class PictureTaken(val photoFile: File) : GlobalEvent
     }
 }

@@ -169,7 +169,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
         }
 
     @Test
-    fun `WHEN save event posted AND create report error THEH post snackbar event AND post SaveReportFailed event`() =
+    fun `WHEN save event posted AND create report error THEH post snackbar event AND post ChangeFabVisibility event`() =
         runTurbineTest {
             val errorException = simpleErrorException(
                 code = INVALID_DATA,
@@ -185,7 +185,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             scheduler.advanceUntilIdle()
 
             coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(errorException.toSnackBarData()) }
-            coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed) }
+            coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.ChangeFabVisibility(isVisible = true)) }
 
             uiState.cancelAndIgnoreRemainingEvents()
         }

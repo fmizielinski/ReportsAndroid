@@ -1,7 +1,6 @@
 package pl.fmizielinski.reports.ui
 
 import android.Manifest
-import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
@@ -82,9 +81,9 @@ class MainViewModel(
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<EventsRepository.GlobalEvent.SaveReportFailed>()
+                .filterIsInstance<EventsRepository.GlobalEvent.ChangeFabVisibility>()
                 .collect {
-                    postEvent(Event.ChangeFabVisibility(isHidden = false))
+                    postEvent(Event.ChangeFabVisibility(isVisible = it.isVisible))
                 }
         }
     }
@@ -110,24 +109,52 @@ class MainViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val actions = when (state.currentDestination) {
-            LoginDestination.baseRoute -> listOf(REGISTER)
-            CreateReportDestination.baseRoute -> listOf(PHOTO)
-            else -> emptyList()
-        }
-        val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
-            graph.startDestination.baseRoute == state.currentDestination
-        }
-        val appBarUiState = ReportsTopAppBarUiState(
-            title = getTitle(state.currentDestination),
-            isBackVisible = isBackVisible,
-            actions = actions,
-        )
         return UiState(
-            appBarUiState = appBarUiState,
-            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
+            appBarUiState = getAppBarUiState(state.currentDestination),
+            fabConfig = getFabConfig(state.currentDestination).takeIf { state.isFabVisible },
             alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
         )
+    }
+
+    private fun getAppBarUiState(currentDestination: String?) = when (currentDestination) {
+        LoginDestination.baseRoute -> ReportsTopAppBarUiState(
+            destination = currentDestination,
+            actions = listOf(REGISTER),
+        )
+
+        RegisterDestination.baseRoute -> ReportsTopAppBarUiState(
+            title = R.string.registerScreen_title,
+            destination = currentDestination,
+        )
+
+        CreateReportDestination.baseRoute -> ReportsTopAppBarUiState(
+            title = R.string.createReportScreen_title,
+            destination = currentDestination,
+            actions = listOf(PHOTO),
+        )
+
+        ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
+            title = R.string.reportsScreen_title,
+            destination = currentDestination,
+        )
+
+        else -> ReportsTopAppBarUiState()
+    }
+
+    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
+        return when (currentDestination) {
+            CreateReportDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_save_24dp,
+                contentDescription = R.string.common_button_saveReport,
+            )
+
+            ReportsDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_add_24dp,
+                contentDescription = R.string.common_button_createReport,
+            )
+
+            else -> null
+        }
     }
 
     private fun getAlertDialogUiState(
@@ -189,7 +216,7 @@ class MainViewModel(
     }
 
     private fun handleChangeFabVisibility(state: State, event: Event.ChangeFabVisibility): State {
-        return state.copy(isFabHidden = event.isHidden)
+        return state.copy(isFabVisible = event.isVisible)
     }
 
     // endregion handle Event
@@ -229,14 +256,14 @@ class MainViewModel(
                 setInitialLoadingFinished()
             }
         }
-        return state.copy(currentDestination = event.route, isFabHidden = false)
+        return state.copy(currentDestination = event.route, isFabVisible = true)
     }
 
     private fun handleFabClicked(state: State): State {
         scope.launch {
             when (state.currentDestination) {
                 CreateReportDestination.baseRoute -> {
-                    postEvent(Event.ChangeFabVisibility(isHidden = true))
+                    postEvent(Event.ChangeFabVisibility(isVisible = false))
                     eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
                 }
 
@@ -322,33 +349,10 @@ class MainViewModel(
         _isInitialLoading.value = false
     }
 
-    private fun getTitle(currentDestination: String?) = when (currentDestination) {
-        CreateReportDestination.baseRoute -> R.string.createReportScreen_title
-        RegisterDestination.baseRoute -> R.string.registerScreen_title
-        ReportsDestination.baseRoute -> R.string.reportsScreen_title
-        else -> null
-    }
-
-    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
-        return when (currentDestination) {
-            CreateReportDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_save_24dp,
-                contentDescription = R.string.common_button_saveReport,
-            )
-
-            ReportsDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_add_24dp,
-                contentDescription = R.string.common_button_createReport,
-            )
-
-            else -> null
-        }
-    }
-
     data class State(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
-        val isFabHidden: Boolean = false,
+        val isFabVisible: Boolean = true,
         val permissionRationale: PermissionRationale? = null,
     ) {
 
@@ -374,7 +378,7 @@ class MainViewModel(
         data object CheckIfLoggedIn : Event
         data object Logout : Event
         data object LogoutSuccess : Event
-        data class ChangeFabVisibility(val isHidden: Boolean) : Event
+        data class ChangeFabVisibility(val isVisible: Boolean) : Event
     }
 
     sealed interface UiEvent : Event {
