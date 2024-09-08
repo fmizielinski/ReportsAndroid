@@ -1,5 +1,7 @@
 package pl.fmizielinski.reports.ui
 
+import android.Manifest
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
@@ -31,9 +33,15 @@ import pl.fmizielinski.reports.ui.MainViewModel.State
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
-import pl.fmizielinski.reports.ui.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.AlertDialogUiState
+import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
+import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarAction.PHOTO
+import pl.fmizielinski.reports.ui.common.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
+import timber.log.Timber
+import java.io.File
 import java.util.Optional
 import java.util.concurrent.TimeUnit
 
@@ -53,6 +61,12 @@ class MainViewModel(
 
     private val _navigationEvents = MutableSharedFlow<Optional<DestinationData>>()
     val navigationEvents: SharedFlow<Optional<DestinationData>> = _navigationEvents
+
+    private val _takePicture = MutableSharedFlow<Unit>()
+    val takePicture: SharedFlow<Unit> = _takePicture
+
+    private val _openSettings = MutableSharedFlow<Unit>()
+    val openSettings: SharedFlow<Unit> = _openSettings
 
     init {
         scope.launch {
@@ -75,6 +89,7 @@ class MainViewModel(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.LoggedInStateChecked -> handleLoggedInStateChecked(state, event)
@@ -83,27 +98,50 @@ class MainViewModel(
             is Event.LogoutSuccess -> handleLogoutSuccess(state)
             is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
-            is UiEvent.RegisterClicked -> handleRegisterClicked(state)
+            is UiEvent.ActionClicked -> handleActionClicked(state, event)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
             is UiEvent.FabClicked -> handleFabClicked(state)
+            is UiEvent.PictureTaken -> handlePictureTaken(state, event)
+            is UiEvent.TakePictureFailed -> handleTakePictureFailed(state)
+            is UiEvent.ShowPermissionRationale -> handleShowPermissionRationale(state, event)
+            is UiEvent.AlertDialogDismissed -> handleAlertDialogDismissed(state)
+            is UiEvent.AlertDialogPositiveClicked -> handleAlertDialogPositiveClicked(state)
         }
     }
 
     override fun mapState(state: State): UiState {
-        val actions = buildList {
-            if (state.currentDestination == LoginDestination.baseRoute) {
-                add(TopBarAction.REGISTER)
-            }
+        val actions = when (state.currentDestination) {
+            LoginDestination.baseRoute -> listOf(REGISTER)
+            CreateReportDestination.baseRoute -> listOf(PHOTO)
+            else -> emptyList()
         }
         val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
             graph.startDestination.baseRoute == state.currentDestination
         }
-        return UiState(
-            actions = actions,
-            isBackVisible = isBackVisible,
+        val appBarUiState = ReportsTopAppBarUiState(
             title = getTitle(state.currentDestination),
-            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
+            isBackVisible = isBackVisible,
+            actions = actions,
         )
+        return UiState(
+            appBarUiState = appBarUiState,
+            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
+            alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
+        )
+    }
+
+    private fun getAlertDialogUiState(
+        permissionRationale: State.PermissionRationale?,
+    ): AlertDialogUiState? {
+        return permissionRationale?.let { rationale ->
+            AlertDialogUiState(
+                iconResId = R.drawable.ic_info_24dp,
+                titleResId = R.string.common_label_permission,
+                messageResId = rationale.messageResId,
+                positiveButtonResId = R.string.common_label_settings,
+                negativeButtonResId = R.string.common_label_cancel,
+            )
+        }
     }
 
     // region handle Event
@@ -165,9 +203,12 @@ class MainViewModel(
         return state
     }
 
-    private fun handleRegisterClicked(state: State): State {
+    private fun handleActionClicked(state: State, event: UiEvent.ActionClicked): State {
         scope.launch {
-            postNavigationEvent(RegisterDestination.toDestinationData())
+            when (event.action) {
+                REGISTER -> postNavigationEvent(RegisterDestination.toDestinationData())
+                PHOTO -> _takePicture.emit(Unit)
+            }
         }
         return state
     }
@@ -205,6 +246,44 @@ class MainViewModel(
             }
         }
         return state
+    }
+
+    private fun handlePictureTaken(state: State, event: UiEvent.PictureTaken): State {
+        scope.launch {
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(event.file))
+        }
+        return state
+    }
+
+    private fun handleTakePictureFailed(state: State): State {
+        scope.launch {
+            Timber.e("Take picture failed")
+            val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+            postSnackBarEvent(snackBarData)
+        }
+        return state
+    }
+
+    private fun handleShowPermissionRationale(
+        state: State,
+        event: UiEvent.ShowPermissionRationale,
+    ): State {
+        val permissionRationale = when (event.permission) {
+            Manifest.permission.CAMERA -> R.string.common_label_cameraPermissionRationale
+            else -> null
+        }?.let(State::PermissionRationale)
+        return state.copy(permissionRationale = permissionRationale)
+    }
+
+    private fun handleAlertDialogDismissed(state: State): State {
+        return state.copy(permissionRationale = null)
+    }
+
+    private fun handleAlertDialogPositiveClicked(state: State): State {
+        scope.launch {
+            _openSettings.emit(Unit)
+        }
+        return state.copy(permissionRationale = null)
     }
 
     // endregion handle UiEvent
@@ -270,13 +349,18 @@ class MainViewModel(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
         val isFabHidden: Boolean = false,
-    )
+        val permissionRationale: PermissionRationale? = null,
+    ) {
+
+        data class PermissionRationale(
+            @StringRes val messageResId: Int,
+        )
+    }
 
     data class UiState(
-        val actions: List<TopBarAction>,
-        val isBackVisible: Boolean,
-        @StringRes val title: Int?,
+        val appBarUiState: ReportsTopAppBarUiState,
         val fabConfig: FabConfig?,
+        val alertDialogUiState: AlertDialogUiState?,
     ) {
 
         data class FabConfig(
@@ -295,9 +379,14 @@ class MainViewModel(
 
     sealed interface UiEvent : Event {
         data object BackClicked : UiEvent
-        data object RegisterClicked : UiEvent
+        data class ActionClicked(val action: TopBarAction) : UiEvent
         data class NavDestinationChanged(val route: String) : UiEvent
         data object FabClicked : UiEvent
+        data class PictureTaken(val file: File) : UiEvent
+        data object TakePictureFailed : UiEvent
+        data class ShowPermissionRationale(val permission: String) : UiEvent
+        data object AlertDialogDismissed : UiEvent
+        data object AlertDialogPositiveClicked : UiEvent
     }
 
     companion object {

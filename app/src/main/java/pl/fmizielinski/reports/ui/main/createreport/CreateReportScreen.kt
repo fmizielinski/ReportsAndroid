@@ -1,18 +1,37 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices
@@ -29,6 +48,7 @@ import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiStat
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
+import java.io.File
 
 @Destination<MainGraph>(route = "CreateReport")
 @Composable
@@ -42,6 +62,9 @@ fun CreateReportScreen() {
                 },
                 onDescriptionChanged = {
                     coroutineScope.launch { viewModel.postUiEvent(UiEvent.DescriptionChanged(it)) }
+                },
+                onDeleteAttachment = {
+                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.DeleteAttachment(it)) }
                 },
             ),
         )
@@ -94,6 +117,7 @@ fun ReportContent(
         ReportsTextField(
             onValueChange = callbacks.onDescriptionChanged,
             modifier = Modifier.fillMaxWidth()
+                .padding(bottom = 16.dp)
                 .focusRequester(descriptionConfirmationFocusRequester),
             labelResId = R.string.createReportScreen_label_description,
             keyboardOptions = KeyboardOptions(
@@ -105,12 +129,91 @@ fun ReportContent(
             supportingText = descriptionSupportingText,
             error = uiState.descriptionVerificationError?.let { stringResource(it) },
         )
+
+        Attachements(
+            attachments = uiState.attachments,
+            onDeleteAttachment = callbacks.onDeleteAttachment,
+        )
     }
 }
+
+@Composable
+fun Attachements(
+    attachments: List<File>,
+    onDeleteAttachment: (File) -> Unit,
+) {
+    val density = LocalDensity.current
+
+    var width by remember { mutableStateOf(ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH) }
+    val cardMinWidth = remember(width) {
+        with(density) {
+            (width.toFloat() / ATTACHMENTS_GRID_COLUMNS).toDp()
+        }
+    }
+
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Adaptive(cardMinWidth),
+        modifier = Modifier.fillMaxWidth()
+            .onGloballyPositioned { coordinates ->
+                width = coordinates.size.width
+            },
+        verticalItemSpacing = 8.dp,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(attachments) { attachment ->
+            AttachmentItem(
+                attachment = attachment,
+                onDeleteAttachment = onDeleteAttachment,
+            )
+        }
+    }
+}
+
+@Composable
+fun AttachmentItem(
+    attachment: File,
+    onDeleteAttachment: (File) -> Unit,
+) {
+    val photoBitmap = remember(attachment) {
+        BitmapFactory.decodeFile(attachment.absolutePath)
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Image(
+                bitmap = photoBitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            IconButton(
+                onClick = { onDeleteAttachment(attachment) },
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Image(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_delete_24dp),
+                    contentDescription = stringResource(
+                        R.string.createReportScreen_button_deleteAttachment,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+const val ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH = 100
+const val ATTACHMENTS_GRID_COLUMNS = 3
 
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
     val onDescriptionChanged: (String) -> Unit,
+    val onDeleteAttachment: (File) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -129,9 +232,11 @@ private val previewUiState = UiState(
     descriptionLength = 120,
     titleVerificationError = null,
     descriptionVerificationError = null,
+    attachments = emptyList(),
 )
 
 private val emptyCallbacks = CreateReportCallbacks(
     onTitleChanged = {},
     onDescriptionChanged = {},
+    onDeleteAttachment = {},
 )

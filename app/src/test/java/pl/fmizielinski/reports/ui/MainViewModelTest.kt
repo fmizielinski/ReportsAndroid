@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui
 
+import android.Manifest
 import app.cash.turbine.testIn
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
@@ -25,14 +26,16 @@ import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
+import pl.fmizielinski.reports.fixtures.ui.alertDialogUiState
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
-import pl.fmizielinski.reports.ui.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarAction
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import strikt.assertions.isNull
+import java.io.File
 
 @ExperimentalCoroutinesApi
 class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
@@ -119,7 +122,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.isBackVisible) isEqualTo isBackVisible
+        expectThat(result.appBarUiState.isBackVisible) isEqualTo isBackVisible
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -141,7 +144,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.actions) isEqualTo action
+        expectThat(result.appBarUiState.actions) isEqualTo action
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -183,15 +186,29 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `WHEN Register button is clicked THEN Navigate to RegisterScreen`() = runTurbineTest {
+    fun `WHEN REGISTER action is clicked THEN Navigate to RegisterScreen`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.REGISTER)) }
 
         expectThat(navigationEvents.awaitItem().get()) isEqualTo RegisterDestination.toDestinationData()
 
         navigationEvents.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN PHOTO action is clicked THEN take picture`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val takePicture = viewModel.takePicture.testIn(context, name = "takePicture")
+
+        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.PHOTO)) }
+        scheduler.advanceUntilIdle()
+
+        takePicture.expectMostRecentItem()
+
+        takePicture.cancel()
         uiState.cancelAndIgnoreRemainingEvents()
     }
 
@@ -297,6 +314,108 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.cancel()
     }
 
+    @Test
+    fun `WHEN PictureTaken event posted THEN post PictureTaken global event`() = runTurbineTest {
+        val file = File.createTempFile("test", "jpg")
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.PictureTaken(file))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN TakePictureFailed event posted THEN post snackbar event`() = runTurbineTest {
+        val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val showSnackBar = viewModel.showSnackBar.testIn(context, name = "showSnackBar")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.TakePictureFailed)
+        }
+        scheduler.advanceUntilIdle()
+
+        expectThat(showSnackBar.awaitItem()) isEqualTo snackBarData
+        expectThat(showSnackBar.awaitItem()) isEqualTo SnackBarData.empty()
+
+        uiState.cancelAndIgnoreRemainingEvents()
+        showSnackBar.cancel()
+    }
+
+    @Test
+    fun `WHEN ShowPermissionRationale event posted THEN show alert dialog`() = runTurbineTest {
+        val expectedIconResId = R.drawable.ic_info_24dp
+        val expectedTitleResId = R.string.common_label_permission
+        val expectedMessageResId = R.string.common_label_cameraPermissionRationale
+        val expectedPositiveButtonResId = R.string.common_label_settings
+        val expectedNegativeButtonResId = R.string.common_label_cancel
+
+        val expected = alertDialogUiState(
+            iconResId = expectedIconResId,
+            titleResId = expectedTitleResId,
+            messageResId = expectedMessageResId,
+            positiveButtonResId = expectedPositiveButtonResId,
+            negativeButtonResId = expectedNegativeButtonResId,
+        )
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        uiState.skipItems(1)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+        }
+
+        val result = uiState.awaitItem()
+        expectThat(result.alertDialogUiState) isEqualTo expected
+
+        uiState.cancel()
+    }
+
+    @Test
+    fun `GIVEN alert dialog visible WHEN AlertDialogDismissed event posted THEN hide alert dialog`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        uiState.skipItems(1)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
+        }
+        uiState.skipItems(1)
+
+        val result = uiState.awaitItem()
+        expectThat(result.alertDialogUiState).isNull()
+
+        uiState.cancel()
+    }
+
+    @Test
+    fun `GIVEN alert dialog visible WHEN AlertDialogPositiveClicked event posted THEN hide alert dialog AND openSettings`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val openSettings = viewModel.openSettings.testIn(context, name = "openSettings")
+        uiState.skipItems(1)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
+        }
+        uiState.skipItems(1)
+        scheduler.advanceUntilIdle()
+
+        val result = uiState.awaitItem()
+        expectThat(result.alertDialogUiState).isNull()
+        openSettings.expectMostRecentItem()
+
+        uiState.cancel()
+        openSettings.cancel()
+    }
+
     companion object {
 
         @JvmStatic
@@ -304,7 +423,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             arrayOf("Login", listOf(TopBarAction.REGISTER)),
             arrayOf("Register", emptyList<TopBarAction>()),
             arrayOf("Reports", emptyList<TopBarAction>()),
-            arrayOf("CreateReport", emptyList<TopBarAction>()),
+            arrayOf("CreateReport", listOf(TopBarAction.PHOTO)),
         )
 
         @JvmStatic

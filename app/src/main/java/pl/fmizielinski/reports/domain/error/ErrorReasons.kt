@@ -16,10 +16,13 @@ object ErrorReasons {
 
     object Report {
 
+        const val ACCESS_DENIED = "report.access-denied"
+
         object Create {
             const val INVALID_DATA = "report.create.invalid-data"
             const val TITLE_EMPTY = "report.create.validation.title-empty"
             const val DESCRIPTION_EMPTY = "report.create.validation.description-empty"
+            const val UPLOAD_FAILED = "report.create.upload-failed"
         }
     }
 }

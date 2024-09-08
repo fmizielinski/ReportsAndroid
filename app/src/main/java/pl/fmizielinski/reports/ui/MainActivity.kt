@@ -1,54 +1,68 @@
 package pl.fmizielinski.reports.ui
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import com.ramcosta.composedestinations.utils.startDestination
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import pl.fmizielinski.reports.R
+import org.koin.compose.koinInject
+import pl.fmizielinski.reports.android.CustomActivityResultContracts
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen
+import pl.fmizielinski.reports.ui.common.composable.AlertDialog
+import pl.fmizielinski.reports.ui.common.composable.AlertDialogCallbacks
+import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBar
+import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBarCallbacks
+import pl.fmizielinski.reports.ui.common.composable.emptyAlertDialogCallbacks
+import pl.fmizielinski.reports.ui.common.composable.emptyTopAppBarCallbacks
+import pl.fmizielinski.reports.ui.common.composable.previewTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.consumeNavEvent
-import pl.fmizielinski.reports.ui.model.TopBarAction
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
+import pl.fmizielinski.reports.ui.utils.FileUtils
+import java.io.File
 
+@ExperimentalPermissionsApi
 @ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
 
@@ -65,41 +79,59 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@ExperimentalPermissionsApi
 @ExperimentalMaterial3Api
 @Composable
 fun ReportsApp() {
     ReportsTheme {
         BaseScreen<MainViewModel, UiState, UiEvent> {
             val navController = rememberNavController()
-            val currentDestination = navController.currentDestinationAsState().value
-                ?: NavGraphs.reports.startDestination
-            val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
+            viewModel.handleNavigationEvents(coroutineScope, navController)
 
             val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
 
-            LaunchedEffect(Unit) {
-                viewModel.navigationEvents.collectDestination(navigator::consumeNavEvent)
-            }
-            LaunchedEffect(currentDestination) {
-                coroutineScope.launch {
-                    val event = UiEvent.NavDestinationChanged(currentDestination.baseRoute)
-                    viewModel.postUiEvent(event)
-                }
-            }
+            viewModel.handleTakePicture(coroutineScope)
+            viewModel.handleOpenSettings()
 
             MainScreen(
                 uiState = state.value,
                 navController = navController,
                 snackBarData = snackBarData.value,
                 callbacks = MainCallbacks(
-                    onBackClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
-                    },
-                    onRegisterClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
-                    },
                     onFabClicked = {
                         coroutineScope.launch { viewModel.postUiEvent(UiEvent.FabClicked) }
+                    },
+                    topAppBarCallbacks = ReportsTopAppBarCallbacks(
+                        onBackClicked = {
+                            coroutineScope.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
+                        },
+                        onActionClicked = {
+                            coroutineScope.launch {
+                                viewModel.postUiEvent(UiEvent.ActionClicked(it))
+                            }
+                        },
+                        onShouldShowPermissionRationale = {
+                            coroutineScope.launch {
+                                viewModel.postUiEvent(UiEvent.ShowPermissionRationale(it))
+                            }
+                        },
+                    ),
+                ),
+                alertDialogCallbacks = AlertDialogCallbacks(
+                    onDismissRequest = {
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
+                        }
+                    },
+                    onNegativeClick = {
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
+                        }
+                    },
+                    onPositiveClick = {
+                        coroutineScope.launch {
+                            viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
+                        }
                     },
                 ),
             )
@@ -107,6 +139,66 @@ fun ReportsApp() {
     }
 }
 
+@Composable
+fun MainViewModel.handleOpenSettings() {
+    val settingsLauncher = rememberLauncherForActivityResult(
+        contract = CustomActivityResultContracts.OpenAppSettings(),
+    ) { _ -> }
+
+    LaunchedEffect(Unit) {
+        openSettings.collect {
+            settingsLauncher.launch()
+        }
+    }
+}
+
+@Composable
+fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
+    val context = LocalContext.current
+    var photoFile by remember { mutableStateOf<File?>(null) }
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    val fileUtils = koinInject<FileUtils>()
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        scope.launch {
+            if (success) {
+                postUiEvent(UiEvent.PictureTaken(requireNotNull(photoFile)))
+            } else {
+                postUiEvent(UiEvent.TakePictureFailed)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        takePicture.collect {
+            photoFile = fileUtils.createPhotoFile(context)
+            photoUri = fileUtils.getUriForFile(context, requireNotNull(photoFile))
+
+            takePictureLauncher.launch(requireNotNull(photoUri))
+        }
+    }
+}
+
+@Composable
+fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navController: NavHostController) {
+    val currentDestination = navController.currentDestinationAsState().value
+        ?: NavGraphs.reports.startDestination
+    val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
+
+    LaunchedEffect(Unit) {
+        navigationEvents.collectDestination(navigator::consumeNavEvent)
+    }
+    LaunchedEffect(currentDestination) {
+        scope.launch {
+            val event = UiEvent.NavDestinationChanged(currentDestination.baseRoute)
+            postUiEvent(event)
+        }
+    }
+}
+
+@ExperimentalPermissionsApi
 @ExperimentalMaterial3Api
 @Composable
 fun MainScreen(
@@ -114,12 +206,13 @@ fun MainScreen(
     navController: NavHostController,
     snackBarData: SnackBarData = SnackBarData.empty(),
     callbacks: MainCallbacks,
+    alertDialogCallbacks: AlertDialogCallbacks,
 ) {
     Scaffold(
         topBar = {
-            ReportsTopBar(
-                uiState = uiState,
-                callbacks = callbacks,
+            ReportsTopAppBar(
+                uiState = uiState.appBarUiState,
+                callbacks = callbacks.topAppBarCallbacks,
             )
         },
         snackbarHost = {
@@ -145,6 +238,13 @@ fun MainScreen(
             modifier = Modifier.fillMaxWidth()
                 .padding(it),
         )
+
+        if (uiState.alertDialogUiState != null) {
+            AlertDialog(
+                uiState = uiState.alertDialogUiState,
+                callbacks = alertDialogCallbacks,
+            )
+        }
     }
 }
 
@@ -164,57 +264,12 @@ fun Fab(
     )
 }
 
-@ExperimentalMaterial3Api
-@Composable
-fun ReportsTopBar(
-    uiState: UiState,
-    callbacks: MainCallbacks,
-) {
-    CenterAlignedTopAppBar(
-        title = {
-            if (uiState.title != null) {
-                Text(text = stringResource(uiState.title))
-            }
-        },
-        navigationIcon = {
-            if (uiState.isBackVisible) {
-                IconButton(
-                    onClick = callbacks.onBackClicked,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                        contentDescription = stringResource(R.string.common_button_back),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
-        },
-        actions = {
-            uiState.actions.forEach { action ->
-                when (action) {
-                    TopBarAction.REGISTER -> {
-                        TextButton(
-                            onClick = callbacks.onRegisterClicked,
-                        ) {
-                            Text(
-                                text = stringResource(action.nameResId),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                    }
-                }
-            }
-        },
-    )
-}
-
 data class MainCallbacks(
-    val onBackClicked: () -> Unit,
-    val onRegisterClicked: () -> Unit,
     val onFabClicked: () -> Unit,
+    val topAppBarCallbacks: ReportsTopAppBarCallbacks,
 )
 
+@ExperimentalPermissionsApi
 @ExperimentalMaterial3Api
 @Preview(showBackground = true)
 @Composable
@@ -224,19 +279,18 @@ fun ReportsAppPreview() {
             uiState = previewUiState,
             navController = rememberNavController(),
             callbacks = emptyCallbacks,
+            alertDialogCallbacks = emptyAlertDialogCallbacks,
         )
     }
 }
 
 private val previewUiState = UiState(
-    actions = emptyList(),
-    isBackVisible = false,
-    title = null,
+    appBarUiState = previewTopAppBarUiState,
     fabConfig = null,
+    alertDialogUiState = null,
 )
 
 private val emptyCallbacks = MainCallbacks(
-    onBackClicked = {},
-    onRegisterClicked = {},
     onFabClicked = {},
+    topAppBarCallbacks = emptyTopAppBarCallbacks,
 )

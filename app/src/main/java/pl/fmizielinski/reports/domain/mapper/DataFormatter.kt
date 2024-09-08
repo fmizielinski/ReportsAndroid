@@ -8,9 +8,18 @@ import java.util.Locale
 @Factory
 class DataFormatter(locale: Locale = Locale.getDefault()) {
 
-    private val formatter by lazy { DateTimeFormatter.ofPattern("d LLL", locale) }
+    private val reportListDateFormatter by lazy {
+        DateTimeFormatter.ofPattern("d LLL", locale)
+    }
+    private val fileNameFormatter by lazy {
+        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", locale)
+    }
 
     fun formatReportListDate(date: LocalDateTime): String {
-        return formatter.format(date)
+        return reportListDateFormatter.format(date)
+    }
+
+    fun formatFileName(date: LocalDateTime): String {
+        return fileNameFormatter.format(date)
     }
 }

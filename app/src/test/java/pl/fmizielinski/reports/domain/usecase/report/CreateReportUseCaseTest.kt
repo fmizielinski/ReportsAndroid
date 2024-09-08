@@ -1,7 +1,6 @@
 package pl.fmizielinski.reports.domain.usecase.report
 
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -10,9 +9,11 @@ import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.fixtures.common.httpException
+import pl.fmizielinski.reports.fixtures.data.createReportResponse
 import pl.fmizielinski.reports.fixtures.domain.createReportData
 import pl.fmizielinski.reports.fixtures.domain.networkError
 import strikt.api.expectDoesNotThrow
+import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
@@ -26,17 +27,20 @@ class CreateReportUseCaseTest {
 
     @Test
     fun `GIVEN valid report data WHEN invoke THEN no errors`() = runTest {
-        coJustRun { reportService.createReport(any()) }
+        val reportId = 1
+        coEvery { reportService.createReport(any()) } returns createReportResponse(id = reportId)
 
-        expectDoesNotThrow { useCase(createReportData()) }
+        val result = useCase(createReportData())
+
+        expectThat(result) isEqualTo reportId
     }
 
     @Test
     fun `GIVEN 400 INVALID_DATA error WHEN invoke THEN throw invalid data exception`() = runTest {
-        val message = "INVALID_DATA"
+        val errorMessage = "INVALID_DATA"
         val exception = httpException<Unit>(
             code = 400,
-            error = networkError(ErrorReasons.Report.Create.INVALID_DATA, message),
+            error = networkError(ErrorReasons.Report.Create.INVALID_DATA, errorMessage),
         )
         coEvery { reportService.createReport(any()) } throws exception
 
@@ -44,17 +48,17 @@ class CreateReportUseCaseTest {
             useCase(createReportData())
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_save
-            get { message } isEqualTo message
+            get { message } isEqualTo errorMessage
             get { isVerificationError }.isFalse()
         }
     }
 
     @Test
     fun `GIVEN 400 TITLE_EMPTY error WHEN invoke THEN throw empty title exception`() = runTest {
-        val message = "TITLE_EMPTY"
+        val errorMessage = "TITLE_EMPTY"
         val exception = httpException<Unit>(
             code = 400,
-            error = networkError(ErrorReasons.Report.Create.TITLE_EMPTY, message),
+            error = networkError(ErrorReasons.Report.Create.TITLE_EMPTY, errorMessage),
         )
         coEvery { reportService.createReport(any()) } throws exception
 
@@ -62,17 +66,17 @@ class CreateReportUseCaseTest {
             useCase(createReportData())
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_titleEmpty
-            get { message } isEqualTo message
+            get { message } isEqualTo errorMessage
             get { isVerificationError }.isTrue()
         }
     }
 
     @Test
     fun `GIVEN 400 DESCRIPTION_EMPTY error WHEN invoke THEN throw empty description exception`() = runTest {
-        val message = "DESCRIPTION_EMPTY"
+        val errorMessage = "DESCRIPTION_EMPTY"
         val exception = httpException<Unit>(
             code = 400,
-            error = networkError(ErrorReasons.Report.Create.DESCRIPTION_EMPTY, message),
+            error = networkError(ErrorReasons.Report.Create.DESCRIPTION_EMPTY, errorMessage),
         )
         coEvery { reportService.createReport(any()) } throws exception
 
@@ -80,7 +84,7 @@ class CreateReportUseCaseTest {
             useCase(createReportData())
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_descriptionEmpty
-            get { message } isEqualTo message
+            get { message } isEqualTo errorMessage
             get { isVerificationError }.isTrue()
         }
     }

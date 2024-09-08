@@ -60,14 +60,17 @@ android {
         compose = true
         buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
-    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+composeCompiler {
+    enableStrongSkippingMode = true
+
+    reportsDestination = layout.buildDirectory.dir("compose_compiler")
 }
 
 detekt {
@@ -83,6 +86,7 @@ tasks.withType<Detekt>().configureEach {
 }
 
 dependencies {
+    implementation(libs.accompanist)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.serialization)
@@ -154,12 +158,14 @@ koverReport {
                 "com.ramcosta.composedestinations.generated",
                 "org.koin.ksp.generated",
                 "pl.fmizielinski.reports.data.db.dao",
+                "pl.fmizielinski.reports.data.network.utils",
                 "pl.fmizielinski.reports.di",
                 "pl.fmizielinski.reports.domain.error",
                 "pl.fmizielinski.reports.domain.usecase.base",
                 "pl.fmizielinski.reports.ui.base",
-                "pl.fmizielinski.reports.ui.common.composables",
+                "pl.fmizielinski.reports.ui.common.composable",
                 "pl.fmizielinski.reports.ui.theme",
+                "pl.fmizielinski.reports.ui.utils",
             )
             annotatedBy(
                 "*Generated*",
