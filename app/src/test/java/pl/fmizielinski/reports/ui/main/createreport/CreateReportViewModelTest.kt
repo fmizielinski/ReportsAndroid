@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.base.BaseViewModelTest
+import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.DESCRIPTION_EMPTY
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.INVALID_DATA
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.TITLE_EMPTY
@@ -18,14 +19,17 @@ import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
-import pl.fmizielinski.reports.fixtures.data.createReportResponse
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
+import strikt.assertions.hasSize
+import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
+import strikt.assertions.withFirst
+import java.io.File
 
 class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
 
@@ -99,7 +103,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
         }
 
     @Test
-    fun `WHEN save event posted AND create report success THEH post Reports navigation event`() =
+    fun `GIVEN empty attachments WHEN save event posted AND create report success THEH post Reports navigation event`() =
         runTurbineTest {
             coEvery { createReportUseCase(any()) } returns 1
 
@@ -110,6 +114,55 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             }
             scheduler.advanceUntilIdle()
 
+            coVerify(exactly = 0) { addAttachmentUseCase(any(), any()) }
+            coVerify(exactly = 1) { eventsRepository.postNavEvent(ReportsDestination.toDestinationData()) }
+
+            uiState.cancelAndIgnoreRemainingEvents()
+        }
+
+    @Test
+    fun `GIVEN has attachments WHEN save event posted AND create report success THEH upload attachments AND post Reports navigation event`() =
+        runTurbineTest {
+            val file = File.createTempFile("test", "jpg")
+
+            coEvery { createReportUseCase(any()) } returns 1
+            coJustRun { addAttachmentUseCase(any(), any()) }
+
+            val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+            context.launch {
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
+            }
+            scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { addAttachmentUseCase(any(), any()) }
+            coVerify(exactly = 1) { eventsRepository.postNavEvent(ReportsDestination.toDestinationData()) }
+
+            uiState.cancelAndIgnoreRemainingEvents()
+        }
+
+    @Test
+    fun `GIVEN has attachments WHEN save event posted AND upload error THEH post snackbar event AND post Reports navigation event`() =
+        runTurbineTest {
+            val file = File.createTempFile("test", "jpg")
+            val errorException = simpleErrorException(
+                code = ErrorReasons.Report.Create.UPLOAD_FAILED,
+                isVerificationError = false,
+            )
+
+            coEvery { createReportUseCase(any()) } returns 1
+            coEvery { addAttachmentUseCase(any(), any()) } throws errorException
+
+            val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+            context.launch {
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
+            }
+            scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(errorException.toSnackBarData()) }
             coVerify(exactly = 1) { eventsRepository.postNavEvent(ReportsDestination.toDestinationData()) }
 
             uiState.cancelAndIgnoreRemainingEvents()
@@ -132,7 +185,51 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             scheduler.advanceUntilIdle()
 
             coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(errorException.toSnackBarData()) }
-            coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport) }
+            coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed) }
+
+            uiState.cancelAndIgnoreRemainingEvents()
+        }
+
+    @Test
+    fun `WHEN picture taken global event posted THEH add attachment`() =
+        runTurbineTest {
+            val file = File.createTempFile("test", "jpg")
+
+            val uiState = viewModel.uiState.testIn(context, name = "uiState")
+            uiState.skipItems(1)
+
+            context.launch {
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+            }
+            scheduler.advanceUntilIdle()
+
+            val result = uiState.awaitItem()
+            expectThat(result.attachments)
+                .hasSize(1)
+                .withFirst {
+                    get { file } isEqualTo file
+                }
+
+            uiState.cancelAndIgnoreRemainingEvents()
+        }
+
+    @Test
+    fun `GIVEN has attachments WHEN DeleteAttachment event posted THEH delete attachment`() =
+        runTurbineTest {
+            val file = File.createTempFile("test", "jpg")
+
+            val uiState = viewModel.uiState.testIn(context, name = "uiState")
+            uiState.skipItems(1)
+
+            context.launch {
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                viewModel.postUiEvent(UiEvent.DeleteAttachment(file))
+            }
+            scheduler.advanceUntilIdle()
+            uiState.skipItems(1)
+
+            val result = uiState.awaitItem()
+            expectThat(result.attachments).isEmpty()
 
             uiState.cancelAndIgnoreRemainingEvents()
         }
