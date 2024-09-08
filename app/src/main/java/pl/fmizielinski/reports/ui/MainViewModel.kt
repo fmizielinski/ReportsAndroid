@@ -1,7 +1,6 @@
 package pl.fmizielinski.reports.ui
 
 import android.Manifest
-import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
@@ -82,9 +81,9 @@ class MainViewModel(
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<EventsRepository.GlobalEvent.SaveReportFailed>()
+                .filterIsInstance<EventsRepository.GlobalEvent.ChangeFabVisibility>()
                 .collect {
-                    postEvent(Event.ChangeFabVisibility(isHidden = false))
+                    postEvent(Event.ChangeFabVisibility(isVisible = it.isVisible))
                 }
         }
     }
@@ -125,9 +124,25 @@ class MainViewModel(
         )
         return UiState(
             appBarUiState = appBarUiState,
-            fabConfig = getFabConfig(state.currentDestination).takeUnless { state.isFabHidden },
+            fabConfig = getFabConfig(state.currentDestination).takeIf { state.isFabVisible },
             alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
         )
+    }
+
+    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
+        return when (currentDestination) {
+            CreateReportDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_save_24dp,
+                contentDescription = R.string.common_button_saveReport,
+            )
+
+            ReportsDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_add_24dp,
+                contentDescription = R.string.common_button_createReport,
+            )
+
+            else -> null
+        }
     }
 
     private fun getAlertDialogUiState(
@@ -189,7 +204,7 @@ class MainViewModel(
     }
 
     private fun handleChangeFabVisibility(state: State, event: Event.ChangeFabVisibility): State {
-        return state.copy(isFabHidden = event.isHidden)
+        return state.copy(isFabVisible = event.isVisible)
     }
 
     // endregion handle Event
@@ -229,14 +244,14 @@ class MainViewModel(
                 setInitialLoadingFinished()
             }
         }
-        return state.copy(currentDestination = event.route, isFabHidden = false)
+        return state.copy(currentDestination = event.route, isFabVisible = true)
     }
 
     private fun handleFabClicked(state: State): State {
         scope.launch {
             when (state.currentDestination) {
                 CreateReportDestination.baseRoute -> {
-                    postEvent(Event.ChangeFabVisibility(isHidden = true))
+                    postEvent(Event.ChangeFabVisibility(isVisible = false))
                     eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
                 }
 
@@ -329,26 +344,10 @@ class MainViewModel(
         else -> null
     }
 
-    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
-        return when (currentDestination) {
-            CreateReportDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_save_24dp,
-                contentDescription = R.string.common_button_saveReport,
-            )
-
-            ReportsDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_add_24dp,
-                contentDescription = R.string.common_button_createReport,
-            )
-
-            else -> null
-        }
-    }
-
     data class State(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
-        val isFabHidden: Boolean = false,
+        val isFabVisible: Boolean = true,
         val permissionRationale: PermissionRationale? = null,
     ) {
 
@@ -374,7 +373,7 @@ class MainViewModel(
         data object CheckIfLoggedIn : Event
         data object Logout : Event
         data object LogoutSuccess : Event
-        data class ChangeFabVisibility(val isHidden: Boolean) : Event
+        data class ChangeFabVisibility(val isVisible: Boolean) : Event
     }
 
     sealed interface UiEvent : Event {

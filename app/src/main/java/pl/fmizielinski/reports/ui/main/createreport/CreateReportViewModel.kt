@@ -11,6 +11,7 @@ import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.model.CreateReportData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
@@ -37,12 +38,12 @@ class CreateReportViewModel(
     init {
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<EventsRepository.GlobalEvent.SaveReport>()
+                .filterIsInstance<GlobalEvent.SaveReport>()
                 .collect { postEvent(Event.SaveReport) }
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<EventsRepository.GlobalEvent.PictureTaken>()
+                .filterIsInstance<GlobalEvent.PictureTaken>()
                 .collect { postEvent(Event.PictureTaken(it.photoFile)) }
         }
     }
@@ -120,7 +121,7 @@ class CreateReportViewModel(
     private fun handleCreateReportFailed(state: State, event: Event.CreateReportFailed): State {
         scope.launch {
             handleError(event.error)
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReportFailed)
+            eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = false))
         }
         return state
     }
