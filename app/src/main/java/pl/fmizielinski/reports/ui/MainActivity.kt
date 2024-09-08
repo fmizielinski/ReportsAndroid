@@ -8,6 +8,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -224,7 +227,11 @@ fun MainScreen(
         },
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
-            if (uiState.fabConfig != null) {
+            AnimatedVisibility(
+                visible = uiState.fabConfig != null,
+                enter = scaleIn(),
+                exit = scaleOut(),
+            ) {
                 Fab(
                     config = uiState.fabConfig,
                     onFabClicked = callbacks.onFabClicked,
@@ -250,16 +257,18 @@ fun MainScreen(
 
 @Composable
 fun Fab(
-    config: UiState.FabConfig,
+    config: UiState.FabConfig?,
     onFabClicked: () -> Unit,
 ) {
     FloatingActionButton(
         onClick = onFabClicked,
         content = {
-            Icon(
-                imageVector = ImageVector.vectorResource(config.icon),
-                contentDescription = stringResource(config.contentDescription),
-            )
+            if (config != null) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(config.icon),
+                    contentDescription = stringResource(config.contentDescription),
+                )
+            }
         },
     )
 }

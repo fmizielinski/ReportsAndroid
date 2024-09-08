@@ -109,24 +109,36 @@ class MainViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val actions = when (state.currentDestination) {
-            LoginDestination.baseRoute -> listOf(REGISTER)
-            CreateReportDestination.baseRoute -> listOf(PHOTO)
-            else -> emptyList()
-        }
-        val isBackVisible = ReportsNavGraph.nestedNavGraphs.none { graph ->
-            graph.startDestination.baseRoute == state.currentDestination
-        }
-        val appBarUiState = ReportsTopAppBarUiState(
-            title = getTitle(state.currentDestination),
-            isBackVisible = isBackVisible,
-            actions = actions,
-        )
         return UiState(
-            appBarUiState = appBarUiState,
+            appBarUiState = getAppBarUiState(state.currentDestination),
             fabConfig = getFabConfig(state.currentDestination).takeIf { state.isFabVisible },
             alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
         )
+    }
+
+    private fun getAppBarUiState(currentDestination: String?) = when (currentDestination) {
+        LoginDestination.baseRoute -> ReportsTopAppBarUiState(
+            destination = currentDestination,
+            actions = listOf(REGISTER),
+        )
+
+        RegisterDestination.baseRoute -> ReportsTopAppBarUiState(
+            title = R.string.registerScreen_title,
+            destination = currentDestination,
+        )
+
+        CreateReportDestination.baseRoute -> ReportsTopAppBarUiState(
+            title = R.string.createReportScreen_title,
+            destination = currentDestination,
+            actions = listOf(PHOTO),
+        )
+
+        ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
+            title = R.string.reportsScreen_title,
+            destination = currentDestination,
+        )
+
+        else -> ReportsTopAppBarUiState()
     }
 
     private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
@@ -335,13 +347,6 @@ class MainViewModel(
         // Delay needed to prevent blinking initial navigation after splash screen
         delay(POST_INITIALIZATION_DELAY)
         _isInitialLoading.value = false
-    }
-
-    private fun getTitle(currentDestination: String?) = when (currentDestination) {
-        CreateReportDestination.baseRoute -> R.string.createReportScreen_title
-        RegisterDestination.baseRoute -> R.string.registerScreen_title
-        ReportsDestination.baseRoute -> R.string.reportsScreen_title
-        else -> null
     }
 
     data class State(
