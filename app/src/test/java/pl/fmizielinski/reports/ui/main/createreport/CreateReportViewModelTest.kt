@@ -17,11 +17,13 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.INVALID_D
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.TITLE_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.hasSize
@@ -233,4 +235,32 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
 
             uiState.cancelAndIgnoreRemainingEvents()
         }
+
+    @Test
+    fun `WHEN list scrolled with first index 0 THEN post ChangeFabVisibility true event`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ListScrolled(0))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(true)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN list scrolled with first index not 0 THEN post ChangeFabVisibility false event`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ListScrolled(10))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 }
