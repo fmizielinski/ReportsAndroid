@@ -1,6 +1,6 @@
 package pl.fmizielinski.reports.ui
 
-import android.Manifest
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
@@ -35,6 +35,7 @@ import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.common.model.AlertDialogUiState
 import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarAction.FILES
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.PHOTO
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.navigation.DestinationData
@@ -66,6 +67,9 @@ class MainViewModel(
 
     private val _openSettings = MutableSharedFlow<Unit>()
     val openSettings: SharedFlow<Unit> = _openSettings
+
+    private val _pickFile = MutableSharedFlow<Unit>()
+    val pickFile: SharedFlow<Unit> = _pickFile
 
     init {
         scope.launch {
@@ -105,6 +109,8 @@ class MainViewModel(
             is UiEvent.ShowPermissionRationale -> handleShowPermissionRationale(state, event)
             is UiEvent.AlertDialogDismissed -> handleAlertDialogDismissed(state)
             is UiEvent.AlertDialogPositiveClicked -> handleAlertDialogPositiveClicked(state)
+            is UiEvent.FilePicked -> handleFilePicked(state, event)
+            is UiEvent.PickFileFailed -> handlePickFileFailed(state)
         }
     }
 
@@ -130,7 +136,10 @@ class MainViewModel(
         CreateReportDestination.baseRoute -> ReportsTopAppBarUiState(
             title = R.string.createReportScreen_title,
             destination = currentDestination,
-            actions = listOf(PHOTO),
+            actions = arrayListOf(
+                FILES,
+                PHOTO,
+            ),
         )
 
         ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
@@ -235,6 +244,7 @@ class MainViewModel(
             when (event.action) {
                 REGISTER -> postNavigationEvent(RegisterDestination.toDestinationData())
                 PHOTO -> _takePicture.emit(Unit)
+                FILES -> _pickFile.emit(Unit)
             }
         }
         return state
@@ -277,7 +287,7 @@ class MainViewModel(
 
     private fun handlePictureTaken(state: State, event: UiEvent.PictureTaken): State {
         scope.launch {
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(event.file))
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(event.file))
         }
         return state
     }
@@ -295,8 +305,9 @@ class MainViewModel(
         state: State,
         event: UiEvent.ShowPermissionRationale,
     ): State {
-        val permissionRationale = when (event.permission) {
-            Manifest.permission.CAMERA -> R.string.common_label_cameraPermissionRationale
+        val permissionRationale = when (event.action) {
+            PHOTO -> R.string.common_label_cameraPermissionRationale
+            FILES -> R.string.common_label_imagesPermissionRationale
             else -> null
         }?.let(State::PermissionRationale)
         return state.copy(permissionRationale = permissionRationale)
@@ -311,6 +322,22 @@ class MainViewModel(
             _openSettings.emit(Unit)
         }
         return state.copy(permissionRationale = null)
+    }
+
+    private fun handleFilePicked(state: State, event: UiEvent.FilePicked): State {
+        scope.launch {
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(event.file))
+        }
+        return state
+    }
+
+    private fun handlePickFileFailed(state: State): State {
+        scope.launch {
+            Timber.e("Pick file failed")
+            val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+            postSnackBarEvent(snackBarData)
+        }
+        return state
     }
 
     // endregion handle UiEvent
@@ -388,9 +415,11 @@ class MainViewModel(
         data object FabClicked : UiEvent
         data class PictureTaken(val file: File) : UiEvent
         data object TakePictureFailed : UiEvent
-        data class ShowPermissionRationale(val permission: String) : UiEvent
+        data class ShowPermissionRationale(val action: TopBarAction) : UiEvent
         data object AlertDialogDismissed : UiEvent
         data object AlertDialogPositiveClicked : UiEvent
+        data class FilePicked(val file: File) : UiEvent
+        data object PickFileFailed : UiEvent
     }
 
     companion object {

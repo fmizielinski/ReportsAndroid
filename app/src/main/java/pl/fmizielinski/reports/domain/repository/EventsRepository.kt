@@ -45,6 +45,6 @@ class EventsRepository : UnauthorizedHandler {
         data object Logout : GlobalEvent
         data object SaveReport : GlobalEvent
         data class ChangeFabVisibility(val isVisible: Boolean) : GlobalEvent
-        data class PictureTaken(val photoFile: File) : GlobalEvent
+        data class AddAttachment(val photoFile: File) : GlobalEvent
     }
 }

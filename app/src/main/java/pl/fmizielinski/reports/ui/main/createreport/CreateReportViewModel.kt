@@ -43,8 +43,8 @@ class CreateReportViewModel(
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<GlobalEvent.PictureTaken>()
-                .collect { postEvent(Event.PictureTaken(it.photoFile)) }
+                .filterIsInstance<GlobalEvent.AddAttachment>()
+                .collect { postEvent(Event.AddAttachment(it.photoFile)) }
         }
     }
 
@@ -54,7 +54,7 @@ class CreateReportViewModel(
             is Event.CreateReportSuccess -> handleCreateReportSuccess(state, event)
             is Event.CreateReportFailed -> handleCreateReportFailed(state, event)
             is Event.PostVerificationError -> handleVerificationError(state, event)
-            is Event.PictureTaken -> handlePictureTaken(state, event)
+            is Event.AddAttachment -> handleAddAttachment(state, event)
             is Event.AttachmentUploaded -> handleAttachmentUploaded(state, event)
             is Event.AttachmentUploadFailed -> handleAttachmentUploadFailed(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
@@ -130,7 +130,7 @@ class CreateReportViewModel(
         return state.copy(verificationErrors = event.errors)
     }
 
-    private fun handlePictureTaken(state: State, event: Event.PictureTaken): State {
+    private fun handleAddAttachment(state: State, event: Event.AddAttachment): State {
         val attachments = buildList {
             addAll(state.attachments)
             add(State.Attachment(event.photoFile))
@@ -240,7 +240,7 @@ class CreateReportViewModel(
         data class CreateReportSuccess(val reportId: Int) : Event
         data class CreateReportFailed(val error: ErrorException) : Event
         data class PostVerificationError(val errors: List<VerificationError>) : Event
-        data class PictureTaken(val photoFile: File) : Event
+        data class AddAttachment(val photoFile: File) : Event
         data class AttachmentUploaded(val attachmentFile: File) : Event
         data class AttachmentUploadFailed(
             val attachmentFile: File,
