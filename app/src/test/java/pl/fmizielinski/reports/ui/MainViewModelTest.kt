@@ -315,7 +315,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `WHEN PictureTaken event posted THEN post PictureTaken global event`() = runTurbineTest {
+    fun `WHEN PictureTaken event posted THEN post AddAttachment global event`() = runTurbineTest {
         val file = File.createTempFile("test", "jpg")
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
@@ -325,7 +325,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         }
         scheduler.advanceUntilIdle()
 
-        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file)) }
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file)) }
 
         uiState.cancelAndIgnoreRemainingEvents()
     }
@@ -369,7 +369,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
         }
 
         val result = uiState.awaitItem()
@@ -384,7 +384,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
             viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
         }
         uiState.skipItems(1)
@@ -402,7 +402,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
             viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
         }
         uiState.skipItems(1)
@@ -423,7 +423,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             arrayOf("Login", listOf(TopBarAction.REGISTER)),
             arrayOf("Register", emptyList<TopBarAction>()),
             arrayOf("Reports", emptyList<TopBarAction>()),
-            arrayOf("CreateReport", listOf(TopBarAction.PHOTO)),
+            arrayOf("CreateReport", listOf(TopBarAction.FILES, TopBarAction.PHOTO)),
         )
 
         @JvmStatic

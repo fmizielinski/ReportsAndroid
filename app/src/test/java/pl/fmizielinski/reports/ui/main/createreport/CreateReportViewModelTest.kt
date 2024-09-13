@@ -131,7 +131,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
                 eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
             }
             scheduler.advanceUntilIdle()
@@ -157,7 +157,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
                 eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
             }
             scheduler.advanceUntilIdle()
@@ -191,7 +191,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
         }
 
     @Test
-    fun `WHEN picture taken global event posted THEH add attachment`() =
+    fun `WHEN AddAttachment global event posted THEH add attachment`() =
         runTurbineTest {
             val file = File.createTempFile("test", "jpg")
 
@@ -199,7 +199,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             uiState.skipItems(1)
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
             }
             scheduler.advanceUntilIdle()
 
@@ -222,7 +222,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             uiState.skipItems(1)
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
                 viewModel.postUiEvent(UiEvent.DeleteAttachment(file))
             }
             scheduler.advanceUntilIdle()
