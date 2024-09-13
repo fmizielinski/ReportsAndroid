@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
@@ -17,10 +18,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -65,6 +68,11 @@ fun CreateReportScreen() {
                 },
                 onDeleteAttachment = {
                     coroutineScope.launch { viewModel.postUiEvent(UiEvent.DeleteAttachment(it)) }
+                },
+                onListScrolled = { firstItemIndex ->
+                    coroutineScope.launch {
+                        viewModel.postUiEvent(UiEvent.ListScrolled(firstItemIndex))
+                    }
                 },
             ),
         )
@@ -133,6 +141,7 @@ fun ReportContent(
         Attachements(
             attachments = uiState.attachments,
             onDeleteAttachment = callbacks.onDeleteAttachment,
+            onListScrolled = callbacks.onListScrolled,
         )
     }
 }
@@ -141,17 +150,26 @@ fun ReportContent(
 fun Attachements(
     attachments: List<File>,
     onDeleteAttachment: (File) -> Unit,
+    onListScrolled: (Int) -> Unit,
 ) {
     val density = LocalDensity.current
 
-    var width by remember { mutableStateOf(ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH) }
+    var width by remember { mutableIntStateOf(ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH) }
     val cardMinWidth = remember(width) {
         with(density) {
             (width.toFloat() / ATTACHMENTS_GRID_COLUMNS).toDp()
         }
     }
 
+    val gridState = rememberLazyStaggeredGridState()
+
+    LaunchedEffect(gridState) {
+        snapshotFlow { gridState.firstVisibleItemIndex }
+            .collect(onListScrolled)
+    }
+
     LazyVerticalStaggeredGrid(
+        state = gridState,
         columns = StaggeredGridCells.Adaptive(cardMinWidth),
         modifier = Modifier.fillMaxWidth()
             .onGloballyPositioned { coordinates ->
@@ -214,6 +232,7 @@ data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
     val onDescriptionChanged: (String) -> Unit,
     val onDeleteAttachment: (File) -> Unit,
+    val onListScrolled: (firstItemIndex: Int) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -239,4 +258,5 @@ private val emptyCallbacks = CreateReportCallbacks(
     onTitleChanged = {},
     onDescriptionChanged = {},
     onDeleteAttachment = {},
+    onListScrolled = {},
 )

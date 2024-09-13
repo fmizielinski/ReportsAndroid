@@ -60,6 +60,7 @@ class CreateReportViewModel(
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
             is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
+            is UiEvent.ListScrolled -> handleListScrolled(state, event)
         }
     }
 
@@ -185,6 +186,14 @@ class CreateReportViewModel(
         return state.copy(attachments = attachments)
     }
 
+    private fun handleListScrolled(state: State, event: UiEvent.ListScrolled): State {
+        scope.launch {
+            val globalEvent = GlobalEvent.ChangeFabVisibility(event.firstItemIndex == 0)
+            eventsRepository.postGlobalEvent(globalEvent)
+        }
+        return state
+    }
+
     // endregion handle UiEvent
 
     // region ErrorHandler
@@ -252,6 +261,7 @@ class CreateReportViewModel(
         data class TitleChanged(val title: String) : UiEvent
         data class DescriptionChanged(val description: String) : UiEvent
         data class DeleteAttachment(val attachmentFile: File) : UiEvent
+        data class ListScrolled(val firstItemIndex: Int) : UiEvent
     }
 
     data class Title(override val messageResId: Int) : VerificationError
