@@ -48,12 +48,12 @@ fun ReportsTopAppBar(
         },
         actions = {
             uiState.actions.forEach { action ->
-                if (action.requirePermission != null) {
-                    requestPermission(
-                        permission = action.requirePermission,
+                if (action.requirePermissions.isNotEmpty()) {
+                    requestPermissions(
+                        permissions = action.requirePermissions,
                         onGrantedCallback = { callbacks.onActionClicked(action) },
                         onShouldShowRationale = {
-                            callbacks.onShouldShowPermissionRationale(action.requirePermission)
+                            callbacks.onShouldShowPermissionRationale(action)
                         },
                     ) { onClick ->
                         Action(
@@ -92,7 +92,7 @@ fun Action(
 data class ReportsTopAppBarCallbacks(
     val onBackClicked: () -> Unit,
     val onActionClicked: (TopBarAction) -> Unit,
-    val onShouldShowPermissionRationale: (String) -> Unit,
+    val onShouldShowPermissionRationale: (TopBarAction) -> Unit,
 )
 
 @ExperimentalMaterial3Api

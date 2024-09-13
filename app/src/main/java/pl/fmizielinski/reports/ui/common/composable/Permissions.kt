@@ -2,25 +2,23 @@ package pl.fmizielinski.reports.ui.common.composable
 
 import androidx.compose.runtime.Composable
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 
 @ExperimentalPermissionsApi
 @Composable
-fun requestPermission(
-    permission: String,
+fun requestPermissions(
+    permissions: List<String>,
     onGrantedCallback: Callback,
     onShouldShowRationale: Callback? = null,
     content: @Composable (onClick: Callback) -> Unit,
 ) {
-    val permissionState = rememberPermissionState(permission)
+    val permissionState = rememberMultiplePermissionsState(permissions)
     when {
-        permissionState.status.isGranted -> {
+        permissionState.allPermissionsGranted -> {
             content(onGrantedCallback)
         }
 
-        permissionState.status.shouldShowRationale -> {
+        permissionState.shouldShowRationale -> {
             if (onShouldShowRationale != null) {
                 content(onShouldShowRationale)
             } else {
@@ -29,7 +27,7 @@ fun requestPermission(
         }
 
         else -> {
-            content { permissionState.launchPermissionRequest() }
+            content { permissionState.launchMultiplePermissionRequest() }
         }
     }
 }

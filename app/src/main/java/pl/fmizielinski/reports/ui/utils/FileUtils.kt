@@ -2,6 +2,7 @@ package pl.fmizielinski.reports.ui.utils
 
 import android.content.Context
 import android.net.Uri
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.domain.mapper.DataFormatter
@@ -23,6 +24,19 @@ class FileUtils(private val dateFormatter: DataFormatter) {
             FILE_PROVIDER_AUTHORITY,
             file,
         )
+    }
+
+    fun getFileForUri(context: Context, uri: Uri): File {
+        var filePath: String? = null
+        val projection = arrayOf(MediaStore.Images.Media.DATA)
+        val cursor = context.contentResolver.query(uri, projection, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+                filePath = it.getString(columnIndex)
+            }
+        }
+        return File(requireNotNull(filePath))
     }
 
     companion object {

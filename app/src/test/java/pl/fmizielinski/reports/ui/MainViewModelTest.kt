@@ -213,6 +213,20 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
+    fun `WHEN FILES action is clicked THEN pick file`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val pickFile = viewModel.pickFile.testIn(context, name = "pickFile")
+
+        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.FILES)) }
+        scheduler.advanceUntilIdle()
+
+        pickFile.expectMostRecentItem()
+
+        pickFile.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
     fun `GIVEN user is logged in WHEN app starts THEN navigate to MainNavGraph start destination`() = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns true
 
@@ -315,7 +329,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `WHEN PictureTaken event posted THEN post PictureTaken global event`() = runTurbineTest {
+    fun `WHEN PictureTaken event posted THEN post AddAttachment global event`() = runTurbineTest {
         val file = File.createTempFile("test", "jpg")
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
@@ -325,7 +339,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         }
         scheduler.advanceUntilIdle()
 
-        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file)) }
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file)) }
 
         uiState.cancelAndIgnoreRemainingEvents()
     }
@@ -350,7 +364,42 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
     }
 
     @Test
-    fun `WHEN ShowPermissionRationale event posted THEN show alert dialog`() = runTurbineTest {
+    fun `WHEN FilePicked event posted THEN post AddAttachment global event`() = runTurbineTest {
+        val file = File.createTempFile("test", "jpg")
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.FilePicked(file))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN PickFileFailed event posted THEN post snackbar event`() = runTurbineTest {
+        val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val showSnackBar = viewModel.showSnackBar.testIn(context, name = "showSnackBar")
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.PickFileFailed)
+        }
+        scheduler.advanceUntilIdle()
+
+        expectThat(showSnackBar.awaitItem()) isEqualTo snackBarData
+        expectThat(showSnackBar.awaitItem()) isEqualTo SnackBarData.empty()
+
+        uiState.cancelAndIgnoreRemainingEvents()
+        showSnackBar.cancel()
+    }
+
+    @Test
+    fun `WHEN PHOTO ShowPermissionRationale event posted THEN show alert dialog`() = runTurbineTest {
         val expectedIconResId = R.drawable.ic_info_24dp
         val expectedTitleResId = R.string.common_label_permission
         val expectedMessageResId = R.string.common_label_cameraPermissionRationale
@@ -369,7 +418,36 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
+        }
+
+        val result = uiState.awaitItem()
+        expectThat(result.alertDialogUiState) isEqualTo expected
+
+        uiState.cancel()
+    }
+
+    @Test
+    fun `WHEN FILES ShowPermissionRationale event posted THEN show alert dialog`() = runTurbineTest {
+        val expectedIconResId = R.drawable.ic_info_24dp
+        val expectedTitleResId = R.string.common_label_permission
+        val expectedMessageResId = R.string.common_label_imagesPermissionRationale
+        val expectedPositiveButtonResId = R.string.common_label_settings
+        val expectedNegativeButtonResId = R.string.common_label_cancel
+
+        val expected = alertDialogUiState(
+            iconResId = expectedIconResId,
+            titleResId = expectedTitleResId,
+            messageResId = expectedMessageResId,
+            positiveButtonResId = expectedPositiveButtonResId,
+            negativeButtonResId = expectedNegativeButtonResId,
+        )
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        uiState.skipItems(1)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.FILES))
         }
 
         val result = uiState.awaitItem()
@@ -384,7 +462,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
             viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
         }
         uiState.skipItems(1)
@@ -402,7 +480,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         uiState.skipItems(1)
 
         context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(Manifest.permission.CAMERA))
+            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
             viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
         }
         uiState.skipItems(1)
@@ -423,7 +501,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             arrayOf("Login", listOf(TopBarAction.REGISTER)),
             arrayOf("Register", emptyList<TopBarAction>()),
             arrayOf("Reports", emptyList<TopBarAction>()),
-            arrayOf("CreateReport", listOf(TopBarAction.PHOTO)),
+            arrayOf("CreateReport", listOf(TopBarAction.FILES, TopBarAction.PHOTO)),
         )
 
         @JvmStatic

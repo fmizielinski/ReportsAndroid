@@ -1,11 +1,13 @@
 package pl.fmizielinski.reports.ui
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.launch
 import androidx.compose.animation.AnimatedVisibility
@@ -94,6 +96,7 @@ fun ReportsApp() {
             val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
 
             viewModel.handleTakePicture(coroutineScope)
+            viewModel.handlePickFile(coroutineScope)
             viewModel.handleOpenSettings()
 
             MainScreen(
@@ -142,6 +145,7 @@ fun ReportsApp() {
     }
 }
 
+@SuppressLint("ComposableNaming")
 @Composable
 fun MainViewModel.handleOpenSettings() {
     val settingsLauncher = rememberLauncherForActivityResult(
@@ -155,6 +159,7 @@ fun MainViewModel.handleOpenSettings() {
     }
 }
 
+@SuppressLint("ComposableNaming")
 @Composable
 fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
     val context = LocalContext.current
@@ -184,6 +189,35 @@ fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
     }
 }
 
+@SuppressLint("ComposableNaming")
+@Composable
+fun MainViewModel.handlePickFile(scope: CoroutineScope) {
+    val context = LocalContext.current
+    val fileUtils = koinInject<FileUtils>()
+
+    val pickFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        scope.launch {
+            if (uri == null) {
+                postUiEvent(UiEvent.PickFileFailed)
+            } else {
+                val file = fileUtils.getFileForUri(context, uri)
+                postUiEvent(UiEvent.FilePicked(file))
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        pickFile.collect {
+            val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+
+            pickFileLauncher.launch(request)
+        }
+    }
+}
+
+@SuppressLint("ComposableNaming")
 @Composable
 fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navController: NavHostController) {
     val currentDestination = navController.currentDestinationAsState().value
@@ -200,6 +234,7 @@ fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navController: N
         }
     }
 }
+
 
 @ExperimentalPermissionsApi
 @ExperimentalMaterial3Api

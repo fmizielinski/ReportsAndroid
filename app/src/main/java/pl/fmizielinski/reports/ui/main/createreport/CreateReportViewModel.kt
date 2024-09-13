@@ -43,8 +43,8 @@ class CreateReportViewModel(
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<GlobalEvent.PictureTaken>()
-                .collect { postEvent(Event.PictureTaken(it.photoFile)) }
+                .filterIsInstance<GlobalEvent.AddAttachment>()
+                .collect { postEvent(Event.AddAttachment(it.photoFile)) }
         }
     }
 
@@ -54,12 +54,13 @@ class CreateReportViewModel(
             is Event.CreateReportSuccess -> handleCreateReportSuccess(state, event)
             is Event.CreateReportFailed -> handleCreateReportFailed(state, event)
             is Event.PostVerificationError -> handleVerificationError(state, event)
-            is Event.PictureTaken -> handlePictureTaken(state, event)
+            is Event.AddAttachment -> handleAddAttachment(state, event)
             is Event.AttachmentUploaded -> handleAttachmentUploaded(state, event)
             is Event.AttachmentUploadFailed -> handleAttachmentUploadFailed(state, event)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
             is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
+            is UiEvent.ListScrolled -> handleListScrolled(state, event)
         }
     }
 
@@ -130,7 +131,7 @@ class CreateReportViewModel(
         return state.copy(verificationErrors = event.errors)
     }
 
-    private fun handlePictureTaken(state: State, event: Event.PictureTaken): State {
+    private fun handleAddAttachment(state: State, event: Event.AddAttachment): State {
         val attachments = buildList {
             addAll(state.attachments)
             add(State.Attachment(event.photoFile))
@@ -183,6 +184,14 @@ class CreateReportViewModel(
     private fun handleDeleteAttachment(state: State, event: UiEvent.DeleteAttachment): State {
         val attachments = state.attachments.filterNot { it.file == event.attachmentFile }
         return state.copy(attachments = attachments)
+    }
+
+    private fun handleListScrolled(state: State, event: UiEvent.ListScrolled): State {
+        scope.launch {
+            val globalEvent = GlobalEvent.ChangeFabVisibility(event.firstItemIndex == 0)
+            eventsRepository.postGlobalEvent(globalEvent)
+        }
+        return state
     }
 
     // endregion handle UiEvent
@@ -240,7 +249,7 @@ class CreateReportViewModel(
         data class CreateReportSuccess(val reportId: Int) : Event
         data class CreateReportFailed(val error: ErrorException) : Event
         data class PostVerificationError(val errors: List<VerificationError>) : Event
-        data class PictureTaken(val photoFile: File) : Event
+        data class AddAttachment(val photoFile: File) : Event
         data class AttachmentUploaded(val attachmentFile: File) : Event
         data class AttachmentUploadFailed(
             val attachmentFile: File,
@@ -252,6 +261,7 @@ class CreateReportViewModel(
         data class TitleChanged(val title: String) : UiEvent
         data class DescriptionChanged(val description: String) : UiEvent
         data class DeleteAttachment(val attachmentFile: File) : UiEvent
+        data class ListScrolled(val firstItemIndex: Int) : UiEvent
     }
 
     data class Title(override val messageResId: Int) : VerificationError

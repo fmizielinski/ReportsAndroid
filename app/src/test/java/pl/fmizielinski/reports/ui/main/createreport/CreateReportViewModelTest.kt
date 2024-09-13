@@ -17,11 +17,13 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.INVALID_D
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.TITLE_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
+import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.hasSize
@@ -131,7 +133,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
                 eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
             }
             scheduler.advanceUntilIdle()
@@ -157,7 +159,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
                 eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
             }
             scheduler.advanceUntilIdle()
@@ -191,7 +193,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
         }
 
     @Test
-    fun `WHEN picture taken global event posted THEH add attachment`() =
+    fun `WHEN AddAttachment global event posted THEH add attachment`() =
         runTurbineTest {
             val file = File.createTempFile("test", "jpg")
 
@@ -199,7 +201,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             uiState.skipItems(1)
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
             }
             scheduler.advanceUntilIdle()
 
@@ -222,7 +224,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             uiState.skipItems(1)
 
             context.launch {
-                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.PictureTaken(file))
+                eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file))
                 viewModel.postUiEvent(UiEvent.DeleteAttachment(file))
             }
             scheduler.advanceUntilIdle()
@@ -233,4 +235,32 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
 
             uiState.cancelAndIgnoreRemainingEvents()
         }
+
+    @Test
+    fun `WHEN list scrolled with first index 0 THEN post ChangeFabVisibility true event`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ListScrolled(0))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(true)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN list scrolled with first index not 0 THEN post ChangeFabVisibility false event`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch {
+            viewModel.postUiEvent(UiEvent.ListScrolled(10))
+        }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
 }
