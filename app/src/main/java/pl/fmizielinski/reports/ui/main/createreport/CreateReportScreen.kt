@@ -30,6 +30,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -193,7 +194,8 @@ fun AttachmentItem(
     onDeleteAttachment: (File) -> Unit,
 ) {
     val photoBitmap = remember(attachment) {
-        BitmapFactory.decodeFile(attachment.absolutePath)
+        val options = BitmapFactory.Options().apply { inSampleSize = ATTACHMENTS_IMAGE_SCALE }
+        BitmapFactory.decodeFile(attachment.absolutePath, options)
     }
 
     Card(
@@ -209,6 +211,7 @@ fun AttachmentItem(
                 bitmap = photoBitmap.asImageBitmap(),
                 contentDescription = null,
                 modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
             )
             IconButton(
                 onClick = { onDeleteAttachment(attachment) },
@@ -227,6 +230,7 @@ fun AttachmentItem(
 
 const val ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH = 100
 const val ATTACHMENTS_GRID_COLUMNS = 3
+const val ATTACHMENTS_IMAGE_SCALE = 4
 
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
