@@ -8,4 +8,5 @@ data class CreateReportRequest(
     val title: String,
     val description: String,
     val reportDate: LocalDateTimeAsString,
+    val attachments: List<String>,
 )

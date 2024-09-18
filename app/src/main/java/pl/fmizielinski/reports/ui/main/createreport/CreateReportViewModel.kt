@@ -12,7 +12,7 @@ import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.model.CreateReportData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.report.AddAttachmentUseCase
+import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.base.ErrorHandler
@@ -32,14 +32,14 @@ class CreateReportViewModel(
     dispatcher: CoroutineDispatcher,
     private val eventsRepository: EventsRepository,
     private val createReportUseCase: CreateReportUseCase,
-    private val addAttachmentUseCase: AddAttachmentUseCase,
+    private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()), ErrorHandler {
 
     init {
         scope.launch {
             eventsRepository.globalEvent
                 .filterIsInstance<GlobalEvent.SaveReport>()
-                .collect { postEvent(Event.SaveReport) }
+                .collect { postEvent(Event.SaveAttachments) }
         }
         scope.launch {
             eventsRepository.globalEvent
@@ -51,12 +51,13 @@ class CreateReportViewModel(
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.SaveReport -> handleSaveReport(state)
-            is Event.CreateReportSuccess -> handleCreateReportSuccess(state, event)
+            is Event.CreateReportSuccess -> handleCreateReportSuccess(state)
             is Event.CreateReportFailed -> handleCreateReportFailed(state, event)
             is Event.PostVerificationError -> handleVerificationError(state, event)
             is Event.AddAttachment -> handleAddAttachment(state, event)
             is Event.AttachmentUploaded -> handleAttachmentUploaded(state, event)
             is Event.AttachmentUploadFailed -> handleAttachmentUploadFailed(state, event)
+            is Event.SaveAttachments -> handleSaveAttachments(state)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
             is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
@@ -69,14 +70,22 @@ class CreateReportViewModel(
             .findVerificationError<Title>()
         val descriptionVerificationError = state.verificationErrors
             .findVerificationError<Description>()
-        val attachments = state.attachments.map { it.file }
         return UiState(
             titleLength = state.title.length,
             descriptionLength = state.description.length,
             titleVerificationError = titleVerificationError,
             descriptionVerificationError = descriptionVerificationError,
-            attachments = attachments,
+            attachments = getAttachments(state.attachments),
         )
+    }
+
+    private fun getAttachments(attachments: List<State.Attachment>): List<UiState.Attachment> {
+        return attachments.map { attachment ->
+            UiState.Attachment(
+                file = attachment.file,
+                isUploading = attachment.isUploading,
+            )
+        }
     }
 
     // region handle Event
@@ -84,14 +93,15 @@ class CreateReportViewModel(
     private fun handleSaveReport(state: State): State {
         scope.launch {
             try {
-                val reportId = createReportUseCase(
-                    CreateReportData(
-                        title = state.title,
-                        description = state.description,
-                        reportDate = LocalDateTime.now(),
-                    ),
+                val attachments = state.attachments.mapNotNull { it.uuid }
+                val data = CreateReportData(
+                    title = state.title,
+                    description = state.description,
+                    reportDate = LocalDateTime.now(),
+                    attachments = attachments,
                 )
-                postEvent(Event.CreateReportSuccess(reportId))
+                createReportUseCase(data)
+                postEvent(Event.CreateReportSuccess)
             } catch (error: ErrorException) {
                 logError(error)
                 postEvent(Event.CreateReportFailed(error))
@@ -100,21 +110,9 @@ class CreateReportViewModel(
         return state
     }
 
-    private fun handleCreateReportSuccess(state: State, event: Event.CreateReportSuccess): State {
+    private fun handleCreateReportSuccess(state: State): State {
         scope.launch {
-            if (state.attachments.isNotEmpty()) {
-                state.attachments.forEach { attachment ->
-                    try {
-                        addAttachmentUseCase(event.reportId, attachment.file)
-                        postEvent(Event.AttachmentUploaded(attachment.file))
-                    } catch (error: ErrorException) {
-                        logError(error)
-                        postEvent(Event.AttachmentUploadFailed(attachment.file, error))
-                    }
-                }
-            } else {
-                eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
-            }
+            eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
         }
         return state
     }
@@ -140,10 +138,10 @@ class CreateReportViewModel(
     }
 
     private fun handleAttachmentUploaded(state: State, event: Event.AttachmentUploaded): State {
-        val attachments = state.attachments.updateUploaded(event.attachmentFile)
+        val attachments = state.attachments.updateUploaded(event.attachmentFile, event.uuid)
         scope.launch {
             if (attachments.all { it.isUploaded }) {
-                eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
+                postEvent(Event.SaveReport)
             }
         }
         return state.copy(attachments = attachments)
@@ -157,10 +155,29 @@ class CreateReportViewModel(
         scope.launch {
             if (attachments.all { it.isUploaded }) {
                 handleError(event.error)
-                eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
             }
         }
         return state.copy(attachments = attachments)
+    }
+
+    private fun handleSaveAttachments(state: State): State {
+        val attachments = state.attachments.filter { !it.isUploaded }
+        scope.launch {
+            if (attachments.isEmpty()) {
+                postEvent(Event.SaveReport)
+            } else {
+                attachments.forEach { attachment ->
+                    try {
+                        val uuid = addTemporaryAttachmentUseCase(attachment.file)
+                        postEvent(Event.AttachmentUploaded(attachment.file, uuid))
+                    } catch (error: ErrorException) {
+                        logError(error)
+                        postEvent(Event.AttachmentUploadFailed(attachment.file, error))
+                    }
+                }
+            }
+        }
+        return state.copy(attachments = attachments.map { it.copy(isUploading = true) })
     }
 
     // endregion handle Event
@@ -216,10 +233,13 @@ class CreateReportViewModel(
 
     // endregion ErrorHandler
 
-    private fun List<State.Attachment>.updateUploaded(attachmentFile: File): List<State.Attachment> {
+    private fun List<State.Attachment>.updateUploaded(
+        attachmentFile: File,
+        uuid: String? = null,
+    ): List<State.Attachment> {
         return map { attachment ->
             if (attachment.file == attachmentFile) {
-                attachment.copy(isUploaded = true)
+                attachment.copy(uuid = uuid)
             } else {
                 attachment
             }
@@ -233,7 +253,14 @@ class CreateReportViewModel(
         val attachments: List<Attachment> = emptyList(),
     ) {
 
-        data class Attachment(val file: File, val isUploaded: Boolean = false)
+        data class Attachment(
+            val file: File,
+            val isUploading: Boolean = false,
+            val uuid: String? = null,
+        ) {
+            val isUploaded: Boolean
+                get() = uuid != null
+        }
     }
 
     data class UiState(
@@ -241,20 +268,28 @@ class CreateReportViewModel(
         val descriptionLength: Int,
         val titleVerificationError: Int?,
         val descriptionVerificationError: Int?,
-        val attachments: List<File>,
-    )
+        val attachments: List<Attachment>,
+    ) {
+
+        data class Attachment(
+            val file: File,
+            val isUploading: Boolean,
+        )
+    }
 
     sealed interface Event {
         data object SaveReport : Event
-        data class CreateReportSuccess(val reportId: Int) : Event
+        data object CreateReportSuccess : Event
         data class CreateReportFailed(val error: ErrorException) : Event
         data class PostVerificationError(val errors: List<VerificationError>) : Event
         data class AddAttachment(val photoFile: File) : Event
-        data class AttachmentUploaded(val attachmentFile: File) : Event
+        data class AttachmentUploaded(val attachmentFile: File, val uuid: String) : Event
         data class AttachmentUploadFailed(
             val attachmentFile: File,
             val error: ErrorException,
         ) : Event
+
+        data object SaveAttachments : Event
     }
 
     sealed interface UiEvent : Event {
