@@ -6,14 +6,14 @@ import pl.fmizielinski.reports.domain.error.ErrorException
 import java.io.File
 
 @Factory
-class AddAttachmentUseCase(
+class AddTemporaryAttachmentUseCase(
     private val reportService: ReportService,
 ) : BaseAddAttachmentUseCase() {
 
     @Throws(ErrorException::class)
-    suspend operator fun invoke(reportId: Int, file: File) {
+    suspend operator fun invoke(file: File) {
         catchHttpExceptions(
-            body = { reportService.addAttachment(reportId, createFilePart(file)) },
+            body = { reportService.addTemporaryAttachment(createFilePart(file)) },
             handler = { it.toErrorException() },
         )
     }
