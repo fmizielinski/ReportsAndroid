@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,9 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -41,6 +38,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.BuildConfig
@@ -188,16 +187,12 @@ fun Attachements(
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun AttachmentItem(
     attachment: File,
     onDeleteAttachment: (File) -> Unit,
 ) {
-    val photoBitmap = remember(attachment) {
-        val options = BitmapFactory.Options().apply { inSampleSize = ATTACHMENTS_IMAGE_SCALE }
-        BitmapFactory.decodeFile(attachment.absolutePath, options)
-    }
-
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -207,11 +202,9 @@ fun AttachmentItem(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Image(
-                bitmap = photoBitmap.asImageBitmap(),
+            GlideImage(
+                model = attachment,
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth(),
-                contentScale = ContentScale.FillWidth
             )
             IconButton(
                 onClick = { onDeleteAttachment(attachment) },
@@ -230,7 +223,6 @@ fun AttachmentItem(
 
 const val ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH = 100
 const val ATTACHMENTS_GRID_COLUMNS = 3
-const val ATTACHMENTS_IMAGE_SCALE = 4
 
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
