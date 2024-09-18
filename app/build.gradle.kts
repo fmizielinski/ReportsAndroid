@@ -120,6 +120,9 @@ dependencies {
     implementation(libs.bundles.retrofit)
     implementation(libs.okHttp)
 
+    // Glide
+    implementation(libs.bundles.glide)
+
     testImplementation(libs.bundles.test.strikt)
     testImplementation(libs.test.arch.core)
     testImplementation(libs.test.coroutines)

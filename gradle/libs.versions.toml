@@ -8,6 +8,8 @@ composeDestinations = "2.1.0-beta11"
 coreKtx = "1.13.1"
 coroutines = "1.8.1"
 detekt = "1.23.6"
+glide = "4.16.0"
+glideCompose = "1.0.0-beta01"
 junit = "5.11.0"
 koin = "3.5.6"
 koinAnnotations = "1.4.0-RC3"
@@ -87,9 +89,15 @@ navigation-fragment = { module = "androidx.navigation:navigation-fragment-ktx", 
 navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigation" }
 # endregion
 
+# region glide
+glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
+# endregion
+
 [bundles]
 compose = ["compose-material", "compose-ui", "compose-ui-tooling-preview", "compose-constraintLayout", "compose-destinations"]
 compose-debug = ["compose-ui-test-manifest", "compose-ui-tooling"]
+glide = ["glide", "glide-compose"]
 koin = ["koin", "koin-compose", "koin-annotations"]
 navigation = ["navigation-ui", "navigation-fragment", "navigation-compose"]
 retrofit = ["retrofit", "retrofit-converter-serialization"]
