@@ -19,13 +19,12 @@ class CreateReportUseCase(
 ) : BaseUseCase() {
 
     @Throws(ErrorException::class)
-    suspend operator fun invoke(data: CreateReportData): Int {
+    suspend operator fun invoke(data: CreateReportData) {
         val requestModel = data.toCreateReportRequest()
-        val responseModel = catchHttpExceptions(
+        catchHttpExceptions(
             body = { reportService.createReport(requestModel) },
             handler = { it.toErrorException() },
         )
-        return responseModel.id
     }
 
     private fun HttpException.toErrorException(): ErrorException {

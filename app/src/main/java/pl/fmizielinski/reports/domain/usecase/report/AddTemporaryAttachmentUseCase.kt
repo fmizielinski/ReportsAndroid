@@ -11,10 +11,11 @@ class AddTemporaryAttachmentUseCase(
 ) : BaseAddAttachmentUseCase() {
 
     @Throws(ErrorException::class)
-    suspend operator fun invoke(file: File) {
-        catchHttpExceptions(
+    suspend operator fun invoke(file: File): String {
+        val response = catchHttpExceptions(
             body = { reportService.addTemporaryAttachment(createFilePart(file)) },
             handler = { it.toErrorException() },
         )
+        return response.uuid
     }
 }

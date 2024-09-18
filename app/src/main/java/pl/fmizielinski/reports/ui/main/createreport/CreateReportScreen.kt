@@ -2,6 +2,7 @@ package pl.fmizielinski.reports.ui.main.createreport
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -148,7 +150,7 @@ fun ReportContent(
 
 @Composable
 fun Attachements(
-    attachments: List<File>,
+    attachments: List<UiState.Attachment>,
     onDeleteAttachment: (File) -> Unit,
     onListScrolled: (Int) -> Unit,
 ) {
@@ -190,7 +192,7 @@ fun Attachements(
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun AttachmentItem(
-    attachment: File,
+    attachment: UiState.Attachment,
     onDeleteAttachment: (File) -> Unit,
 ) {
     Card(
@@ -202,12 +204,17 @@ fun AttachmentItem(
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
-            GlideImage(
-                model = attachment,
-                contentDescription = null,
-            )
+            Box {
+                GlideImage(
+                    model = attachment.file,
+                    contentDescription = null,
+                )
+                if (attachment.isUploading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+            }
             IconButton(
-                onClick = { onDeleteAttachment(attachment) },
+                onClick = { onDeleteAttachment(attachment.file) },
                 modifier = Modifier.align(Alignment.End),
             ) {
                 Image(
