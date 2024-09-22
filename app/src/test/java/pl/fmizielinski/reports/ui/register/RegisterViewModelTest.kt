@@ -7,6 +7,7 @@ import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -86,22 +87,18 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         expected: Boolean?,
     ) = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.EmailChanged(email.orEmpty()))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordChanged(password.orEmpty()))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation.orEmpty()))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.NameChanged(name.orEmpty()))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.SurnameChanged(surname.orEmpty()))
+        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email.orEmpty())) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password.orEmpty())) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation.orEmpty())) }
+        context.launch { viewModel.postUiEvent(UiEvent.NameChanged(name.orEmpty())) }
+        context.launch { viewModel.postUiEvent(UiEvent.SurnameChanged(surname.orEmpty())) }
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
+        val result = uiState.expectMostRecentItem()
         expectThat(result.isRegisterButtonEnabled) isEqualTo expected
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
     @Test
@@ -114,8 +111,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coJustRun { registerUseCase.invoke(registrationData(email, name, surname, password)) }
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.RegisterClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
 
         val result = uiState.awaitItem()
         expectThat(result.isRegisterButtonEnabled).isFalse()
@@ -133,36 +129,35 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coJustRun { registerUseCase.invoke(registrationData(email, name, surname, password)) }
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.RegisterClicked)
-        uiState.skipItems(1)
+        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
+        val result = uiState.expectMostRecentItem()
         expectThat(result.loginData.passwordVerificationError)
             .isNotNull()
             .isEqualTo(R.string.registerScreen_error_password)
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
     @Test
     fun `GIVEN password passed WHEN show password clicked THEN toggle show password`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged("password")) }
+        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        scheduler.advanceUntilIdle()
 
-        var result = uiState.awaitItem()
+        var result = uiState.expectMostRecentItem()
         expectThat(result.loginData.showPassword).isTrue()
 
-        viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        scheduler.advanceUntilIdle()
 
-        result = uiState.awaitItem()
+        result = uiState.expectMostRecentItem()
         expectThat(result.loginData.showPassword).isFalse()
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
     @Test
@@ -177,9 +172,8 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coEvery { registerUseCase.invoke(registrationData(email, name, surname, password)) } throws errorException
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.RegisterClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
@@ -205,12 +199,11 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coEvery { registerUseCase.invoke(registrationData(email, name, surname, password)) } throws errorException
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.RegisterClicked)
-        uiState.skipItems(3)
+        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
+        val result = uiState.expectMostRecentItem()
         expectThat(result) {
             get { loginData.emailVerificationError }.isNotNull()
             get { loginData.passwordVerificationError }.isNotNull()
@@ -218,7 +211,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
             get { userData.surnameVerificationError }.isNotNull()
         }
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
     @Test
@@ -232,18 +225,17 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coEvery { registerUseCase.invoke(registrationData(email, name, surname, password)) } throws errorException
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.RegisterClicked)
-        uiState.skipItems(3)
+        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
+        val result = uiState.expectMostRecentItem()
         expectThat(result.loginData.emailVerificationError).isNotNull()
 
-        uiState.cancelAndIgnoreRemainingEvents()
+        uiState.cancel()
     }
 
-    private suspend fun TestContext<RegisterViewModel>.postData(
+    private fun TestContext<RegisterViewModel>.postData(
         email: String,
         password: String,
         passwordConfirmation: String,
@@ -251,17 +243,13 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         surname: String,
     ): ReceiveTurbine<RegisterViewModel.UiState> {
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.EmailChanged(email))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordChanged(password))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.NameChanged(name))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.SurnameChanged(surname))
+        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email)) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password)) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation)) }
+        context.launch { viewModel.postUiEvent(UiEvent.NameChanged(name)) }
+        context.launch { viewModel.postUiEvent(UiEvent.SurnameChanged(surname)) }
+        scheduler.advanceUntilIdle()
 
         return uiState
     }
