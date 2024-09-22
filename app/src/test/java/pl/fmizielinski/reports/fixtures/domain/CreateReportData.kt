@@ -7,8 +7,10 @@ fun createReportData(
     title: String = "title",
     description: String = "description",
     reportDate: LocalDateTime = LocalDateTime.now(),
+    attachments: List<String> = emptyList(),
 ) = CreateReportData(
     title = title,
     description = description,
     reportDate = reportDate,
+    attachments = attachments,
 )

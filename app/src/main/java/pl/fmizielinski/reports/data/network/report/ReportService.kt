@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.data.network.report
 
 import okhttp3.MultipartBody
+import pl.fmizielinski.reports.data.network.report.model.AddTemporaryAttachmentResponse
 import pl.fmizielinski.reports.data.network.report.model.CreateReportRequest
 import pl.fmizielinski.reports.data.network.report.model.CreateReportResponse
 import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
@@ -31,4 +32,10 @@ interface ReportService {
         @Path("id") id: Int,
         @Part attachment: MultipartBody.Part,
     )
+
+    @Multipart
+    @POST("/report/attachment")
+    suspend fun addTemporaryAttachment(
+        @Part attachment: MultipartBody.Part,
+    ): AddTemporaryAttachmentResponse
 }
