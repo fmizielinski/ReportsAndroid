@@ -153,7 +153,7 @@ class CreateReportViewModel(
     ): State {
         val attachments = state.attachments.updateUploaded(event.attachmentFile)
         scope.launch {
-            if (attachments.all { it.isUploaded }) {
+            if (attachments.all { it.isUploaded || it.uploadFailed }) {
                 handleError(event.error)
             }
         }
@@ -239,7 +239,7 @@ class CreateReportViewModel(
     ): List<State.Attachment> {
         return map { attachment ->
             if (attachment.file == attachmentFile) {
-                attachment.copy(uuid = uuid)
+                attachment.copy(uuid = uuid, uploadFailed = uuid == null)
             } else {
                 attachment
             }
@@ -257,6 +257,7 @@ class CreateReportViewModel(
             val file: File,
             val isUploading: Boolean = false,
             val uuid: String? = null,
+            val uploadFailed: Boolean = false,
         ) {
             val isUploaded: Boolean
                 get() = uuid != null

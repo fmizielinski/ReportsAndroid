@@ -30,9 +30,7 @@ class CreateReportUseCaseTest {
         val reportId = 1
         coEvery { reportService.createReport(any()) } returns createReportResponse(id = reportId)
 
-        val result = useCase(createReportData())
-
-        expectThat(result) isEqualTo reportId
+        expectDoesNotThrow { useCase(createReportData()) }
     }
 
     @Test

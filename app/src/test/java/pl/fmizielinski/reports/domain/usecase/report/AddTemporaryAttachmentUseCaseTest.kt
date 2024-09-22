@@ -1,7 +1,6 @@
 package pl.fmizielinski.reports.domain.usecase.report
 
 import io.mockk.coEvery
-import io.mockk.coJustRun
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -11,26 +10,28 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.ACCESS_DENIED
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FAILED
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.fixtures.common.httpException
+import pl.fmizielinski.reports.fixtures.data.addTemporaryAttachmentResponse
 import pl.fmizielinski.reports.fixtures.domain.networkError
-import strikt.api.expectDoesNotThrow
+import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import java.io.File
 
-class AddAttachmentUseCaseTest {
+class AddTemporaryAttachmentUseCaseTest {
 
     private val reportService: ReportService = mockk()
 
-    private val useCase = AddAttachmentUseCase(reportService)
+    private val useCase = AddTemporaryAttachmentUseCase(reportService)
 
     @Test
-    fun `GIVEN valid attachment WHEN invoke THEN no errors`() = runTest {
-        val reportId = 1
+    fun `GIVEN valid attachment WHEN invoke THEN return uuid`() = runTest {
+        val uuid = "uuid"
         val file = File.createTempFile("test", "jpg")
-        coJustRun { reportService.addAttachment(reportId, any()) }
+        coEvery { reportService.addTemporaryAttachment(any()) } returns addTemporaryAttachmentResponse(uuid)
 
-        expectDoesNotThrow { useCase(reportId, file) }
+        val result = useCase(file)
+        expectThat(result) isEqualTo uuid
     }
 
     @Test
@@ -40,13 +41,12 @@ class AddAttachmentUseCaseTest {
             code = 400,
             error = networkError(UPLOAD_FAILED, errorMessage),
         )
-        val reportId = 1
         val file = File.createTempFile("test", "jpg")
 
-        coEvery { reportService.addAttachment(reportId, any()) } throws exception
+        coEvery { reportService.addTemporaryAttachment(any()) } throws exception
 
         expectThrows<SimpleErrorException> {
-            useCase(reportId, file)
+            useCase(file)
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_addAttachment
             get { message } isEqualTo errorMessage
@@ -60,13 +60,12 @@ class AddAttachmentUseCaseTest {
             code = 400,
             error = networkError("unknown", "message"),
         )
-        val reportId = 1
         val file = File.createTempFile("test", "jpg")
 
-        coEvery { reportService.addAttachment(reportId, any()) } throws exception
+        coEvery { reportService.addTemporaryAttachment(any()) } throws exception
 
         expectThrows<SimpleErrorException> {
-            useCase(reportId, file)
+            useCase(file)
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_addAttachment
             get { message } isEqualTo "Unknown add attachment error"
@@ -81,13 +80,12 @@ class AddAttachmentUseCaseTest {
             code = 403,
             error = networkError(ACCESS_DENIED, errorMessage),
         )
-        val reportId = 1
         val file = File.createTempFile("test", "jpg")
 
-        coEvery { reportService.addAttachment(reportId, any()) } throws exception
+        coEvery { reportService.addTemporaryAttachment(any()) } throws exception
 
         expectThrows<SimpleErrorException> {
-            useCase(reportId, file)
+            useCase(file)
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_addAttachment
             get { message } isEqualTo errorMessage
@@ -101,13 +99,12 @@ class AddAttachmentUseCaseTest {
             code = 403,
             error = networkError("unknown", "message"),
         )
-        val reportId = 1
         val file = File.createTempFile("test", "jpg")
 
-        coEvery { reportService.addAttachment(reportId, any()) } throws exception
+        coEvery { reportService.addTemporaryAttachment(any()) } throws exception
 
         expectThrows<SimpleErrorException> {
-            useCase(reportId, file)
+            useCase(file)
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_addAttachment
             get { message } isEqualTo "Unknown add attachment error"
@@ -117,13 +114,12 @@ class AddAttachmentUseCaseTest {
 
     @Test
     fun `GIVEN unknown http error WHEN invoke THEN throw generic exception`() = runTest {
-        val reportId = 1
         val file = File.createTempFile("test", "jpg")
 
-        coEvery { reportService.addAttachment(reportId, any()) } throws httpException<Unit>(999)
+        coEvery { reportService.addTemporaryAttachment(any()) } throws httpException<Unit>(999)
 
         expectThrows<SimpleErrorException> {
-            useCase(reportId, file)
+            useCase(file)
         }.and {
             get { uiMessage } isEqualTo R.string.createReportScreen_error_addAttachment
             get { message } isEqualTo "Unknown add attachment error"
