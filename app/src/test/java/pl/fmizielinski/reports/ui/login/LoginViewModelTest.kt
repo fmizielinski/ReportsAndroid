@@ -6,7 +6,6 @@ import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -23,7 +22,7 @@ import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import strikt.assertions.isTrue
 
-class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
+class LoginViewModelTest : BaseViewModelTest<LoginViewModel, UiEvent>() {
     private val loginUseCase: LoginUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
 
@@ -47,8 +46,8 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
     ) = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email.orEmpty())) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password.orEmpty())) }
+        postUiEvent(UiEvent.EmailChanged(email.orEmpty()))
+        postUiEvent(UiEvent.PasswordChanged(password.orEmpty()))
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -65,9 +64,9 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
 
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email)) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password)) }
-        context.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+        postUiEvent(UiEvent.EmailChanged(email))
+        postUiEvent(UiEvent.PasswordChanged(password))
+        postUiEvent(UiEvent.LoginClicked)
         scheduler.advanceUntilIdle()
         uiState.skipItems(2)
 
@@ -87,9 +86,9 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
 
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email)) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password)) }
-        context.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+        postUiEvent(UiEvent.EmailChanged(email))
+        postUiEvent(UiEvent.PasswordChanged(password))
+        postUiEvent(UiEvent.LoginClicked)
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
@@ -101,14 +100,14 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
     fun `GIVEN password passed WHEN show password clicked THEN toggle show password`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged("password")) }
-        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        postUiEvent(UiEvent.PasswordChanged("password"))
+        postUiEvent(UiEvent.ShowPasswordClicked)
         scheduler.advanceUntilIdle()
 
         var result = uiState.expectMostRecentItem()
         expectThat(result.showPassword).isTrue()
 
-        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        postUiEvent(UiEvent.ShowPasswordClicked)
         scheduler.advanceUntilIdle()
 
         result = uiState.expectMostRecentItem()

@@ -37,7 +37,7 @@ import strikt.assertions.isNull
 import java.io.File
 
 @ExperimentalCoroutinesApi
-class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
+class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
     private val eventsRepository = spyk(EventsRepository())
     private val isLoggedInUseCase: IsLoggedInUseCase = mockk()
     private val logoutUseCase: LogoutUseCase = mockk()
@@ -116,7 +116,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
+        postUiEvent(UiEvent.NavDestinationChanged(destination))
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
@@ -137,7 +137,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
+        postUiEvent(UiEvent.NavDestinationChanged(destination))
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
@@ -158,7 +158,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
+        postUiEvent(UiEvent.NavDestinationChanged(destination))
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
@@ -173,7 +173,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
+        postUiEvent(UiEvent.BackClicked)
 
         expectThat(navigationEvents.awaitItem().isPresent).isFalse()
 
@@ -186,7 +186,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.REGISTER)) }
+        postUiEvent(UiEvent.ActionClicked(TopBarAction.REGISTER))
 
         expectThat(navigationEvents.awaitItem().get()) isEqualTo RegisterDestination.toDestinationData()
 
@@ -199,7 +199,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val takePicture = viewModel.takePicture.testIn(context, name = "takePicture")
 
-        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.PHOTO)) }
+        postUiEvent(UiEvent.ActionClicked(TopBarAction.PHOTO))
         scheduler.advanceUntilIdle()
 
         takePicture.expectMostRecentItem()
@@ -213,7 +213,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val pickFile = viewModel.pickFile.testIn(context, name = "pickFile")
 
-        context.launch { viewModel.postUiEvent(UiEvent.ActionClicked(TopBarAction.FILES)) }
+        postUiEvent(UiEvent.ActionClicked(TopBarAction.FILES))
         scheduler.advanceUntilIdle()
 
         pickFile.expectMostRecentItem()
@@ -229,7 +229,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(AuthNavGraph.startDestination.route)) }
+        postUiEvent(UiEvent.NavDestinationChanged(AuthNavGraph.startDestination.route))
 
         expectThat(navigationEvents.awaitItem().get()) isEqualTo MainNavGraph.startDestination.toDestinationData()
 
@@ -244,7 +244,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(AuthNavGraph.startDestination.route)) }
+        postUiEvent(UiEvent.NavDestinationChanged(AuthNavGraph.startDestination.route))
 
         navigationEvents.expectNoEvents()
 
@@ -259,13 +259,11 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
-            viewModel.postUiEvent(UiEvent.NavDestinationChanged(ReportsDestination.baseRoute))
-            navigationEvents.skipItems(1)
-            viewModel.postUiEvent(UiEvent.FabClicked)
-            navigationEvents.skipItems(1)
-        }
+        postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
+        postUiEvent(UiEvent.NavDestinationChanged(ReportsDestination.baseRoute))
+        navigationEvents.skipItems(1)
+        postUiEvent(UiEvent.FabClicked)
+        navigationEvents.skipItems(1)
         scheduler.advanceUntilIdle()
 
         expectThat(navigationEvents.awaitItem().get()) isEqualTo CreateReportDestination.toDestinationData()
@@ -281,11 +279,9 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
-            viewModel.postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
-            viewModel.postUiEvent(UiEvent.FabClicked)
-        }
+        postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
+        postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
+        postUiEvent(UiEvent.FabClicked)
         scheduler.advanceUntilIdle()
         uiState.skipItems(3)
 
@@ -303,16 +299,16 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
+        postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
+        postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
+        postUiEvent(UiEvent.FabClicked)
+        scheduler.advanceUntilIdle()
         context.launch {
-            viewModel.postUiEvent(UiEvent.NavDestinationChanged(LoginDestination.baseRoute))
-            viewModel.postUiEvent(UiEvent.NavDestinationChanged(CreateReportDestination.baseRoute))
-            viewModel.postUiEvent(UiEvent.FabClicked)
             eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.ChangeFabVisibility(isVisible = true))
         }
         scheduler.advanceUntilIdle()
-        uiState.skipItems(4)
 
-        expectThat(uiState.awaitItem().fabConfig) isEqualTo UiState.FabConfig(
+        expectThat(uiState.expectMostRecentItem().fabConfig) isEqualTo UiState.FabConfig(
             icon = R.drawable.ic_save_24dp,
             contentDescription = R.string.common_button_saveReport,
         )
@@ -328,9 +324,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.PictureTaken(file))
-        }
+        postUiEvent(UiEvent.PictureTaken(file))
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file)) }
@@ -345,9 +339,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val showSnackBar = viewModel.showSnackBar.testIn(context, name = "showSnackBar")
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.TakePictureFailed)
-        }
+        postUiEvent(UiEvent.TakePictureFailed)
         scheduler.advanceUntilIdle()
 
         expectThat(showSnackBar.awaitItem()) isEqualTo snackBarData
@@ -363,9 +355,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.FilePicked(file))
-        }
+        postUiEvent(UiEvent.FilePicked(file))
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(file)) }
@@ -380,9 +370,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val showSnackBar = viewModel.showSnackBar.testIn(context, name = "showSnackBar")
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.PickFileFailed)
-        }
+        postUiEvent(UiEvent.PickFileFailed)
         scheduler.advanceUntilIdle()
 
         expectThat(showSnackBar.awaitItem()) isEqualTo snackBarData
@@ -411,9 +399,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         uiState.skipItems(1)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
-        }
+        postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
 
         val result = uiState.awaitItem()
         expectThat(result.alertDialogUiState) isEqualTo expected
@@ -440,9 +426,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         uiState.skipItems(1)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.FILES))
-        }
+        postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.FILES))
 
         val result = uiState.awaitItem()
         expectThat(result.alertDialogUiState) isEqualTo expected
@@ -455,10 +439,8 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         uiState.skipItems(1)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
-            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
-        }
+        postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
+        postUiEvent(UiEvent.AlertDialogDismissed)
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
@@ -473,10 +455,8 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         val openSettings = viewModel.openSettings.testIn(context, name = "openSettings")
         uiState.skipItems(1)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
-            viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
-        }
+        postUiEvent(UiEvent.ShowPermissionRationale(TopBarAction.PHOTO))
+        postUiEvent(UiEvent.AlertDialogPositiveClicked)
         uiState.skipItems(1)
         scheduler.advanceUntilIdle()
 

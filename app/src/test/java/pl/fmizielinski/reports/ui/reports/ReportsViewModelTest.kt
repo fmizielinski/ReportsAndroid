@@ -20,7 +20,7 @@ import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 import strikt.assertions.withFirst
 
-class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel>() {
+class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
 
     private val getReportsUseCase: GetReportsUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
@@ -66,9 +66,7 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel>() {
     fun `WHEN list scrolled with first index 0 THEN post ChangeFabVisibility true event`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ListScrolled(0))
-        }
+        postUiEvent(UiEvent.ListScrolled(0))
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(true)) }
@@ -80,9 +78,7 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel>() {
     fun `WHEN list scrolled with first index not 0 THEN post ChangeFabVisibility false event`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ListScrolled(10))
-        }
+        postUiEvent(UiEvent.ListScrolled(10))
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }
