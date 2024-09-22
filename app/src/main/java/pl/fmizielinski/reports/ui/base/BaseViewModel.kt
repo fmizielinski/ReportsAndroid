@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -55,12 +56,13 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
 
     @CallSuper
     open suspend fun onStart() {
+        delay(ON_START_DELAY)
         Timber.tag(tag).i("onStart")
     }
 
     @CallSuper
     open suspend fun onStop() {
-        Timber.tag(tag).i("onStart")
+        Timber.tag(tag).i("onStop")
     }
 
     override fun onCleared() {
@@ -74,5 +76,9 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
         } else if (exception is CompositeErrorException) {
             exception.exceptions.forEach { Timber.tag(tag).e(it) }
         }
+    }
+
+    companion object {
+        private const val ON_START_DELAY = 500L
     }
 }
