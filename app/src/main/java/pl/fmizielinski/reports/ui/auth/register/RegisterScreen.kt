@@ -31,7 +31,6 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiState
@@ -48,32 +47,18 @@ fun RegisterScreen() {
             uiState = state.value,
             callbacks = RegisterCallbacks(
                 loginDataCallbacks = RegisterCallbacks.LoginDataCallbacks(
-                    onEmailChanged = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
-                    },
-                    onPasswordChanged = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
-                    },
+                    onEmailChanged = { postUiEvent(UiEvent.EmailChanged(it)) },
+                    onPasswordChanged = { postUiEvent(UiEvent.PasswordChanged(it)) },
                     onPasswordConfirmationChanged = {
-                        coroutineScope.launch {
-                            viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(it))
-                        }
+                        postUiEvent(UiEvent.PasswordConfirmationChanged(it))
                     },
-                    onShowPasswordClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
-                    },
+                    onShowPasswordClicked = { postUiEvent(UiEvent.ShowPasswordClicked) },
                 ),
                 userDataCallbacks = RegisterCallbacks.UserDataCallbacks(
-                    onNameChanged = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.NameChanged(it)) }
-                    },
-                    onSurnameChanged = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.SurnameChanged(it)) }
-                    },
+                    onNameChanged = { postUiEvent(UiEvent.NameChanged(it)) },
+                    onSurnameChanged = { postUiEvent(UiEvent.SurnameChanged(it)) },
                 ),
-                onRegisterClicked = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
-                },
+                onRegisterClicked = { postUiEvent(UiEvent.RegisterClicked) },
             ),
         )
     }

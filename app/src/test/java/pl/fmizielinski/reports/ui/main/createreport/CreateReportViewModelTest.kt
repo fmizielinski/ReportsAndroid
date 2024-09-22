@@ -34,7 +34,7 @@ import strikt.assertions.isNotNull
 import strikt.assertions.withFirst
 import java.io.File
 
-class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
+class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEvent>() {
 
     private val createReportUseCase: CreateReportUseCase = mockk()
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase = mockk()
@@ -54,7 +54,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
         val uiState = viewModel.uiState.testIn(context)
         uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.TitleChanged(title))
+        postUiEvent(UiEvent.TitleChanged(title))
 
         expectThat(uiState.awaitItem().titleLength) isEqualTo title.length
 
@@ -68,7 +68,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
         val uiState = viewModel.uiState.testIn(context)
         uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.DescriptionChanged(description))
+        postUiEvent(UiEvent.DescriptionChanged(description))
 
         expectThat(uiState.awaitItem().descriptionLength) isEqualTo description.length
 
@@ -225,16 +225,15 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             val file = File.createTempFile("test", "jpg")
 
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
-            uiState.skipItems(1)
 
             context.launch {
                 eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(file))
-                viewModel.postUiEvent(UiEvent.DeleteAttachment(file))
             }
             scheduler.advanceUntilIdle()
-            uiState.skipItems(1)
+            postUiEvent(UiEvent.DeleteAttachment(file))
+            scheduler.advanceUntilIdle()
 
-            val result = uiState.awaitItem()
+            val result = uiState.expectMostRecentItem()
             expectThat(result.attachments).isEmpty()
 
             uiState.cancelAndIgnoreRemainingEvents()
@@ -244,9 +243,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
     fun `WHEN list scrolled with first index 0 THEN post ChangeFabVisibility true event`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ListScrolled(0))
-        }
+        postUiEvent(UiEvent.ListScrolled(0))
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(true)) }
@@ -258,9 +255,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
     fun `WHEN list scrolled with first index not 0 THEN post ChangeFabVisibility false event`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch {
-            viewModel.postUiEvent(UiEvent.ListScrolled(10))
-        }
+        postUiEvent(UiEvent.ListScrolled(10))
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }

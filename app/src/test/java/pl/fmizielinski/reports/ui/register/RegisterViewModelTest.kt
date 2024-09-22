@@ -7,7 +7,6 @@ import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -32,7 +31,7 @@ import strikt.assertions.isFalse
 import strikt.assertions.isNotNull
 import strikt.assertions.isTrue
 
-class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
+class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
 
     private val registerUseCase: RegisterUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
@@ -88,11 +87,11 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
     ) = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email.orEmpty())) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password.orEmpty())) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation.orEmpty())) }
-        context.launch { viewModel.postUiEvent(UiEvent.NameChanged(name.orEmpty())) }
-        context.launch { viewModel.postUiEvent(UiEvent.SurnameChanged(surname.orEmpty())) }
+        postUiEvent(UiEvent.EmailChanged(email.orEmpty()))
+        postUiEvent(UiEvent.PasswordChanged(password.orEmpty()))
+        postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation.orEmpty()))
+        postUiEvent(UiEvent.NameChanged(name.orEmpty()))
+        postUiEvent(UiEvent.SurnameChanged(surname.orEmpty()))
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -111,7 +110,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coJustRun { registerUseCase.invoke(registrationData(email, name, surname, password)) }
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        postUiEvent(UiEvent.RegisterClicked)
 
         val result = uiState.awaitItem()
         expectThat(result.isRegisterButtonEnabled).isFalse()
@@ -129,7 +128,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         coJustRun { registerUseCase.invoke(registrationData(email, name, surname, password)) }
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        postUiEvent(UiEvent.RegisterClicked)
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -144,14 +143,14 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
     fun `GIVEN password passed WHEN show password clicked THEN toggle show password`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged("password")) }
-        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        postUiEvent(UiEvent.PasswordChanged("password"))
+        postUiEvent(UiEvent.ShowPasswordClicked)
         scheduler.advanceUntilIdle()
 
         var result = uiState.expectMostRecentItem()
         expectThat(result.loginData.showPassword).isTrue()
 
-        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        postUiEvent(UiEvent.ShowPasswordClicked)
         scheduler.advanceUntilIdle()
 
         result = uiState.expectMostRecentItem()
@@ -173,7 +172,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
 
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        postUiEvent(UiEvent.RegisterClicked)
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
@@ -200,7 +199,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
 
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        postUiEvent(UiEvent.RegisterClicked)
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -226,7 +225,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
 
-        context.launch { viewModel.postUiEvent(UiEvent.RegisterClicked) }
+        postUiEvent(UiEvent.RegisterClicked)
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -235,7 +234,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
         uiState.cancel()
     }
 
-    private fun TestContext<RegisterViewModel>.postData(
+    private fun TestContext<RegisterViewModel, UiEvent>.postData(
         email: String,
         password: String,
         passwordConfirmation: String,
@@ -244,11 +243,11 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel>() {
     ): ReceiveTurbine<RegisterViewModel.UiState> {
         val uiState = viewModel.uiState.testIn(context)
 
-        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email)) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password)) }
-        context.launch { viewModel.postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation)) }
-        context.launch { viewModel.postUiEvent(UiEvent.NameChanged(name)) }
-        context.launch { viewModel.postUiEvent(UiEvent.SurnameChanged(surname)) }
+        postUiEvent(UiEvent.EmailChanged(email))
+        postUiEvent(UiEvent.PasswordChanged(password))
+        postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation))
+        postUiEvent(UiEvent.NameChanged(name))
+        postUiEvent(UiEvent.SurnameChanged(surname))
         scheduler.advanceUntilIdle()
 
         return uiState

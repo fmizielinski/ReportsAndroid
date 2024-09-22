@@ -17,7 +17,7 @@ inline fun <
         reified UiEvent,
         > BaseScreen(
     noinline parameters: ParametersDefinition? = null,
-    content: @Composable ScreenScope<ViewModel, UiState>.() -> Unit,
+    content: @Composable ScreenScope<ViewModel, UiState, UiEvent>.() -> Unit,
 ) {
 
     val viewModel: ViewModel = koinViewModel(parameters = parameters)
@@ -41,8 +41,13 @@ inline fun <
     }
 }
 
-data class ScreenScope<ViewModel : BaseViewModel<*, *, UiState, *>, UiState>(
+data class ScreenScope<ViewModel : BaseViewModel<*, *, UiState, UiEvent>, UiState, UiEvent>(
     val viewModel: ViewModel,
     val coroutineScope: CoroutineScope,
     val state: State<UiState>,
-)
+) {
+
+    fun postUiEvent(event: UiEvent) {
+        coroutineScope.launch { viewModel.postUiEvent(event) }
+    }
+}

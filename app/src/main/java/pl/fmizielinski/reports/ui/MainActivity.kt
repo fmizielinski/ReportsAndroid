@@ -104,41 +104,19 @@ fun ReportsApp() {
                 navController = navController,
                 snackBarData = snackBarData.value,
                 callbacks = MainCallbacks(
-                    onFabClicked = {
-                        coroutineScope.launch { viewModel.postUiEvent(UiEvent.FabClicked) }
-                    },
+                    onFabClicked = { postUiEvent(UiEvent.FabClicked) },
                     topAppBarCallbacks = ReportsTopAppBarCallbacks(
-                        onBackClicked = {
-                            coroutineScope.launch { viewModel.postUiEvent(UiEvent.BackClicked) }
-                        },
-                        onActionClicked = {
-                            coroutineScope.launch {
-                                viewModel.postUiEvent(UiEvent.ActionClicked(it))
-                            }
-                        },
+                        onBackClicked = { postUiEvent(UiEvent.BackClicked) },
+                        onActionClicked = { postUiEvent(UiEvent.ActionClicked(it)) },
                         onShouldShowPermissionRationale = {
-                            coroutineScope.launch {
-                                viewModel.postUiEvent(UiEvent.ShowPermissionRationale(it))
-                            }
+                            postUiEvent(UiEvent.ShowPermissionRationale(it))
                         },
                     ),
                 ),
                 alertDialogCallbacks = AlertDialogCallbacks(
-                    onDismissRequest = {
-                        coroutineScope.launch {
-                            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
-                        }
-                    },
-                    onNegativeClick = {
-                        coroutineScope.launch {
-                            viewModel.postUiEvent(UiEvent.AlertDialogDismissed)
-                        }
-                    },
-                    onPositiveClick = {
-                        coroutineScope.launch {
-                            viewModel.postUiEvent(UiEvent.AlertDialogPositiveClicked)
-                        }
-                    },
+                    onDismissRequest = { postUiEvent(UiEvent.AlertDialogDismissed) },
+                    onNegativeClick = { postUiEvent(UiEvent.AlertDialogDismissed) },
+                    onPositiveClick = { postUiEvent(UiEvent.AlertDialogPositiveClicked) },
                 ),
             )
         }
