@@ -8,6 +8,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
@@ -33,6 +34,7 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
             replay = 1,
         )
     val uiState: Flow<UiState> = state.map(::mapState)
+        .distinctUntilChanged()
 
     val initialUiState: UiState = this.mapState(mState)
 
