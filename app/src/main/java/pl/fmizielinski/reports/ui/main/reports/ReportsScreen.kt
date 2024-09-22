@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
@@ -45,9 +44,7 @@ fun ReportsScreen() {
             uiState = state.value,
             callbacks = ReportsCallbacks(
                 onListScrolled = { firstItemIndex ->
-                    coroutineScope.launch {
-                        viewModel.postUiEvent(UiEvent.ListScrolled(firstItemIndex))
-                    }
+                    postUiEvent(UiEvent.ListScrolled(firstItemIndex))
                 },
             ),
         )

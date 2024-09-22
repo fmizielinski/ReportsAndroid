@@ -30,12 +30,11 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.R
-import pl.fmizielinski.reports.ui.base.BaseScreen
-import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiState
+import pl.fmizielinski.reports.ui.base.BaseScreen
+import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.navigation.graph.AuthGraph
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
@@ -46,18 +45,10 @@ fun LoginScreen() {
         LoginForm(
             uiState = state.value,
             callbacks = LoginCallbacks(
-                onEmailChanged = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.EmailChanged(it)) }
-                },
-                onPasswordChanged = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(it)) }
-                },
-                onLoginClicked = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
-                },
-                onShowPasswordClicked = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
-                },
+                onEmailChanged = { postUiEvent(UiEvent.EmailChanged(it)) },
+                onPasswordChanged = { postUiEvent(UiEvent.PasswordChanged(it)) },
+                onLoginClicked = { postUiEvent(UiEvent.LoginClicked) },
+                onShowPasswordClicked = { postUiEvent(UiEvent.ShowPasswordClicked) },
             ),
         )
     }

@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
-import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.BuildConfig
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
@@ -62,19 +61,11 @@ fun CreateReportScreen() {
         ReportContent(
             uiState = state.value,
             callbacks = CreateReportCallbacks(
-                onTitleChanged = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.TitleChanged(it)) }
-                },
-                onDescriptionChanged = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.DescriptionChanged(it)) }
-                },
-                onDeleteAttachment = {
-                    coroutineScope.launch { viewModel.postUiEvent(UiEvent.DeleteAttachment(it)) }
-                },
+                onTitleChanged = { postUiEvent(UiEvent.TitleChanged(it)) },
+                onDescriptionChanged = { postUiEvent(UiEvent.DescriptionChanged(it)) },
+                onDeleteAttachment = { postUiEvent(UiEvent.DeleteAttachment(it)) },
                 onListScrolled = { firstItemIndex ->
-                    coroutineScope.launch {
-                        viewModel.postUiEvent(UiEvent.ListScrolled(firstItemIndex))
-                    }
+                    postUiEvent(UiEvent.ListScrolled(firstItemIndex))
                 },
             ),
         )
