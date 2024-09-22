@@ -87,16 +87,12 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel>() {
             coEvery { createReportUseCase(any()) } throws errorException
 
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
-            uiState.skipItems(1)
             val globalEvent = eventsRepository.globalEvent.testIn(context, name = "globalEvent")
 
-            context.launch {
-                eventsRepository.postGlobalEvent(GlobalEvent.SaveReport)
-                uiState.skipItems(3)
-            }
+            context.launch { eventsRepository.postGlobalEvent(GlobalEvent.SaveReport) }
             scheduler.advanceUntilIdle()
 
-            expectThat(uiState.awaitItem()) {
+            expectThat(uiState.expectMostRecentItem()) {
                 get { titleVerificationError }.isNotNull()
                 get { descriptionVerificationError }.isNotNull()
             }
