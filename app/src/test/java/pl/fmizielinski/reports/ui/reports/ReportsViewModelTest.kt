@@ -46,9 +46,8 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel>() {
         coEvery { getReportsUseCase() } returns listOf(report)
 
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.onStart()
+        context.launch { viewModel.onStart() }
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
