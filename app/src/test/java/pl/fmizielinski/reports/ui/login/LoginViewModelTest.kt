@@ -6,6 +6,7 @@ import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -45,13 +46,12 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         expected: Boolean,
     ) = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.EmailChanged(email.orEmpty()))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordChanged(password.orEmpty()))
+        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email.orEmpty())) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password.orEmpty())) }
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
+        val result = uiState.expectMostRecentItem()
         expectThat(result.isLoginButtonEnabled) isEqualTo expected
 
         uiState.cancel()
@@ -64,18 +64,17 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         coJustRun { loginUseCase(email, password) }
 
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.EmailChanged(email))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordChanged(password))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.LoginClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email)) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password)) }
+        context.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
+        scheduler.advanceUntilIdle()
+        uiState.skipItems(2)
 
         val result = uiState.awaitItem()
         expectThat(result.isLoginButtonEnabled).isFalse()
 
-        uiState.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
     }
 
     @Test
@@ -87,15 +86,10 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
         coEvery { loginUseCase(email, password) } throws errorException
 
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.EmailChanged(email))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.PasswordChanged(password))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.LoginClicked)
-        uiState.skipItems(1)
-
+        context.launch { viewModel.postUiEvent(UiEvent.EmailChanged(email)) }
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged(password)) }
+        context.launch { viewModel.postUiEvent(UiEvent.LoginClicked) }
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
@@ -106,18 +100,18 @@ class LoginViewModelTest : BaseViewModelTest<LoginViewModel>() {
     @Test
     fun `GIVEN password passed WHEN show password clicked THEN toggle show password`() = runTurbineTest {
         val uiState = viewModel.uiState.testIn(context)
-        uiState.skipItems(1)
 
-        viewModel.postUiEvent(UiEvent.PasswordChanged("password"))
-        uiState.skipItems(1)
-        viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.PasswordChanged("password")) }
+        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        scheduler.advanceUntilIdle()
 
-        var result = uiState.awaitItem()
+        var result = uiState.expectMostRecentItem()
         expectThat(result.showPassword).isTrue()
 
-        viewModel.postUiEvent(UiEvent.ShowPasswordClicked)
+        context.launch { viewModel.postUiEvent(UiEvent.ShowPasswordClicked) }
+        scheduler.advanceUntilIdle()
 
-        result = uiState.awaitItem()
+        result = uiState.expectMostRecentItem()
         expectThat(result.showPassword).isFalse()
 
         uiState.cancel()
