@@ -7,6 +7,7 @@ import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.runTest
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import kotlin.time.Duration.Companion.seconds
 
 abstract class BaseViewModelTest<T : BaseViewModel<*, *, *, *>> {
 
@@ -14,7 +15,7 @@ abstract class BaseViewModelTest<T : BaseViewModel<*, *, *, *>> {
 
     protected fun runTurbineTest(body: suspend TestContext<T>.() -> Unit) {
         runTest {
-            turbineScope {
+            turbineScope(timeout = 1.seconds) {
                 val scheduler = requireNotNull(coroutineContext[TestCoroutineScheduler.Key])
                 TestContext(
                     context = this,

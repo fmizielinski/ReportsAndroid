@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui
 
-import android.Manifest
 import app.cash.turbine.testIn
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
 import com.ramcosta.composedestinations.generated.destinations.LoginDestination
@@ -115,7 +114,6 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
-        uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
         context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
@@ -137,7 +135,6 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
-        uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
         context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
@@ -159,7 +156,6 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         coEvery { isLoggedInUseCase() } returns false
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
-        uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
         context.launch { viewModel.postUiEvent(UiEvent.NavDestinationChanged(destination)) }
@@ -283,7 +279,6 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         coEvery { isLoggedInUseCase() } returns true
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
-        uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
         context.launch {
@@ -292,7 +287,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             viewModel.postUiEvent(UiEvent.FabClicked)
         }
         scheduler.advanceUntilIdle()
-        uiState.skipItems(7)
+        uiState.skipItems(3)
 
         expectThat(uiState.awaitItem().fabConfig).isNull()
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport) }
@@ -306,7 +301,6 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
         coEvery { isLoggedInUseCase() } returns true
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
-        uiState.skipItems(1)
         val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
 
         context.launch {
@@ -316,7 +310,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel>() {
             eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.ChangeFabVisibility(isVisible = true))
         }
         scheduler.advanceUntilIdle()
-        uiState.skipItems(8)
+        uiState.skipItems(4)
 
         expectThat(uiState.awaitItem().fabConfig) isEqualTo UiState.FabConfig(
             icon = R.drawable.ic_save_24dp,
