@@ -13,7 +13,6 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.model.AddTemporaryAttachmentData
-import pl.fmizielinski.reports.domain.model.AttachmentData
 import pl.fmizielinski.reports.domain.model.CreateReportData
 import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.domain.repository.EventsRepository
@@ -89,11 +88,15 @@ class CreateReportViewModel(
 
     private fun getAttachments(attachments: List<State.Attachment>): List<UiState.Attachment> {
         return attachments.map { attachment ->
+            val isUploading = attachment.isUploading &&
+                    !attachment.isUploaded &&
+                    !attachment.uploadFailed
             UiState.Attachment(
                 file = attachment.file,
-                isUploading = attachment.isUploading && !attachment.isUploaded,
+                isUploading = isUploading,
                 progress = attachment.progress ?: 0f,
                 isUploaded = attachment.isUploaded,
+                uploadFailed = attachment.uploadFailed,
             )
         }
     }
@@ -323,7 +326,8 @@ class CreateReportViewModel(
             val file: File,
             val isUploading: Boolean,
             val progress: Float,
-            val isUploaded: Boolean
+            val isUploaded: Boolean,
+            val uploadFailed: Boolean,
         )
     }
 

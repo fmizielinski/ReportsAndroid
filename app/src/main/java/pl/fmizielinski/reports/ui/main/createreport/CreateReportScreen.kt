@@ -203,13 +203,18 @@ fun AttachmentItem(
                     model = attachment.file,
                     contentDescription = null,
                 )
-                if (attachment.isUploaded) {
+                if (attachment.isUploaded || attachment.uploadFailed) {
+                    val (iconResId, tint) = if (attachment.uploadFailed) {
+                        R.drawable.ic_error_24dp to MaterialTheme.colorScheme.error
+                    } else {
+                        R.drawable.ic_check_circle_24dp to MaterialTheme.colorScheme.primary
+                    }
                     Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_check_circle_24dp),
+                        imageVector = ImageVector.vectorResource(iconResId),
                         contentDescription = null,
                         modifier = Modifier.size(AttachmentProgressSize)
                             .align(Alignment.Center),
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = tint,
                     )
                 } else if (attachment.isUploading) {
                     CircularProgressIndicator(
