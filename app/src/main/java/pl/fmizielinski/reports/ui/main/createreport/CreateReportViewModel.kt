@@ -91,8 +91,9 @@ class CreateReportViewModel(
         return attachments.map { attachment ->
             UiState.Attachment(
                 file = attachment.file,
-                isUploading = attachment.isUploading,
+                isUploading = attachment.isUploading && !attachment.isUploaded,
                 progress = attachment.progress ?: 0f,
+                isUploaded = attachment.isUploaded,
             )
         }
     }
@@ -322,6 +323,7 @@ class CreateReportViewModel(
             val file: File,
             val isUploading: Boolean,
             val progress: Float,
+            val isUploaded: Boolean
         )
     }
 
