@@ -201,7 +201,10 @@ fun AttachmentItem(
                     contentDescription = null,
                 )
                 if (attachment.isUploading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        progress = { attachment.progress.toFloat() },
+                    )
                 }
             }
             IconButton(

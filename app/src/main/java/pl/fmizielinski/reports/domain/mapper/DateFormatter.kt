@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Factory
-class DataFormatter(locale: Locale = Locale.getDefault()) {
+class DateFormatter(locale: Locale = Locale.getDefault()) {
 
     private val reportListDateFormatter by lazy {
         DateTimeFormatter.ofPattern("d LLL", locale)

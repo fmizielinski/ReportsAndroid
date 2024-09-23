@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.android
+package pl.fmizielinski.reports.utils.android
 
 import android.app.Activity
 import android.content.Context

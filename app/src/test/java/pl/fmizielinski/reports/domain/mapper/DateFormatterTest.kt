@@ -6,9 +6,9 @@ import strikt.assertions.isEqualTo
 import java.time.LocalDateTime
 import java.util.Locale
 
-class DataFormatterTest {
+class DateFormatterTest {
 
-    private val formatter = DataFormatter(Locale.US)
+    private val formatter = DateFormatter(Locale.US)
 
     @Test
     fun formatReportListDate() {

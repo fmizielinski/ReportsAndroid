@@ -18,7 +18,7 @@ import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import java.io.File
 
-class AddTemporaryAttachmentUseCaseTest {
+class AddTemporaryAttachmentDataUseCaseTest {
 
     private val reportService: ReportService = mockk()
 
