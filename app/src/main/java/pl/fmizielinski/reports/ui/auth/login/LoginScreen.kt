@@ -78,7 +78,7 @@ fun LoginForm(
                 val keyboardController = LocalSoftwareKeyboardController.current
                 Credentials(
                     showPassword = uiState.showPassword,
-                    isLoading = uiState.isLoading,
+                    enabled = uiState.isLoading,
                     callbacks = callbacks,
                 )
                 Button(
@@ -100,7 +100,7 @@ fun LoginForm(
 @Composable
 fun Credentials(
     showPassword: Boolean,
-    isLoading: Boolean,
+    enabled: Boolean,
     callbacks: LoginCallbacks,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -123,7 +123,7 @@ fun Credentials(
         keyboardActions = KeyboardActions { focusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
-        enabled = !isLoading,
+        enabled = enabled,
     )
     ReportsTextField(
         onValueChange = callbacks.onPasswordChanged,
@@ -145,18 +145,18 @@ fun Credentials(
         trailingIcon = {
             ShowPasswordButton(
                 showPassword = showPassword,
-                isLoading = isLoading,
+                enabled = enabled,
                 onShowPasswordClicked = callbacks.onShowPasswordClicked,
             )
         },
-        enabled = !isLoading,
+        enabled = enabled,
     )
 }
 
 @Composable
 fun ShowPasswordButton(
     showPassword: Boolean,
-    isLoading: Boolean,
+    enabled: Boolean,
     onShowPasswordClicked: () -> Unit,
 ) {
     val drawableResId =
@@ -173,15 +173,14 @@ fun ShowPasswordButton(
         }
     IconButton(
         onClick = onShowPasswordClicked,
-        content = {
-            Icon(
-                imageVector = ImageVector.vectorResource(drawableResId),
-                contentDescription = stringResource(contentDescriptionResId),
-                tint = MaterialTheme.colorScheme.onSurface,
-            )
-        },
-        enabled = !isLoading,
-    )
+        enabled = enabled,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(drawableResId),
+            contentDescription = stringResource(contentDescriptionResId),
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 data class LoginCallbacks(
