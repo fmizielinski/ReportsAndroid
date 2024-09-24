@@ -10,6 +10,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,28 +60,38 @@ fun LoginForm(
     uiState: UiState,
     callbacks: LoginCallbacks,
 ) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-            .padding(32.dp),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier.align(Alignment.Center),
-        ) {
-            val keyboardController = LocalSoftwareKeyboardController.current
-            Credentials(
-                showPassword = uiState.showPassword,
-                callbacks = callbacks,
+        if (uiState.isLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
             )
-            Button(
-                enabled = uiState.isLoginButtonEnabled,
-                onClick = {
-                    callbacks.onLoginClicked()
-                    keyboardController?.hide()
-                },
-                modifier = Modifier.padding(vertical = 8.dp)
-                    .align(Alignment.CenterHorizontally),
+        }
+        Box(
+            modifier = Modifier.fillMaxSize()
+                .padding(32.dp),
+        ) {
+            Column(
+                modifier = Modifier.align(Alignment.Center),
             ) {
-                Text(stringResource(R.string.loginScreen_button_login))
+                val keyboardController = LocalSoftwareKeyboardController.current
+                Credentials(
+                    showPassword = uiState.showPassword,
+                    isLoading = uiState.isLoading,
+                    callbacks = callbacks,
+                )
+                Button(
+                    enabled = uiState.isLoginButtonEnabled,
+                    onClick = {
+                        callbacks.onLoginClicked()
+                        keyboardController?.hide()
+                    },
+                    modifier = Modifier.padding(vertical = 8.dp)
+                        .align(Alignment.CenterHorizontally),
+                ) {
+                    Text(stringResource(R.string.loginScreen_button_login))
+                }
             }
         }
     }
@@ -89,6 +100,7 @@ fun LoginForm(
 @Composable
 fun Credentials(
     showPassword: Boolean,
+    isLoading: Boolean,
     callbacks: LoginCallbacks,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -111,6 +123,7 @@ fun Credentials(
         keyboardActions = KeyboardActions { focusRequester.requestFocus() },
         singleLine = true,
         limit = 254,
+        enabled = !isLoading,
     )
     ReportsTextField(
         onValueChange = callbacks.onPasswordChanged,
@@ -130,14 +143,20 @@ fun Credentials(
         visualTransformation = passwordVisualTransformation,
         limit = 64,
         trailingIcon = {
-            ShowPasswordButton(showPassword, callbacks.onShowPasswordClicked)
+            ShowPasswordButton(
+                showPassword = showPassword,
+                isLoading = isLoading,
+                onShowPasswordClicked = callbacks.onShowPasswordClicked,
+            )
         },
+        enabled = !isLoading,
     )
 }
 
 @Composable
 fun ShowPasswordButton(
     showPassword: Boolean,
+    isLoading: Boolean,
     onShowPasswordClicked: () -> Unit,
 ) {
     val drawableResId =
@@ -161,6 +180,7 @@ fun ShowPasswordButton(
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         },
+        enabled = !isLoading,
     )
 }
 
@@ -182,16 +202,15 @@ fun LoginScreenPreview() {
     }
 }
 
-private val previewUiState =
-    UiState(
-        isLoginButtonEnabled = true,
-        showPassword = false,
-    )
+private val previewUiState = UiState(
+    isLoginButtonEnabled = true,
+    showPassword = false,
+    isLoading = false,
+)
 
-private val emptyCallbacks =
-    LoginCallbacks(
-        onEmailChanged = {},
-        onPasswordChanged = {},
-        onLoginClicked = {},
-        onShowPasswordClicked = {},
-    )
+private val emptyCallbacks = LoginCallbacks(
+    onEmailChanged = {},
+    onPasswordChanged = {},
+    onLoginClicked = {},
+    onShowPasswordClicked = {},
+)

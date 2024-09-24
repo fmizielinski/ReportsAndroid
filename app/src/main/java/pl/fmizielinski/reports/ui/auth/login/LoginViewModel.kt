@@ -38,11 +38,13 @@ class LoginViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val isLoginButtonEnabled =
-            state.email.isNotBlank() && state.password.isNotBlank() && !state.loginInProgress
+        val isLoginButtonEnabled = state.email.isNotBlank() &&
+                state.password.isNotBlank() &&
+                !state.loginInProgress
         return UiState(
             isLoginButtonEnabled = isLoginButtonEnabled,
             showPassword = state.showPassword,
+            isLoading = state.loginInProgress,
         )
     }
 
@@ -112,6 +114,7 @@ class LoginViewModel(
     data class UiState(
         val isLoginButtonEnabled: Boolean,
         val showPassword: Boolean,
+        val isLoading: Boolean,
     )
 
     sealed interface Event {

@@ -31,6 +31,7 @@ fun ReportsTextField(
     trailingIcon: @Composable (() -> Unit)? = null,
     error: String? = null,
     supportingText: String? = null,
+    enabled: Boolean = true,
 ) {
     var fieldValue by remember { mutableStateOf(TextFieldValue()) }
 
@@ -64,5 +65,6 @@ fun ReportsTextField(
                 error?.let { Text(it) }
             }
         },
+        enabled = enabled,
     )
 }
