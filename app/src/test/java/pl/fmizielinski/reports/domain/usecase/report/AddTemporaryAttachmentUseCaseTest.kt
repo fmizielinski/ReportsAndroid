@@ -6,7 +6,6 @@ import io.mockk.every
 import io.mockk.invoke
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.slot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -17,7 +16,6 @@ import pl.fmizielinski.reports.data.network.utils.createMultipartBody
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.ACCESS_DENIED
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FAILED
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
-import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult.Complete
 import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult.Progress
 import pl.fmizielinski.reports.fixtures.common.httpException
@@ -31,7 +29,7 @@ import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import java.io.File
 
-class AddTemporaryAttachmentDataUseCaseTest {
+class AddTemporaryAttachmentUseCaseTest {
 
     private val reportService: ReportService = mockk()
 
