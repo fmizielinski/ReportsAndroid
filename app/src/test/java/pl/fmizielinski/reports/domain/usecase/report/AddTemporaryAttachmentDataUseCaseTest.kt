@@ -2,15 +2,24 @@ package pl.fmizielinski.reports.domain.usecase.report
 
 import app.cash.turbine.test
 import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.invoke
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.report.ReportService
+import pl.fmizielinski.reports.data.network.utils.ProgressListener
+import pl.fmizielinski.reports.data.network.utils.createMultipartBody
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.ACCESS_DENIED
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FAILED
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
+import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult.Complete
+import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult.Progress
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.addTemporaryAttachmentResponse
 import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData
@@ -39,6 +48,33 @@ class AddTemporaryAttachmentDataUseCaseTest {
             expectThat(awaitItem()).isA<Complete>()
                 .get { this.uuid } isEqualTo uuid
             cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `GIVEN valid attachment WHEN invoke THEN post progress`() = runTest {
+        val file = File.createTempFile("test", "jpg")
+        val data = addTemporaryAttachmentData(file)
+        coEvery { reportService.addTemporaryAttachment(any()) } coAnswers {
+            delay(10000L)
+            addTemporaryAttachmentResponse()
+        }
+        mockkStatic("pl.fmizielinski.reports.data.network.utils.MultipartKt")
+        every { file.createMultipartBody(any(), captureLambda()) } answers {
+            lambda<ProgressListener>().invoke(0.5f)
+            lambda<ProgressListener>().invoke(1f)
+            lambda<ProgressListener>().invoke(0.5f)
+            mockk()
+        }
+
+        useCase(data).test {
+            expectThat(awaitItem()).isA<Progress>()
+                .get { this.progress } isEqualTo 0.25f
+            expectThat(awaitItem()).isA<Progress>()
+                .get { this.progress } isEqualTo 0.5f
+            expectThat(awaitItem()).isA<Progress>()
+                .get { this.progress } isEqualTo 0.75f
+            cancel()
         }
     }
 

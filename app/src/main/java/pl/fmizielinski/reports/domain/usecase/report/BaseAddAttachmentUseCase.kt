@@ -44,7 +44,7 @@ abstract class BaseAddAttachmentUseCase<Data : AttachmentData, Result> : BaseUse
             close()
         }
             .distinctUntilChanged()
-            .conflate()
+//            .conflate()
     }
 
     override fun genericErrorException(cause: Throwable): SimpleErrorException {
