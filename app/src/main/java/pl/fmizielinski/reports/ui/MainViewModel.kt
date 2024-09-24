@@ -24,6 +24,7 @@ import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.Event
@@ -79,14 +80,21 @@ class MainViewModel(
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<EventsRepository.GlobalEvent.Logout>()
+                .filterIsInstance<GlobalEvent.Logout>()
                 .collect { postLogoutEvent() }
         }
         scope.launch {
             eventsRepository.globalEvent
-                .filterIsInstance<EventsRepository.GlobalEvent.ChangeFabVisibility>()
+                .filterIsInstance<GlobalEvent.ChangeFabVisibility>()
                 .collect {
                     postEvent(Event.ChangeFabVisibility(isVisible = it.isVisible))
+                }
+        }
+        scope.launch {
+            eventsRepository.globalEvent
+                .filterIsInstance<GlobalEvent.Loading>()
+                .collect {
+                    postEvent(Event.ChangeLoadingState(isLoading = it.isLoading))
                 }
         }
     }
@@ -99,6 +107,7 @@ class MainViewModel(
             is Event.Logout -> handleLogout(state)
             is Event.LogoutSuccess -> handleLogoutSuccess(state)
             is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
+            is Event.ChangeLoadingState -> handleChangeLoadingState(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.ActionClicked -> handleActionClicked(state, event)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -115,39 +124,44 @@ class MainViewModel(
 
     override fun mapState(state: State): UiState {
         return UiState(
-            appBarUiState = getAppBarUiState(state.currentDestination),
+            appBarUiState = getAppBarUiState(state.currentDestination, state.isLoading),
             fabConfig = getFabConfig(state.currentDestination).takeIf { state.isFabVisible },
             alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
         )
     }
 
-    private fun getAppBarUiState(currentDestination: String?) = when (currentDestination) {
-        LoginDestination.baseRoute -> ReportsTopAppBarUiState(
-            destination = currentDestination,
-            actions = listOf(REGISTER),
-        )
+    private fun getAppBarUiState(currentDestination: String?, isLoading: Boolean) =
+        when (currentDestination) {
+            LoginDestination.baseRoute -> ReportsTopAppBarUiState(
+                destination = currentDestination,
+                actions = listOf(REGISTER),
+                isEnabled = !isLoading,
+            )
 
-        RegisterDestination.baseRoute -> ReportsTopAppBarUiState(
-            title = R.string.registerScreen_title,
-            destination = currentDestination,
-        )
+            RegisterDestination.baseRoute -> ReportsTopAppBarUiState(
+                title = R.string.registerScreen_title,
+                destination = currentDestination,
+                isEnabled = !isLoading,
+            )
 
-        CreateReportDestination.baseRoute -> ReportsTopAppBarUiState(
-            title = R.string.createReportScreen_title,
-            destination = currentDestination,
-            actions = arrayListOf(
-                FILES,
-                PHOTO,
-            ),
-        )
+            CreateReportDestination.baseRoute -> ReportsTopAppBarUiState(
+                title = R.string.createReportScreen_title,
+                destination = currentDestination,
+                actions = arrayListOf(
+                    FILES,
+                    PHOTO,
+                ),
+                isEnabled = !isLoading,
+            )
 
-        ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
-            title = R.string.reportsScreen_title,
-            destination = currentDestination,
-        )
+            ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
+                title = R.string.reportsScreen_title,
+                destination = currentDestination,
+                isEnabled = !isLoading,
+            )
 
-        else -> ReportsTopAppBarUiState()
-    }
+            else -> ReportsTopAppBarUiState(isEnabled = !isLoading)
+        }
 
     private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
         return when (currentDestination) {
@@ -227,6 +241,10 @@ class MainViewModel(
         return state.copy(isFabVisible = event.isVisible)
     }
 
+    private fun handleChangeLoadingState(state: State, event: Event.ChangeLoadingState): State {
+        return state.copy(isLoading = event.isLoading)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -273,7 +291,7 @@ class MainViewModel(
             when (state.currentDestination) {
                 CreateReportDestination.baseRoute -> {
                     postEvent(Event.ChangeFabVisibility(isVisible = false))
-                    eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport)
+                    eventsRepository.postGlobalEvent(GlobalEvent.SaveReport)
                 }
 
                 ReportsDestination.baseRoute -> {
@@ -286,7 +304,7 @@ class MainViewModel(
 
     private fun handlePictureTaken(state: State, event: UiEvent.PictureTaken): State {
         scope.launch {
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(event.file))
+            eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(event.file))
         }
         return state
     }
@@ -325,7 +343,7 @@ class MainViewModel(
 
     private fun handleFilePicked(state: State, event: UiEvent.FilePicked): State {
         scope.launch {
-            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.AddAttachment(event.file))
+            eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(event.file))
         }
         return state
     }
@@ -380,6 +398,7 @@ class MainViewModel(
         val isInitialized: Boolean = false,
         val isFabVisible: Boolean = true,
         val permissionRationale: PermissionRationale? = null,
+        val isLoading: Boolean = false,
     ) {
 
         data class PermissionRationale(
@@ -405,6 +424,7 @@ class MainViewModel(
         data object Logout : Event
         data object LogoutSuccess : Event
         data class ChangeFabVisibility(val isVisible: Boolean) : Event
+        data class ChangeLoadingState(val isLoading: Boolean) : Event
     }
 
     sealed interface UiEvent : Event {
