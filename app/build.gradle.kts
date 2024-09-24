@@ -151,6 +151,7 @@ koverReport {
                 "*Ext*",
                 "*Interceptor*",
                 "*MainViewModelKt*",
+                "*NumberKt*",
                 "*ReportsApplication*",
                 "*ReportsDatabase*",
                 "*Screen*",

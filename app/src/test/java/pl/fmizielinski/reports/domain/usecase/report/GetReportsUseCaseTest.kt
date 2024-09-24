@@ -10,7 +10,7 @@ import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.UnauthorizedErrorException
-import pl.fmizielinski.reports.domain.mapper.DataFormatter
+import pl.fmizielinski.reports.domain.mapper.DateFormatter
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.reportModel
 import pl.fmizielinski.reports.fixtures.data.reportsResponseModel
@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 class GetReportsUseCaseTest {
 
     private val reportService: ReportService = mockk()
-    private val dateFormatter: DataFormatter = mockk()
+    private val dateFormatter: DateFormatter = mockk()
 
     private val useCase = GetReportsUseCase(reportService, dateFormatter)
 

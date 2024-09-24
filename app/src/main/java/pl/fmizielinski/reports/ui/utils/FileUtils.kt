@@ -5,12 +5,12 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import org.koin.core.annotation.Factory
-import pl.fmizielinski.reports.domain.mapper.DataFormatter
+import pl.fmizielinski.reports.domain.mapper.DateFormatter
 import java.io.File
 import java.time.LocalDateTime
 
 @Factory
-class FileUtils(private val dateFormatter: DataFormatter) {
+class FileUtils(private val dateFormatter: DateFormatter) {
 
     fun createPhotoFile(context: Context): File {
         val date = LocalDateTime.now()

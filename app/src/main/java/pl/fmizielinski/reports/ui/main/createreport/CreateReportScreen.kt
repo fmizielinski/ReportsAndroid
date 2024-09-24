@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -16,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -50,6 +52,7 @@ import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
+import pl.fmizielinski.reports.ui.theme.AttachmentProgressSize
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 import java.io.File
@@ -200,8 +203,25 @@ fun AttachmentItem(
                     model = attachment.file,
                     contentDescription = null,
                 )
-                if (attachment.isUploading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                if (attachment.isUploaded || attachment.uploadFailed) {
+                    val (iconResId, tint) = if (attachment.uploadFailed) {
+                        R.drawable.ic_error_24dp to MaterialTheme.colorScheme.error
+                    } else {
+                        R.drawable.ic_check_circle_24dp to MaterialTheme.colorScheme.primary
+                    }
+                    Icon(
+                        imageVector = ImageVector.vectorResource(iconResId),
+                        contentDescription = null,
+                        modifier = Modifier.size(AttachmentProgressSize)
+                            .align(Alignment.Center),
+                        tint = tint,
+                    )
+                } else if (attachment.isUploading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(AttachmentProgressSize)
+                            .align(Alignment.Center),
+                        progress = { attachment.progress },
+                    )
                 }
             }
             IconButton(

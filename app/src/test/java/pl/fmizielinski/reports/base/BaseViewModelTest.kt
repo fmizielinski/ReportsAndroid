@@ -18,7 +18,7 @@ abstract class BaseViewModelTest<ViewModel : BaseViewModel<*, *, *, UiEvent>, Ui
         runTest {
             turbineScope(timeout = 1.seconds) {
                 val scheduler = requireNotNull(coroutineContext[TestCoroutineScheduler.Key])
-                TestContext<ViewModel, UiEvent>(
+                TestContext(
                     context = this,
                     scheduler = scheduler,
                     viewModel = createViewModel(StandardTestDispatcher(scheduler)),

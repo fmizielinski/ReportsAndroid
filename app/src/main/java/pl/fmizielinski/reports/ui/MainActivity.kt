@@ -50,7 +50,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
-import pl.fmizielinski.reports.android.CustomActivityResultContracts
+import pl.fmizielinski.reports.utils.android.CustomActivityResultContracts
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState

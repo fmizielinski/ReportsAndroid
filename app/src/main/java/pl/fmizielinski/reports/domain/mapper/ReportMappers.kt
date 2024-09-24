@@ -5,15 +5,15 @@ import pl.fmizielinski.reports.domain.model.Report
 
 // region reports
 
-fun ReportsResponseModel.toReports(dataFormatter: DataFormatter) = reports.map {
-    it.toReport(dataFormatter)
+fun ReportsResponseModel.toReports(dateFormatter: DateFormatter) = reports.map {
+    it.toReport(dateFormatter)
 }
 
-fun ReportsResponseModel.ReportModel.toReport(dataFormatter: DataFormatter) = Report(
+fun ReportsResponseModel.ReportModel.toReport(dateFormatter: DateFormatter) = Report(
     id = id,
     title = title,
     description = description,
-    reportDate = dataFormatter.formatReportListDate(reportDate),
+    reportDate = dateFormatter.formatReportListDate(reportDate),
     comments = comments,
 )
 

@@ -8,6 +8,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
@@ -22,15 +23,20 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
+import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData
+import pl.fmizielinski.reports.fixtures.domain.completeTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
+import pl.fmizielinski.reports.fixtures.domain.progressTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
+import pl.fmizielinski.reports.utils.exceptionFlow
 import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
+import strikt.assertions.isTrue
 import strikt.assertions.withFirst
 import java.io.File
 
@@ -120,14 +126,16 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
         }
 
     @Test
-    fun `GIVEN has attachments WHEN save event posted AND create report success THEH upload attachments AND post Reports navigation event`() =
+    fun `GIVEN has attachments WHEN save event posted THEN upload attachments AND save report AND post Reports navigation event`() =
         runTurbineTest {
             val file = File.createTempFile("test", "jpg")
             val attachmentUuid = "attachmentUuid"
             val createReportDataSlot = slot<CreateReportData>()
 
             coJustRun { createReportUseCase(capture(createReportDataSlot)) }
-            coEvery { addTemporaryAttachmentUseCase(any()) } returns attachmentUuid
+            coEvery { addTemporaryAttachmentUseCase(any()) } returns flowOf(
+                completeTemporaryAttachmentUploadResult(attachmentUuid),
+            )
 
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
@@ -137,7 +145,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
             }
             scheduler.advanceUntilIdle()
 
-            coVerify(exactly = 1) { addTemporaryAttachmentUseCase(file) }
+            coVerify(exactly = 1) { addTemporaryAttachmentUseCase(addTemporaryAttachmentData(file)) }
             coVerify(exactly = 1) { eventsRepository.postNavEvent(ReportsDestination.toDestinationData()) }
 
             expectThat(createReportDataSlot.captured.attachments)
@@ -145,6 +153,38 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
                 .withFirst {
                     get { attachmentUuid } isEqualTo attachmentUuid
                 }
+
+            expectThat(uiState.expectMostRecentItem().attachments).withFirst {
+                get { isUploaded }.isTrue()
+            }
+
+            uiState.cancelAndIgnoreRemainingEvents()
+        }
+
+    @Test
+    fun `GIVEN has attachments WHEN save event posted THEN update upload progress`() =
+        runTurbineTest {
+            val file = File.createTempFile("test", "jpg")
+
+            coJustRun { createReportUseCase(any()) }
+            coEvery { addTemporaryAttachmentUseCase(any()) } returns flowOf(
+                progressTemporaryAttachmentUploadResult(0.5f),
+            )
+
+            val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+            context.launch {
+                eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(file))
+                eventsRepository.postGlobalEvent(GlobalEvent.SaveReport)
+            }
+            scheduler.advanceUntilIdle()
+
+            coVerify(exactly = 1) { addTemporaryAttachmentUseCase(addTemporaryAttachmentData(file)) }
+
+            expectThat(uiState.expectMostRecentItem().attachments).withFirst {
+                get { isUploading }.isTrue()
+                get { progress } isEqualTo 0.5f
+            }
 
             uiState.cancelAndIgnoreRemainingEvents()
         }
@@ -158,7 +198,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
                 isVerificationError = false,
             )
 
-            coEvery { addTemporaryAttachmentUseCase(any()) } throws errorException
+            coEvery { addTemporaryAttachmentUseCase(any()) } returns exceptionFlow(errorException)
 
             val uiState = viewModel.uiState.testIn(context, name = "uiState")
 

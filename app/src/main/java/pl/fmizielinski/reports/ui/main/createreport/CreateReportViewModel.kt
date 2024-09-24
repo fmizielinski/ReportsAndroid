@@ -2,14 +2,19 @@ package pl.fmizielinski.reports.ui.main.createreport
 
 import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
+import pl.fmizielinski.reports.domain.model.AddTemporaryAttachmentData
 import pl.fmizielinski.reports.domain.model.CreateReportData
+import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
@@ -24,6 +29,7 @@ import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.State
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
+import timber.log.Timber
 import java.io.File
 import java.time.LocalDateTime
 
@@ -56,6 +62,7 @@ class CreateReportViewModel(
             is Event.PostVerificationError -> handleVerificationError(state, event)
             is Event.AddAttachment -> handleAddAttachment(state, event)
             is Event.AttachmentUploaded -> handleAttachmentUploaded(state, event)
+            is Event.AttachmentUploadProgress -> handleAttachmentUploadProgress(state, event)
             is Event.AttachmentUploadFailed -> handleAttachmentUploadFailed(state, event)
             is Event.SaveAttachments -> handleSaveAttachments(state)
             is UiEvent.TitleChanged -> handleTitleChanged(state, event)
@@ -81,9 +88,15 @@ class CreateReportViewModel(
 
     private fun getAttachments(attachments: List<State.Attachment>): List<UiState.Attachment> {
         return attachments.map { attachment ->
+            val isUploading = attachment.isUploading &&
+                    !attachment.isUploaded &&
+                    !attachment.uploadFailed
             UiState.Attachment(
                 file = attachment.file,
-                isUploading = attachment.isUploading,
+                isUploading = isUploading,
+                progress = attachment.progress ?: 0f,
+                isUploaded = attachment.isUploaded,
+                uploadFailed = attachment.uploadFailed,
             )
         }
     }
@@ -132,16 +145,31 @@ class CreateReportViewModel(
     private fun handleAddAttachment(state: State, event: Event.AddAttachment): State {
         val attachments = buildList {
             addAll(state.attachments)
-            add(State.Attachment(event.photoFile))
+            val localId = state.attachments.size + 1
+            add(State.Attachment(localId, event.photoFile))
         }
         return state.copy(attachments = attachments)
     }
 
     private fun handleAttachmentUploaded(state: State, event: Event.AttachmentUploaded): State {
-        val attachments = state.attachments.updateUploaded(event.attachmentFile, event.uuid)
+        val attachments = state.attachments.updateUploaded(event.localId, event.uuid)
         scope.launch {
             if (attachments.all { it.isUploaded }) {
                 postEvent(Event.SaveReport)
+            }
+        }
+        return state.copy(attachments = attachments)
+    }
+
+    private fun handleAttachmentUploadProgress(
+        state: State,
+        event: Event.AttachmentUploadProgress,
+    ): State {
+        val attachments = state.attachments.map { attachment ->
+            if (attachment.localId == event.localId) {
+                attachment.copy(progress = event.progress)
+            } else {
+                attachment
             }
         }
         return state.copy(attachments = attachments)
@@ -151,7 +179,7 @@ class CreateReportViewModel(
         state: State,
         event: Event.AttachmentUploadFailed,
     ): State {
-        val attachments = state.attachments.updateUploaded(event.attachmentFile)
+        val attachments = state.attachments.updateUploaded(event.localId)
         scope.launch {
             if (attachments.all { it.isUploaded || it.uploadFailed }) {
                 handleError(event.error)
@@ -167,17 +195,35 @@ class CreateReportViewModel(
                 postEvent(Event.SaveReport)
             } else {
                 attachments.forEach { attachment ->
-                    try {
-                        val uuid = addTemporaryAttachmentUseCase(attachment.file)
-                        postEvent(Event.AttachmentUploaded(attachment.file, uuid))
-                    } catch (error: ErrorException) {
-                        logError(error)
-                        postEvent(Event.AttachmentUploadFailed(attachment.file, error))
-                    }
+                    val data = AddTemporaryAttachmentData(attachment.file)
+                    addTemporaryAttachmentUseCase(data)
+                        .catch { error ->
+                            if (error is ErrorException) {
+                                logError(error)
+                                postEvent(Event.AttachmentUploadFailed(attachment.localId, error))
+                            }
+                        }
+                        .map { result ->
+                            when (result) {
+                                is TemporaryAttachmentUploadResult.Progress -> {
+                                    Timber.d("Attachment ${attachment.localId} upload progress: ${result.progress}")
+                                    Event.AttachmentUploadProgress(
+                                        localId = attachment.localId,
+                                        progress = result.progress,
+                                    )
+                                }
+
+                                is TemporaryAttachmentUploadResult.Complete -> Event.AttachmentUploaded(
+                                    localId = attachment.localId,
+                                    uuid = result.uuid,
+                                )
+                            }
+                        }
+                        .collectLatest { postEvent(it) }
                 }
             }
         }
-        return state.copy(attachments = attachments.map { it.copy(isUploading = true) })
+        return state
     }
 
     // endregion handle Event
@@ -234,11 +280,11 @@ class CreateReportViewModel(
     // endregion ErrorHandler
 
     private fun List<State.Attachment>.updateUploaded(
-        attachmentFile: File,
+        localId: Int,
         uuid: String? = null,
     ): List<State.Attachment> {
         return map { attachment ->
-            if (attachment.file == attachmentFile) {
+            if (attachment.localId == localId) {
                 attachment.copy(uuid = uuid, uploadFailed = uuid == null)
             } else {
                 attachment
@@ -254,13 +300,17 @@ class CreateReportViewModel(
     ) {
 
         data class Attachment(
+            val localId: Int,
             val file: File,
-            val isUploading: Boolean = false,
+            val progress: Float? = null,
             val uuid: String? = null,
             val uploadFailed: Boolean = false,
         ) {
             val isUploaded: Boolean
                 get() = uuid != null
+
+            val isUploading: Boolean
+                get() = progress != null
         }
     }
 
@@ -275,6 +325,9 @@ class CreateReportViewModel(
         data class Attachment(
             val file: File,
             val isUploading: Boolean,
+            val progress: Float,
+            val isUploaded: Boolean,
+            val uploadFailed: Boolean,
         )
     }
 
@@ -284,9 +337,10 @@ class CreateReportViewModel(
         data class CreateReportFailed(val error: ErrorException) : Event
         data class PostVerificationError(val errors: List<VerificationError>) : Event
         data class AddAttachment(val photoFile: File) : Event
-        data class AttachmentUploaded(val attachmentFile: File, val uuid: String) : Event
+        data class AttachmentUploaded(val localId: Int, val uuid: String) : Event
+        data class AttachmentUploadProgress(val localId: Int, val progress: Float) : Event
         data class AttachmentUploadFailed(
-            val attachmentFile: File,
+            val localId: Int,
             val error: ErrorException,
         ) : Event
 
