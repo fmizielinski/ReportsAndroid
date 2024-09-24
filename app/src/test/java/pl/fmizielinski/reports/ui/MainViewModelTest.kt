@@ -334,7 +334,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
 
     @Test
     fun `WHEN TakePictureFailed event posted THEN post snackbar event`() = runTurbineTest {
-        val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+        val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val showSnackBar = viewModel.showSnackBar.testIn(context, name = "showSnackBar")
@@ -365,7 +365,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
 
     @Test
     fun `WHEN PickFileFailed event posted THEN post snackbar event`() = runTurbineTest {
-        val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+        val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
         val showSnackBar = viewModel.showSnackBar.testIn(context, name = "showSnackBar")

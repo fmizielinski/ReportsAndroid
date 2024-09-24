@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.ui.main.reports
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,13 +58,22 @@ fun ReportsList(
     uiState: UiState,
     callbacks: ReportsCallbacks,
 ) {
-    if (uiState.reports.isEmpty()) {
-        EmptyListPlaceholder()
-    } else {
-        ReportsListContent(
-            uiState = uiState,
-            callbacks = callbacks,
-        )
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        if (uiState.isLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (uiState.reports.isEmpty()) {
+            EmptyListPlaceholder()
+        } else {
+            ReportsListContent(
+                uiState = uiState,
+                callbacks = callbacks,
+            )
+        }
     }
 }
 
@@ -212,10 +223,12 @@ private val previewUiState = UiState(
         previewReport(),
         previewReport(),
     ),
+    isLoading = false,
 )
 
 private val previewUiStateEmpty = UiState(
     reports = emptyList(),
+    isLoading = true,
 )
 
 private val emptyCallbacks = ReportsCallbacks(

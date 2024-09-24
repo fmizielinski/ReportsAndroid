@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui
 
-import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
@@ -295,7 +294,7 @@ class MainViewModel(
     private fun handleTakePictureFailed(state: State): State {
         scope.launch {
             Timber.e("Take picture failed")
-            val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+            val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
             postSnackBarEvent(snackBarData)
         }
         return state
@@ -334,7 +333,7 @@ class MainViewModel(
     private fun handlePickFileFailed(state: State): State {
         scope.launch {
             Timber.e("Pick file failed")
-            val snackBarData = SnackBarData(messageResId = R.string.common_error_ups)
+            val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
             postSnackBarEvent(snackBarData)
         }
         return state

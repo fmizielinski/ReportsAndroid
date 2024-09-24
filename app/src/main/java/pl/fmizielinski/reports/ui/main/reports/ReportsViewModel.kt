@@ -3,8 +3,10 @@ package pl.fmizielinski.reports.ui.main.reports
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.model.Report
+import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
@@ -13,6 +15,7 @@ import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.Event
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.State
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
+import timber.log.Timber
 
 @KoinViewModel
 class ReportsViewModel(
@@ -25,6 +28,7 @@ class ReportsViewModel(
         return when (event) {
             is Event.LoadReports -> handleLoadReports(state)
             is Event.ReportsLoaded -> handleReportsLoaded(state, event)
+            is Event.LoadReportsFailed -> handleLoadReportsFailed(state)
             is UiEvent.ListScrolled -> handleListScrolled(state, event)
         }
     }
@@ -39,7 +43,10 @@ class ReportsViewModel(
                 comments = report.comments,
             )
         }
-        return UiState(reports)
+        return UiState(
+            reports = reports,
+            isLoading = state.loadingInProgress,
+        )
     }
 
     override suspend fun onStart() {
@@ -58,11 +65,23 @@ class ReportsViewModel(
                 logError(error)
             }
         }
-        return state
+        return state.copy(loadingInProgress = true)
     }
 
     private fun handleReportsLoaded(state: State, event: Event.ReportsLoaded): State {
-        return state.copy(reports = event.reports)
+        return state.copy(
+            reports = event.reports,
+            loadingInProgress = false,
+        )
+    }
+
+    private fun handleLoadReportsFailed(state: State): State {
+        scope.launch {
+            Timber.e("Reports loading failed")
+            val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
+            eventsRepository.postSnackBarEvent(snackBarData)
+        }
+        return state.copy(loadingInProgress = false)
     }
 
     // endregion handle Event
@@ -81,10 +100,12 @@ class ReportsViewModel(
 
     data class State(
         val reports: List<Report> = emptyList(),
+        val loadingInProgress: Boolean = false,
     )
 
     data class UiState(
         val reports: List<Report>,
+        val isLoading: Boolean,
     ) {
 
         data class Report(
@@ -99,6 +120,7 @@ class ReportsViewModel(
     sealed interface Event {
         data object LoadReports : Event
         data class ReportsLoaded(val reports: List<Report>) : Event
+        data object LoadReportsFailed : Event
     }
 
     sealed interface UiEvent : Event {
