@@ -42,6 +42,7 @@ class EventsRepository : UnauthorizedHandler {
     }
 
     sealed interface GlobalEvent {
+        data object Login : GlobalEvent
         data object Logout : GlobalEvent
         data object SaveReport : GlobalEvent
         data class ChangeFabVisibility(val isVisible: Boolean) : GlobalEvent

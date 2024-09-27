@@ -135,7 +135,6 @@ class CreateReportViewModel(
     private fun handleCreateReportFailed(state: State, event: Event.CreateReportFailed): State {
         scope.launch {
             handleError(event.error)
-            eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = true))
             eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
         }
         return state.copy(savingInProgress = false)
@@ -187,7 +186,6 @@ class CreateReportViewModel(
         scope.launch {
             if (allUploadsFinished) {
                 handleError(event.error)
-                eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = true))
                 eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
             }
         }

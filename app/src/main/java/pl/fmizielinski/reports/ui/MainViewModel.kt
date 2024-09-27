@@ -81,7 +81,7 @@ class MainViewModel(
         scope.launch {
             eventsRepository.globalEvent
                 .filterIsInstance<GlobalEvent.Logout>()
-                .collect { postLogoutEvent() }
+                .collect { postEvent(Event.Logout) }
         }
         scope.launch {
             eventsRepository.globalEvent
@@ -123,9 +123,10 @@ class MainViewModel(
     }
 
     override fun mapState(state: State): UiState {
+        val fabConfig = getFabConfig(state.currentDestination)
         return UiState(
             appBarUiState = getAppBarUiState(state.currentDestination, state.isLoading),
-            fabConfig = getFabConfig(state.currentDestination).takeIf { state.isFabVisible },
+            fabConfig = fabConfig.takeIf { !state.isLoading && state.isFabVisible },
             alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
         )
     }
@@ -173,6 +174,11 @@ class MainViewModel(
             ReportsDestination.baseRoute -> UiState.FabConfig(
                 icon = R.drawable.ic_add_24dp,
                 contentDescription = R.string.common_button_createReport,
+            )
+
+            LoginDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_login_24dp,
+                contentDescription = R.string.common_button_login,
             )
 
             else -> null
@@ -290,12 +296,15 @@ class MainViewModel(
         scope.launch {
             when (state.currentDestination) {
                 CreateReportDestination.baseRoute -> {
-                    postEvent(Event.ChangeFabVisibility(isVisible = false))
                     eventsRepository.postGlobalEvent(GlobalEvent.SaveReport)
                 }
 
                 ReportsDestination.baseRoute -> {
                     postNavigationEvent(CreateReportDestination.toDestinationData())
+                }
+
+                LoginDestination.baseRoute -> {
+                    eventsRepository.postGlobalEvent(GlobalEvent.Login)
                 }
             }
         }
@@ -375,10 +384,6 @@ class MainViewModel(
         _showSnackBar.emit(snackBarData)
         delay(TimeUnit.SECONDS.toMillis(snackBarData.secondsAlive))
         _showSnackBar.emit(SnackBarData.empty())
-    }
-
-    private suspend fun postLogoutEvent() {
-        postEvent(Event.Logout)
     }
 
     private fun validateNavDestination(route: String): Boolean {

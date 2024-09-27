@@ -2,6 +2,7 @@ package pl.fmizielinski.reports.ui.auth.login
 
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
@@ -24,6 +25,14 @@ class LoginViewModel(
     private val eventsRepository: EventsRepository,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
 
+    init {
+        scope.launch {
+            eventsRepository.globalEvent
+                .filterIsInstance<GlobalEvent.Login>()
+                .collect { postEvent(Event.Login) }
+        }
+    }
+
     override fun handleEvent(
         state: State,
         event: Event,
@@ -31,9 +40,9 @@ class LoginViewModel(
         return when (event) {
             is Event.LoginSuccess -> handleLoginSuccess(state)
             is Event.LoginFailed -> handleLoginFailed(state, event)
+            is Event.Login -> handleLogin(state)
             is UiEvent.EmailChanged -> handleEmailChanged(state, event)
             is UiEvent.PasswordChanged -> handlePasswordChanged(state, event)
-            is UiEvent.LoginClicked -> handleLoginClicked(state)
             is UiEvent.ShowPasswordClicked -> handleShowPasswordClicked(state)
         }
     }
@@ -70,6 +79,20 @@ class LoginViewModel(
         return state.copy(loginInProgress = false)
     }
 
+    private fun handleLogin(state: State): State {
+        scope.launch {
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = true))
+            try {
+                loginUseCase(state.email, state.password)
+                postEvent(Event.LoginSuccess)
+            } catch (error: SimpleErrorException) {
+                logError(error)
+                postEvent(Event.LoginFailed(error))
+            }
+        }
+        return state.copy(loginInProgress = true)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -86,20 +109,6 @@ class LoginViewModel(
         event: UiEvent.PasswordChanged,
     ): State {
         return state.copy(password = event.password)
-    }
-
-    private fun handleLoginClicked(state: State): State {
-        scope.launch {
-            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = true))
-            try {
-                loginUseCase(state.email, state.password)
-                postEvent(Event.LoginSuccess)
-            } catch (error: SimpleErrorException) {
-                logError(error)
-                postEvent(Event.LoginFailed(error))
-            }
-        }
-        return state.copy(loginInProgress = true)
     }
 
     private fun handleShowPasswordClicked(state: State): State {
@@ -124,12 +133,12 @@ class LoginViewModel(
     sealed interface Event {
         data object LoginSuccess : Event
         data class LoginFailed(val error: SimpleErrorException) : Event
+        data object Login: Event
     }
 
     sealed interface UiEvent : Event {
         data class EmailChanged(val email: String) : UiEvent
         data class PasswordChanged(val password: String) : UiEvent
-        data object LoginClicked : UiEvent
         data object ShowPasswordClicked : UiEvent
     }
 }
