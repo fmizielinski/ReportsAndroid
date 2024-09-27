@@ -21,6 +21,8 @@ import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
+import strikt.assertions.isFalse
+import strikt.assertions.isTrue
 import strikt.assertions.withFirst
 
 class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
@@ -79,6 +81,37 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
 
         uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN refresh THEN refresh reports`() = runTurbineTest {
+        val report = report()
+        coEvery { getReportsUseCase() } returnsMany listOf(
+            listOf(report),
+            listOf(report, report),
+        )
+
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch { viewModel.onStart() }
+        scheduler.advanceUntilIdle()
+        postUiEvent(UiEvent.Refresh)
+        uiState.skipItems(4)
+
+        expectThat(uiState.awaitItem()) {
+            get { isLoading }.isTrue()
+            get { isRefreshing }.isTrue()
+        }
+
+        scheduler.advanceUntilIdle()
+        expectThat(uiState.expectMostRecentItem()) {
+            get { isLoading }.isFalse()
+            get { isRefreshing }.isFalse()
+            get { reports }.hasSize(2)
+        }
+        coVerify(exactly = 2) { getReportsUseCase() }
+
+        uiState.cancel()
     }
 
     @Test
