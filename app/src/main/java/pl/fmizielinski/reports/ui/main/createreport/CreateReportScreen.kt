@@ -81,6 +81,37 @@ fun ReportContent(
     uiState: UiState,
     callbacks: CreateReportCallbacks,
 ) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        if (uiState.isLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(Margin),
+        ) {
+            ReportDetails(
+                uiState = uiState,
+                callbacks = callbacks,
+            )
+            Attachements(
+                attachments = uiState.attachments,
+                onDeleteAttachment = callbacks.onDeleteAttachment,
+                onListScrolled = callbacks.onListScrolled,
+                enabled = !uiState.isLoading,
+            )
+        }
+    }
+}
+
+@Composable
+fun ReportDetails(
+    uiState: UiState,
+    callbacks: CreateReportCallbacks,
+) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val descriptionConfirmationFocusRequester = remember {
         FocusRequester()
@@ -98,61 +129,40 @@ fun ReportContent(
         BuildConfig.REPORT_DESCRIPTION_LENGTH,
     )
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        if (uiState.isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxSize()
-                .padding(Margin),
-        ) {
-            ReportsTextField(
-                onValueChange = callbacks.onTitleChanged,
-                modifier = Modifier.fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                singleLine = true,
-                labelResId = R.string.createReportScreen_label_title,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next,
-                ),
-                keyboardActions = KeyboardActions {
-                    descriptionConfirmationFocusRequester.requestFocus()
-                },
-                limit = BuildConfig.REPORT_TITLE_LENGTH,
-                supportingText = titleSupportingText,
-                error = uiState.titleVerificationError?.let { stringResource(it) },
-                enabled = !uiState.isLoading,
-            )
-            ReportsTextField(
-                onValueChange = callbacks.onDescriptionChanged,
-                modifier = Modifier.fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .focusRequester(descriptionConfirmationFocusRequester),
-                labelResId = R.string.createReportScreen_label_description,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done,
-                ),
-                keyboardActions = KeyboardActions { keyboardController?.hide() },
-                limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
-                supportingText = descriptionSupportingText,
-                error = uiState.descriptionVerificationError?.let { stringResource(it) },
-                enabled = !uiState.isLoading,
-            )
-
-            Attachements(
-                attachments = uiState.attachments,
-                onDeleteAttachment = callbacks.onDeleteAttachment,
-                onListScrolled = callbacks.onListScrolled,
-                enabled = !uiState.isLoading,
-            )
-        }
-    }
+    ReportsTextField(
+        onValueChange = callbacks.onTitleChanged,
+        modifier = Modifier.fillMaxWidth()
+            .padding(bottom = 16.dp),
+        singleLine = true,
+        labelResId = R.string.createReportScreen_label_title,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Next,
+        ),
+        keyboardActions = KeyboardActions {
+            descriptionConfirmationFocusRequester.requestFocus()
+        },
+        limit = BuildConfig.REPORT_TITLE_LENGTH,
+        supportingText = titleSupportingText,
+        error = uiState.titleVerificationError?.let { stringResource(it) },
+        enabled = !uiState.isLoading,
+    )
+    ReportsTextField(
+        onValueChange = callbacks.onDescriptionChanged,
+        modifier = Modifier.fillMaxWidth()
+            .padding(bottom = 16.dp)
+            .focusRequester(descriptionConfirmationFocusRequester),
+        labelResId = R.string.createReportScreen_label_description,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Done,
+        ),
+        keyboardActions = KeyboardActions { keyboardController?.hide() },
+        limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
+        supportingText = descriptionSupportingText,
+        error = uiState.descriptionVerificationError?.let { stringResource(it) },
+        enabled = !uiState.isLoading,
+    )
 }
 
 @Composable
