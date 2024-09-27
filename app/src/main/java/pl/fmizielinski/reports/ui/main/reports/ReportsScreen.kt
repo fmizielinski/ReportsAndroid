@@ -10,11 +10,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
@@ -48,16 +51,19 @@ fun ReportsScreen() {
                 onListScrolled = { firstItemIndex ->
                     postUiEvent(UiEvent.ListScrolled(firstItemIndex))
                 },
+                onListRefresh = { postUiEvent(UiEvent.Refresh) },
             ),
         )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsList(
     uiState: UiState,
     callbacks: ReportsCallbacks,
 ) {
+    val pullToRefreshState = rememberPullToRefreshState()
     Column(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -66,9 +72,12 @@ fun ReportsList(
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        if (uiState.reports.isEmpty()) {
-            EmptyListPlaceholder()
-        } else {
+        PullToRefreshBox(
+            isRefreshing = uiState.isRefreshing,
+            onRefresh = callbacks.onListRefresh,
+            modifier = Modifier.fillMaxWidth(),
+            state = pullToRefreshState,
+        ) {
             ReportsListContent(
                 uiState = uiState,
                 callbacks = callbacks,
@@ -93,12 +102,16 @@ fun ReportsListContent(
         state = listState,
         modifier = Modifier.fillMaxSize(),
     ) {
-        itemsIndexed(uiState.reports) { index, report ->
-            ReportItem(uiState = report)
-            if (index != uiState.reports.lastIndex) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = Margin),
-                )
+        if (uiState.reports.isEmpty()) {
+            item { EmptyListPlaceholder() }
+        } else {
+            itemsIndexed(uiState.reports) { index, report ->
+                ReportItem(uiState = report)
+                if (index != uiState.reports.lastIndex) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = Margin),
+                    )
+                }
             }
         }
     }
@@ -193,6 +206,7 @@ fun CommentsIndicator(
 
 data class ReportsCallbacks(
     val onListScrolled: (firstItemIndex: Int) -> Unit,
+    val onListRefresh: () -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -224,15 +238,18 @@ private val previewUiState = UiState(
         previewReport(),
     ),
     isLoading = false,
+    isRefreshing = false,
 )
 
 private val previewUiStateEmpty = UiState(
     reports = emptyList(),
     isLoading = true,
+    isRefreshing = true,
 )
 
 private val emptyCallbacks = ReportsCallbacks(
     onListScrolled = {},
+    onListRefresh = {},
 )
 
 private fun previewReport() = UiState.Report(

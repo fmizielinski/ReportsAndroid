@@ -30,6 +30,7 @@ class ReportsViewModel(
             is Event.ReportsLoaded -> handleReportsLoaded(state, event)
             is Event.LoadReportsFailed -> handleLoadReportsFailed(state)
             is UiEvent.ListScrolled -> handleListScrolled(state, event)
+            is UiEvent.Refresh -> handleRefresh(state)
         }
     }
 
@@ -46,6 +47,7 @@ class ReportsViewModel(
         return UiState(
             reports = reports,
             isLoading = state.loadingInProgress,
+            isRefreshing = state.isRefreshing,
         )
     }
 
@@ -73,6 +75,7 @@ class ReportsViewModel(
         return state.copy(
             reports = event.reports,
             loadingInProgress = false,
+            isRefreshing = false,
         )
     }
 
@@ -82,7 +85,7 @@ class ReportsViewModel(
             val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
             eventsRepository.postSnackBarEvent(snackBarData)
         }
-        return state.copy(loadingInProgress = false)
+        return state.copy(loadingInProgress = false, isRefreshing = false)
     }
 
     // endregion handle Event
@@ -97,16 +100,25 @@ class ReportsViewModel(
         return state
     }
 
+    private fun handleRefresh(state: State): State {
+        scope.launch {
+            postEvent(Event.LoadReports)
+        }
+        return state.copy(isRefreshing = true)
+    }
+
     // endregion handle UiEvent
 
     data class State(
         val reports: List<Report> = emptyList(),
         val loadingInProgress: Boolean = false,
+        val isRefreshing: Boolean = false,
     )
 
     data class UiState(
         val reports: List<Report>,
         val isLoading: Boolean,
+        val isRefreshing: Boolean,
     ) {
 
         data class Report(
@@ -126,5 +138,6 @@ class ReportsViewModel(
 
     sealed interface UiEvent : Event {
         data class ListScrolled(val firstItemIndex: Int) : UiEvent
+        data object Refresh : UiEvent
     }
 }
