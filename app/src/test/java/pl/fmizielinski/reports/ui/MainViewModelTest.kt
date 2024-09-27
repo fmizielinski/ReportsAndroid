@@ -1,12 +1,6 @@
 package pl.fmizielinski.reports.ui
 
 import app.cash.turbine.testIn
-import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
-import com.ramcosta.composedestinations.generated.destinations.LoginDestination
-import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
-import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
-import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
-import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -26,10 +20,15 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.fixtures.ui.alertDialogUiState
-import pl.fmizielinski.reports.fixtures.ui.reportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.destinations.destinations.CreateReportDestination
+import pl.fmizielinski.reports.ui.destinations.destinations.LoginDestination
+import pl.fmizielinski.reports.ui.destinations.destinations.RegisterDestination
+import pl.fmizielinski.reports.ui.destinations.destinations.ReportsDestination
+import pl.fmizielinski.reports.ui.destinations.navgraphs.AuthNavGraph
+import pl.fmizielinski.reports.ui.destinations.navgraphs.MainNavGraph
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo

@@ -160,7 +160,6 @@ koverReport {
             )
             packages(
                 "*.model",
-                "com.ramcosta.composedestinations.generated",
                 "org.koin.ksp.generated",
                 "pl.fmizielinski.reports.data.db.dao",
                 "pl.fmizielinski.reports.data.network.utils",
@@ -169,6 +168,7 @@ koverReport {
                 "pl.fmizielinski.reports.domain.usecase.base",
                 "pl.fmizielinski.reports.ui.base",
                 "pl.fmizielinski.reports.ui.common.composable",
+                "pl.fmizielinski.reports.ui.destinations",
                 "pl.fmizielinski.reports.ui.theme",
                 "pl.fmizielinski.reports.ui.utils",
             )

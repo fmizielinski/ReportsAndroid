@@ -1,7 +1,6 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
 import app.cash.turbine.testIn
-import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
@@ -28,6 +27,7 @@ import pl.fmizielinski.reports.fixtures.domain.completeTemporaryAttachmentUpload
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.progressTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
+import pl.fmizielinski.reports.ui.destinations.destinations.ReportsDestination
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import pl.fmizielinski.reports.utils.exceptionFlow
