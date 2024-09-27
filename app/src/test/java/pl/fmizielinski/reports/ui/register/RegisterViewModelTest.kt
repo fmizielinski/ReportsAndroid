@@ -2,15 +2,15 @@ package pl.fmizielinski.reports.ui.register
 
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.testIn
+import com.ramcosta.composedestinations.utils.startDestination
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.EMAIL_NOT_VALID
@@ -19,12 +19,15 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.PASSWORD_
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.SURNAME_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.auth.RegisterUseCase
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.registrationData
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent
+import pl.fmizielinski.reports.ui.destinations.navgraphs.MainNavGraph
+import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
@@ -42,84 +45,27 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
         eventsRepository = eventsRepository,
     )
 
-    @ParameterizedTest
-    @CsvSource(
-        "email, password, passwordConfirmation, name, surname, true",
-        "email, password, passwordConfirmation, name, , false",
-        "email, password, passwordConfirmation, , surname, false",
-        "email, password, passwordConfirmation, , , false",
-        "email, password, , name, surname, false",
-        "email, password, , name, , false",
-        "email, password, , , surname, false",
-        "email, password, , , , false",
-        "email, , passwordConfirmation, name, surname, false",
-        "email, , passwordConfirmation, name, , false",
-        "email, , passwordConfirmation, , surname, false",
-        "email, , passwordConfirmation, , , false",
-        "email, , , name, surname, false",
-        "email, , , name, , false",
-        "email, , , , surname, false",
-        "email, , , , , false",
-        ", password, passwordConfirmation, name, surname, false",
-        ", password, passwordConfirmation, name, , false",
-        ", password, passwordConfirmation, , surname, false",
-        ", password, passwordConfirmation, , , false",
-        ", password, , name, surname, false",
-        ", password, , name, , false",
-        ", password, , , surname, false",
-        ", password, , , , false",
-        ", , passwordConfirmation, name, surname, false",
-        ", , passwordConfirmation, name, , false",
-        ", , passwordConfirmation, , surname, false",
-        ", , passwordConfirmation, , , false",
-        ", , , name, surname, false",
-        ", , , name, , false",
-        ", , , , surname, false",
-        ", , , , , false",
-    )
-    fun `WHEN data passed THEN change register button`(
-        email: String?,
-        password: String?,
-        passwordConfirmation: String?,
-        name: String?,
-        surname: String?,
-        expected: Boolean?,
-    ) = runTurbineTest {
-        val uiState = viewModel.uiState.testIn(context)
-
-        postUiEvent(UiEvent.EmailChanged(email.orEmpty()))
-        postUiEvent(UiEvent.PasswordChanged(password.orEmpty()))
-        postUiEvent(UiEvent.PasswordConfirmationChanged(passwordConfirmation.orEmpty()))
-        postUiEvent(UiEvent.NameChanged(name.orEmpty()))
-        postUiEvent(UiEvent.SurnameChanged(surname.orEmpty()))
-        scheduler.advanceUntilIdle()
-
-        val result = uiState.expectMostRecentItem()
-        expectThat(result.isRegisterButtonEnabled) isEqualTo expected
-
-        uiState.cancel()
-    }
-
     @Test
-    fun `GIVEN valid data passed WHEN register clicked THEN disable register button`() = runTurbineTest {
+    fun `GIVEN valid data passed WHEN Register global event posted THEN post MainNavGraph start destination navigation event`() = runTurbineTest {
         val email = "email"
         val password = "password"
         val passwordConfirmation = "password"
         val name = "name"
         val surname = "surname"
-        coJustRun { registerUseCase.invoke(registrationData(email, name, surname, password)) }
+        coJustRun { registerUseCase(registrationData(email, name, surname, password)) }
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        postUiEvent(UiEvent.RegisterClicked)
+        context.launch { eventsRepository.postGlobalEvent(GlobalEvent.Register) }
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
-        expectThat(result.isRegisterButtonEnabled).isFalse()
+        coVerify(exactly = 1) { registerUseCase(registrationData(email, name, surname, password)) }
+        coVerify(exactly = 1) { eventsRepository.postNavEvent(MainNavGraph.startDestination.toDestinationData()) }
 
         uiState.cancelAndIgnoreRemainingEvents()
     }
 
     @Test
-    fun `GIVEN invalid credentials passed WHEN register clicked THEN show password verification error`() = runTurbineTest {
+    fun `GIVEN invalid credentials passed WHEN Register global event posted THEN show password verification error`() = runTurbineTest {
         val email = "email"
         val password = "password"
         val passwordConfirmation = "passwordConfirmation"
@@ -128,7 +74,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
         coJustRun { registerUseCase.invoke(registrationData(email, name, surname, password)) }
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
-        postUiEvent(UiEvent.RegisterClicked)
+        context.launch { eventsRepository.postGlobalEvent(GlobalEvent.Register) }
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -160,7 +106,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
     }
 
     @Test
-    fun `GIVEN valid data passed WHEN register clicked AND register error THEN show snackbar`() = runTurbineTest {
+    fun `GIVEN valid data passed WHEN Register global event posted AND register error THEN show snackbar`() = runTurbineTest {
         val email = "email"
         val password = "password"
         val passwordConfirmation = "password"
@@ -172,7 +118,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
 
-        postUiEvent(UiEvent.RegisterClicked)
+        context.launch { eventsRepository.postGlobalEvent(GlobalEvent.Register) }
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
@@ -181,7 +127,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
     }
 
     @Test
-    fun `GIVEN valid data passed WHEN register clicked AND register verification errors THEN show verification errors`() = runTurbineTest {
+    fun `GIVEN valid data passed WHEN Register global event posted AND register verification errors THEN show verification errors`() = runTurbineTest {
         val email = "email"
         val password = "password"
         val passwordConfirmation = "password"
@@ -199,7 +145,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
 
-        postUiEvent(UiEvent.RegisterClicked)
+        context.launch { eventsRepository.postGlobalEvent(GlobalEvent.Register) }
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()
@@ -214,7 +160,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
     }
 
     @Test
-    fun `GIVEN valid data passed WHEN register clicked AND register verification error THEN show verification error`() = runTurbineTest {
+    fun `GIVEN valid data passed WHEN Register global event posted AND register verification error THEN show verification error`() = runTurbineTest {
         val email = "email"
         val password = "password"
         val passwordConfirmation = "password"
@@ -225,7 +171,7 @@ class RegisterViewModelTest : BaseViewModelTest<RegisterViewModel, UiEvent>() {
 
         val uiState = postData(email, password, passwordConfirmation, name, surname)
 
-        postUiEvent(UiEvent.RegisterClicked)
+        context.launch { eventsRepository.postGlobalEvent(GlobalEvent.Register) }
         scheduler.advanceUntilIdle()
 
         val result = uiState.expectMostRecentItem()

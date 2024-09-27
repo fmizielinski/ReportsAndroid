@@ -65,16 +65,9 @@ class RegisterViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val allDataFilled = state.email.isNotBlank() &&
-                state.password.isNotBlank() &&
-                state.passwordConfirmation.isNotBlank() &&
-                state.name.isNotBlank() &&
-                state.surname.isNotBlank()
-        val isRegisterButtonEnabled = allDataFilled && !state.registerInProgress
         return UiState(
             loginData = getLoginData(state),
             userData = getUserData(state),
-            isRegisterButtonEnabled = isRegisterButtonEnabled,
             isLoading = state.registerInProgress,
         )
     }
@@ -240,7 +233,6 @@ class RegisterViewModel(
     data class UiState(
         val loginData: LoginData,
         val userData: UserData,
-        val isRegisterButtonEnabled: Boolean,
         val isLoading: Boolean,
     ) {
         data class LoginData(

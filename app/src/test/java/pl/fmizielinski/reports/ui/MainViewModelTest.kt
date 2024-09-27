@@ -273,7 +273,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
     }
 
     @Test
-    fun `GIVEN Current destination is CreateReport WHEN fab clicked THEN Post save event AND hide fab`() = runTurbineTest {
+    fun `GIVEN Current destination is CreateReport WHEN fab clicked THEN Post save event`() = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns true
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
@@ -285,7 +285,6 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         scheduler.advanceUntilIdle()
         uiState.skipItems(3)
 
-        expectThat(uiState.awaitItem().fabConfig).isNull()
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.SaveReport) }
 
         navigationEvents.cancelAndIgnoreRemainingEvents()
@@ -504,8 +503,20 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
 
         @JvmStatic
         fun destinationFabConfig() = listOf(
-            arrayOf("Login", null),
-            arrayOf("Register", null),
+            arrayOf(
+                "Login",
+                UiState.FabConfig(
+                    icon = R.drawable.ic_login_24dp,
+                    contentDescription = R.string.common_button_login,
+                ),
+            ),
+            arrayOf(
+                "Register",
+                UiState.FabConfig(
+                    icon = R.drawable.ic_person_add_24dp,
+                    contentDescription = R.string.common_button_register,
+                ),
+            ),
             arrayOf(
                 "Reports",
                 UiState.FabConfig(

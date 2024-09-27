@@ -320,7 +320,6 @@ private val previewUiState = UiState(
         nameVerificationError = null,
         surnameVerificationError = null,
     ),
-    isRegisterButtonEnabled = true,
     isLoading = false,
 )
 
