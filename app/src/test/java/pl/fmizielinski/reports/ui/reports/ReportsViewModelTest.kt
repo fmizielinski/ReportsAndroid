@@ -8,11 +8,14 @@ import io.mockk.spyk
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
+import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
+import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import strikt.api.expectThat
@@ -48,9 +51,9 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
         val uiState = viewModel.uiState.testIn(context)
 
         context.launch { viewModel.onStart() }
-        uiState.skipItems(1)
+        scheduler.advanceUntilIdle()
 
-        val result = uiState.awaitItem()
+        val result = uiState.expectMostRecentItem()
         expectThat(result.reports).hasSize(1)
             .withFirst {
                 get { id } isEqualTo expectedId
@@ -60,6 +63,22 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
             }
 
         uiState.cancel()
+    }
+
+    @Test
+    fun `GIVEN reports loading error WHEN start THEN show snackbar`() = runTurbineTest {
+        val errorException = simpleErrorException()
+        val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
+        coEvery { getReportsUseCase() } throws errorException
+
+        val uiState = viewModel.uiState.testIn(context)
+
+        context.launch { viewModel.onStart() }
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
     }
 
     @Test

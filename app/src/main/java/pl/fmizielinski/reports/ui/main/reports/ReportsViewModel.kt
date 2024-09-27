@@ -63,6 +63,7 @@ class ReportsViewModel(
                 postEvent(Event.ReportsLoaded(reports))
             } catch (error: ErrorException) {
                 logError(error)
+                postEvent(Event.LoadReportsFailed)
             }
         }
         return state.copy(loadingInProgress = true)

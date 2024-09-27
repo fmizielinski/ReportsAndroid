@@ -26,6 +26,7 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.fixtures.ui.alertDialogUiState
+import pl.fmizielinski.reports.fixtures.ui.reportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
@@ -466,6 +467,22 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
 
         uiState.cancel()
         openSettings.cancel()
+    }
+
+    @Test
+    fun `WHEN Loading event posted THEN disable app bar`() = runTurbineTest {
+        coEvery { isLoggedInUseCase() } returns true
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+        context.launch {
+            eventsRepository.postGlobalEvent(EventsRepository.GlobalEvent.Loading(isLoading = true))
+        }
+        scheduler.advanceUntilIdle()
+
+        expectThat(uiState.expectMostRecentItem().appBarUiState.isEnabled).isFalse()
+
+        uiState.cancel()
     }
 
     companion object {
