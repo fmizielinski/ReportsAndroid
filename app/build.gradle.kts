@@ -133,10 +133,11 @@ dependencies {
 }
 
 ksp {
-    // .mmd file
+    // region Compose Destinations
     arg("compose-destinations.mermaidGraph", "$rootDir/docs")
-    // .html file
     arg("compose-destinations.htmlMermaidGraph", "$rootDir/docs")
+    arg("compose-destinations.codeGenPackageName", "pl.fmizielinski.reports.ui.destinations")
+    // endregion Compose Destinations
 }
 
 koverReport {

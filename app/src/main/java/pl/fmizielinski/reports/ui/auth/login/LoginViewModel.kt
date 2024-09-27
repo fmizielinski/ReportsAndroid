@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui.auth.login
 
-import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -15,6 +14,7 @@ import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.State
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.destinations.navgraphs.MainNavGraph
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 
 @KoinViewModel

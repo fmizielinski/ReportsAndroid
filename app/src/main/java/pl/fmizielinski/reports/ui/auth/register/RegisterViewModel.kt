@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui.auth.register
 
-import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -25,6 +24,7 @@ import pl.fmizielinski.reports.ui.base.ErrorHandler
 import pl.fmizielinski.reports.ui.base.ErrorHandler.VerificationError
 import pl.fmizielinski.reports.ui.base.filterIsNotInstance
 import pl.fmizielinski.reports.ui.base.findVerificationError
+import pl.fmizielinski.reports.ui.destinations.navgraphs.MainNavGraph
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 
 @KoinViewModel
