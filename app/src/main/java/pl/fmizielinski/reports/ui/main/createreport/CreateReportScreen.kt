@@ -19,6 +19,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -98,53 +99,66 @@ fun ReportContent(
     )
 
     Column(
-        modifier = Modifier.fillMaxSize()
-            .padding(Margin),
+        modifier = Modifier.fillMaxSize(),
     ) {
-        ReportsTextField(
-            onValueChange = callbacks.onTitleChanged,
-            modifier = Modifier.fillMaxWidth()
-                .padding(bottom = 16.dp),
-            singleLine = true,
-            labelResId = R.string.createReportScreen_label_title,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Next,
-            ),
-            keyboardActions = KeyboardActions {
-                descriptionConfirmationFocusRequester.requestFocus()
-            },
-            limit = BuildConfig.REPORT_TITLE_LENGTH,
-            supportingText = titleSupportingText,
-            error = uiState.titleVerificationError?.let { stringResource(it) },
-        )
-        ReportsTextField(
-            onValueChange = callbacks.onDescriptionChanged,
-            modifier = Modifier.fillMaxWidth()
-                .padding(bottom = 16.dp)
-                .focusRequester(descriptionConfirmationFocusRequester),
-            labelResId = R.string.createReportScreen_label_description,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done,
-            ),
-            keyboardActions = KeyboardActions { keyboardController?.hide() },
-            limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
-            supportingText = descriptionSupportingText,
-            error = uiState.descriptionVerificationError?.let { stringResource(it) },
-        )
+        if (uiState.isLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .padding(Margin),
+        ) {
+            ReportsTextField(
+                onValueChange = callbacks.onTitleChanged,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                singleLine = true,
+                labelResId = R.string.createReportScreen_label_title,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next,
+                ),
+                keyboardActions = KeyboardActions {
+                    descriptionConfirmationFocusRequester.requestFocus()
+                },
+                limit = BuildConfig.REPORT_TITLE_LENGTH,
+                supportingText = titleSupportingText,
+                error = uiState.titleVerificationError?.let { stringResource(it) },
+                enabled = !uiState.isLoading,
+            )
+            ReportsTextField(
+                onValueChange = callbacks.onDescriptionChanged,
+                modifier = Modifier.fillMaxWidth()
+                    .padding(bottom = 16.dp)
+                    .focusRequester(descriptionConfirmationFocusRequester),
+                labelResId = R.string.createReportScreen_label_description,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions { keyboardController?.hide() },
+                limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
+                supportingText = descriptionSupportingText,
+                error = uiState.descriptionVerificationError?.let { stringResource(it) },
+                enabled = !uiState.isLoading,
+            )
 
-        Attachements(
-            attachments = uiState.attachments,
-            onDeleteAttachment = callbacks.onDeleteAttachment,
-            onListScrolled = callbacks.onListScrolled,
-        )
+            Attachements(
+                attachments = uiState.attachments,
+                onDeleteAttachment = callbacks.onDeleteAttachment,
+                onListScrolled = callbacks.onListScrolled,
+                enabled = !uiState.isLoading,
+            )
+        }
     }
 }
 
 @Composable
 fun Attachements(
     attachments: List<UiState.Attachment>,
+    enabled: Boolean,
     onDeleteAttachment: (File) -> Unit,
     onListScrolled: (Int) -> Unit,
 ) {
@@ -177,6 +191,7 @@ fun Attachements(
         items(attachments) { attachment ->
             AttachmentItem(
                 attachment = attachment,
+                enabled = enabled,
                 onDeleteAttachment = onDeleteAttachment,
             )
         }
@@ -187,6 +202,7 @@ fun Attachements(
 @Composable
 fun AttachmentItem(
     attachment: UiState.Attachment,
+    enabled: Boolean,
     onDeleteAttachment: (File) -> Unit,
 ) {
     Card(
@@ -203,7 +219,13 @@ fun AttachmentItem(
                     model = attachment.file,
                     contentDescription = null,
                 )
-                if (attachment.isUploaded || attachment.uploadFailed) {
+                if (attachment.isUploading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(AttachmentProgressSize)
+                            .align(Alignment.Center),
+                        progress = { attachment.progress },
+                    )
+                } else if (attachment.isUploaded || attachment.uploadFailed) {
                     val (iconResId, tint) = if (attachment.uploadFailed) {
                         R.drawable.ic_error_24dp to MaterialTheme.colorScheme.error
                     } else {
@@ -216,17 +238,12 @@ fun AttachmentItem(
                             .align(Alignment.Center),
                         tint = tint,
                     )
-                } else if (attachment.isUploading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(AttachmentProgressSize)
-                            .align(Alignment.Center),
-                        progress = { attachment.progress },
-                    )
                 }
             }
             IconButton(
                 onClick = { onDeleteAttachment(attachment.file) },
                 modifier = Modifier.align(Alignment.End),
+                enabled = enabled,
             ) {
                 Image(
                     imageVector = ImageVector.vectorResource(R.drawable.ic_delete_24dp),
@@ -266,6 +283,7 @@ private val previewUiState = UiState(
     titleVerificationError = null,
     descriptionVerificationError = null,
     attachments = emptyList(),
+    isLoading = false,
 )
 
 private val emptyCallbacks = CreateReportCallbacks(
