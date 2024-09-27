@@ -41,7 +41,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ramcosta.composedestinations.DestinationsNavHost
-import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
@@ -63,6 +62,7 @@ import pl.fmizielinski.reports.ui.common.composable.emptyAlertDialogCallbacks
 import pl.fmizielinski.reports.ui.common.composable.emptyTopAppBarCallbacks
 import pl.fmizielinski.reports.ui.common.composable.previewTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.consumeNavEvent
+import pl.fmizielinski.reports.ui.destinations.NavGraphs
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 import pl.fmizielinski.reports.ui.utils.FileUtils
 import java.io.File

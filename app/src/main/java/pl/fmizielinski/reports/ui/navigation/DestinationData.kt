@@ -1,9 +1,9 @@
 package pl.fmizielinski.reports.ui.navigation
 
 import androidx.navigation.NavOptions
-import com.ramcosta.composedestinations.generated.navgraphs.ReportsNavGraph
 import com.ramcosta.composedestinations.spec.DestinationSpec
 import com.ramcosta.composedestinations.utils.startDestination
+import pl.fmizielinski.reports.ui.destinations.navgraphs.ReportsNavGraph
 
 data class DestinationData(
     val destination: DestinationSpec,

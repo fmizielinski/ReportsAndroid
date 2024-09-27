@@ -2,13 +2,6 @@ package pl.fmizielinski.reports.ui
 
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import com.ramcosta.composedestinations.generated.destinations.CreateReportDestination
-import com.ramcosta.composedestinations.generated.destinations.LoginDestination
-import com.ramcosta.composedestinations.generated.destinations.RegisterDestination
-import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
-import com.ramcosta.composedestinations.generated.navgraphs.AuthNavGraph
-import com.ramcosta.composedestinations.generated.navgraphs.MainNavGraph
-import com.ramcosta.composedestinations.generated.navgraphs.ReportsNavGraph
 import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -38,6 +31,13 @@ import pl.fmizielinski.reports.ui.common.model.TopBarAction
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.FILES
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.PHOTO
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.REGISTER
+import pl.fmizielinski.reports.ui.destinations.destinations.CreateReportDestination
+import pl.fmizielinski.reports.ui.destinations.destinations.LoginDestination
+import pl.fmizielinski.reports.ui.destinations.destinations.RegisterDestination
+import pl.fmizielinski.reports.ui.destinations.destinations.ReportsDestination
+import pl.fmizielinski.reports.ui.destinations.navgraphs.AuthNavGraph
+import pl.fmizielinski.reports.ui.destinations.navgraphs.MainNavGraph
+import pl.fmizielinski.reports.ui.destinations.navgraphs.ReportsNavGraph
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import timber.log.Timber

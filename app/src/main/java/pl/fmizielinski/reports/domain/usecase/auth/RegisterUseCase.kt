@@ -6,7 +6,6 @@ import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.RegisterRequestModel
 import pl.fmizielinski.reports.data.network.auth.model.RegisterResponseModel
-import pl.fmizielinski.reports.domain.error.CompositeErrorException
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException

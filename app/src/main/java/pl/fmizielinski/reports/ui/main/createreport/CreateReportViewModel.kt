@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
-import com.ramcosta.composedestinations.generated.destinations.ReportsDestination
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
@@ -24,6 +23,7 @@ import pl.fmizielinski.reports.ui.base.ErrorHandler
 import pl.fmizielinski.reports.ui.base.ErrorHandler.VerificationError
 import pl.fmizielinski.reports.ui.base.filterIsNotInstance
 import pl.fmizielinski.reports.ui.base.findVerificationError
+import pl.fmizielinski.reports.ui.destinations.destinations.ReportsDestination
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.Event
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.State
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
