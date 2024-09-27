@@ -185,7 +185,6 @@ fun LoginScreenPreview() {
 }
 
 private val previewUiState = UiState(
-    isLoginButtonEnabled = true,
     showPassword = false,
     isLoading = false,
 )

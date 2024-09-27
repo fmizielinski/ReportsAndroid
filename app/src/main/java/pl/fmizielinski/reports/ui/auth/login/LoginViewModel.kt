@@ -48,14 +48,15 @@ class LoginViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val isLoginButtonEnabled = state.email.isNotBlank() &&
-                state.password.isNotBlank() &&
-                !state.loginInProgress
         return UiState(
-            isLoginButtonEnabled = isLoginButtonEnabled,
             showPassword = state.showPassword,
             isLoading = state.loginInProgress,
         )
+    }
+
+    override suspend fun onStart() {
+        super.onStart()
+        eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false))
     }
 
     // region handle Event
@@ -101,6 +102,11 @@ class LoginViewModel(
         state: State,
         event: UiEvent.EmailChanged,
     ): State {
+        val newState = state.copy(email = event.email)
+        scope.launch {
+            val globalEvent = GlobalEvent.ChangeFabVisibility(newState.isLoginEnabled)
+            eventsRepository.postGlobalEvent(globalEvent)
+        }
         return state.copy(email = event.email)
     }
 
@@ -108,6 +114,11 @@ class LoginViewModel(
         state: State,
         event: UiEvent.PasswordChanged,
     ): State {
+        val newState = state.copy(password = event.password)
+        scope.launch {
+            val globalEvent = GlobalEvent.ChangeFabVisibility(newState.isLoginEnabled)
+            eventsRepository.postGlobalEvent(globalEvent)
+        }
         return state.copy(password = event.password)
     }
 
@@ -117,6 +128,9 @@ class LoginViewModel(
 
     // endregion handle UiEvent
 
+    private val State.isLoginEnabled: Boolean
+        get() = email.isNotBlank() && password.isNotBlank()
+
     data class State(
         val email: String = "",
         val password: String = "",
@@ -125,7 +139,6 @@ class LoginViewModel(
     )
 
     data class UiState(
-        val isLoginButtonEnabled: Boolean,
         val showPassword: Boolean,
         val isLoading: Boolean,
     )
@@ -133,7 +146,7 @@ class LoginViewModel(
     sealed interface Event {
         data object LoginSuccess : Event
         data class LoginFailed(val error: SimpleErrorException) : Event
-        data object Login: Event
+        data object Login : Event
     }
 
     sealed interface UiEvent : Event {

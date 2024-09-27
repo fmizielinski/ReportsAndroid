@@ -4,13 +4,13 @@
     <string name="common_button_addFile">Add file</string>
     <string name="common_button_back">Back</string>
     <string name="common_button_createReport">Create report</string>
+    <string name="common_button_login">Sign in</string>
     <string name="common_button_register">Sign up</string>
     <string name="common_button_saveReport">Save report</string>
     <string name="common_button_takePhoto">Take photo</string>
-    <string name="common_button_login">Sign in</string>
+    <string name="common_error_oops">Oops, something went wrong</string>
     <string name="common_error_unauthorized">You have been logged out</string>
     <string name="common_error_unknown">Unknown</string>
-    <string name="common_error_oops">Oops, something went wrong</string>
     <string name="common_label_cameraPermissionRationale">Camera permission is required to add report attachments</string>
     <string name="common_label_cancel">Cancel</string>
     <string name="common_label_characterCounter">%1$d/%2$d</string>
@@ -32,7 +32,6 @@
     <string name="loginScreen_label_email">Email</string>
     <string name="loginScreen_label_password">Password</string>
     <string name="registerScreen_button_hidePassword">Hide password</string>
-    <string name="registerScreen_button_register">Sign up</string>
     <string name="registerScreen_button_showPassword">Show password</string>
     <string name="registerScreen_error_emailNotValid">Invalid email</string>
     <string name="registerScreen_error_nameEmpty">Empty name</string>

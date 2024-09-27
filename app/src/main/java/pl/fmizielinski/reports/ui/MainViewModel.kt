@@ -181,6 +181,11 @@ class MainViewModel(
                 contentDescription = R.string.common_button_login,
             )
 
+            RegisterDestination.baseRoute -> UiState.FabConfig(
+                icon = R.drawable.ic_person_add_24dp,
+                contentDescription = R.string.common_button_register,
+            )
+
             else -> null
         }
     }
@@ -305,6 +310,10 @@ class MainViewModel(
 
                 LoginDestination.baseRoute -> {
                     eventsRepository.postGlobalEvent(GlobalEvent.Login)
+                }
+
+                RegisterDestination.baseRoute -> {
+                    eventsRepository.postGlobalEvent(GlobalEvent.Register)
                 }
             }
         }

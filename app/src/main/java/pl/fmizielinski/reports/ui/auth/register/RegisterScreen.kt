@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -59,7 +57,6 @@ fun RegisterScreen() {
                     onNameChanged = { postUiEvent(UiEvent.NameChanged(it)) },
                     onSurnameChanged = { postUiEvent(UiEvent.SurnameChanged(it)) },
                 ),
-                onRegisterClicked = { postUiEvent(UiEvent.RegisterClicked) },
             ),
         )
     }
@@ -92,7 +89,6 @@ fun RegisterForm(
             Column(
                 modifier = Modifier.align(Alignment.Center),
             ) {
-                val keyboardController = LocalSoftwareKeyboardController.current
 
                 LoginData(
                     uiState = uiState.loginData,
@@ -105,22 +101,10 @@ fun RegisterForm(
                 UserData(
                     uiState = uiState.userData,
                     callbacks = callbacks.userDataCallbacks,
-                    onRegisterClicked = callbacks.onRegisterClicked,
                     nameFocusRequester = nameFocusRequester,
                     surnameFocusRequester = surnameFocusRequester,
                     isLoading = uiState.isLoading,
                 )
-                Button(
-                    enabled = uiState.isRegisterButtonEnabled,
-                    onClick = {
-                        callbacks.onRegisterClicked()
-                        keyboardController?.hide()
-                    },
-                    modifier = Modifier.padding(vertical = 8.dp)
-                        .align(Alignment.CenterHorizontally),
-                ) {
-                    Text(stringResource(R.string.registerScreen_button_register))
-                }
             }
         }
     }
@@ -251,7 +235,6 @@ fun UserData(
     uiState: UiState.UserData,
     isLoading: Boolean,
     callbacks: RegisterCallbacks.UserDataCallbacks,
-    onRegisterClicked: () -> Unit,
     nameFocusRequester: FocusRequester,
     surnameFocusRequester: FocusRequester,
 ) {
@@ -284,7 +267,6 @@ fun UserData(
             imeAction = ImeAction.Done,
         ),
         keyboardActions = KeyboardActions {
-            onRegisterClicked()
             keyboardController?.hide()
         },
         singleLine = true,
@@ -297,7 +279,6 @@ fun UserData(
 data class RegisterCallbacks(
     val loginDataCallbacks: LoginDataCallbacks,
     val userDataCallbacks: UserDataCallbacks,
-    val onRegisterClicked: () -> Unit,
 ) {
 
     data class LoginDataCallbacks(
@@ -354,5 +335,4 @@ private val emptyCallbacks = RegisterCallbacks(
         onNameChanged = {},
         onSurnameChanged = {},
     ),
-    onRegisterClicked = {},
 )
