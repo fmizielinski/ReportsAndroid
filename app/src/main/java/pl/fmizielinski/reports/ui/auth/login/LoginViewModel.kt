@@ -54,11 +54,6 @@ class LoginViewModel(
         )
     }
 
-    override suspend fun onStart() {
-        super.onStart()
-        eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false))
-    }
-
     // region handle Event
 
     private fun handleLoginSuccess(state: State): State {
@@ -102,11 +97,6 @@ class LoginViewModel(
         state: State,
         event: UiEvent.EmailChanged,
     ): State {
-        val newState = state.copy(email = event.email)
-        scope.launch {
-            val globalEvent = GlobalEvent.ChangeFabVisibility(newState.isLoginEnabled)
-            eventsRepository.postGlobalEvent(globalEvent)
-        }
         return state.copy(email = event.email)
     }
 
@@ -114,11 +104,6 @@ class LoginViewModel(
         state: State,
         event: UiEvent.PasswordChanged,
     ): State {
-        val newState = state.copy(password = event.password)
-        scope.launch {
-            val globalEvent = GlobalEvent.ChangeFabVisibility(newState.isLoginEnabled)
-            eventsRepository.postGlobalEvent(globalEvent)
-        }
         return state.copy(password = event.password)
     }
 
@@ -127,9 +112,6 @@ class LoginViewModel(
     }
 
     // endregion handle UiEvent
-
-    private val State.isLoginEnabled: Boolean
-        get() = email.isNotBlank() && password.isNotBlank()
 
     data class State(
         val email: String = "",
