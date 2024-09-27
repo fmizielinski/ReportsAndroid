@@ -7,14 +7,17 @@ data class ReportsTopAppBarUiState(
     @StringRes val title: Int?,
     val isBackVisible: Boolean,
     val actions: List<TopBarAction>,
+    val isEnabled: Boolean,
 ) {
     constructor(
         @StringRes title: Int? = null,
         destination: String? = null,
         actions: List<TopBarAction> = emptyList(),
+        isEnabled: Boolean = true,
     ) : this(
         title = title,
         isBackVisible = destination?.isStartDestination == true,
         actions = actions,
+        isEnabled = isEnabled,
     )
 }

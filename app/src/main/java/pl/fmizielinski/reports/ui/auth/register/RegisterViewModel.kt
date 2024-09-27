@@ -65,6 +65,7 @@ class RegisterViewModel(
             loginData = getLoginData(state),
             userData = getUserData(state),
             isRegisterButtonEnabled = isRegisterButtonEnabled,
+            isLoading = state.registerInProgress,
         )
     }
 
@@ -97,7 +98,6 @@ class RegisterViewModel(
         if (state.password != state.passwordConfirmation) {
             return state.copy(
                 verificationErrors = listOf(Password(R.string.registerScreen_error_password)),
-                registerInProgress = false,
             )
         } else {
             scope.launch {
@@ -189,7 +189,7 @@ class RegisterViewModel(
 
     private fun handleRegisterClicked(state: State): State {
         scope.launch { postEvent(Event.Verify) }
-        return state.copy(registerInProgress = true)
+        return state
     }
 
     // endregion handle UiEvent
@@ -231,6 +231,7 @@ class RegisterViewModel(
         val loginData: LoginData,
         val userData: UserData,
         val isRegisterButtonEnabled: Boolean,
+        val isLoading: Boolean,
     ) {
         data class LoginData(
             val showPassword: Boolean,

@@ -8,6 +8,7 @@ import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.Event
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.State
@@ -38,11 +39,13 @@ class LoginViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val isLoginButtonEnabled =
-            state.email.isNotBlank() && state.password.isNotBlank() && !state.loginInProgress
+        val isLoginButtonEnabled = state.email.isNotBlank() &&
+                state.password.isNotBlank() &&
+                !state.loginInProgress
         return UiState(
             isLoginButtonEnabled = isLoginButtonEnabled,
             showPassword = state.showPassword,
+            isLoading = state.loginInProgress,
         )
     }
 
@@ -51,6 +54,7 @@ class LoginViewModel(
     private fun handleLoginSuccess(state: State): State {
         scope.launch {
             eventsRepository.postNavEvent(MainNavGraph.startDestination.toDestinationData())
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
         }
         return state.copy(loginInProgress = false)
     }
@@ -61,6 +65,7 @@ class LoginViewModel(
     ): State {
         scope.launch {
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
         }
         return state.copy(loginInProgress = false)
     }
@@ -85,6 +90,7 @@ class LoginViewModel(
 
     private fun handleLoginClicked(state: State): State {
         scope.launch {
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = true))
             try {
                 loginUseCase(state.email, state.password)
                 postEvent(Event.LoginSuccess)
@@ -112,6 +118,7 @@ class LoginViewModel(
     data class UiState(
         val isLoginButtonEnabled: Boolean,
         val showPassword: Boolean,
+        val isLoading: Boolean,
     )
 
     sealed interface Event {

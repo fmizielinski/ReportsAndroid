@@ -83,6 +83,7 @@ class CreateReportViewModel(
             titleVerificationError = titleVerificationError,
             descriptionVerificationError = descriptionVerificationError,
             attachments = getAttachments(state.attachments),
+            isLoading = state.savingInProgress,
         )
     }
 
@@ -126,16 +127,18 @@ class CreateReportViewModel(
     private fun handleCreateReportSuccess(state: State): State {
         scope.launch {
             eventsRepository.postNavEvent(ReportsDestination.toDestinationData())
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
         }
-        return state
+        return state.copy(savingInProgress = false)
     }
 
     private fun handleCreateReportFailed(state: State, event: Event.CreateReportFailed): State {
         scope.launch {
             handleError(event.error)
             eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = true))
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
         }
-        return state
+        return state.copy(savingInProgress = false)
     }
 
     private fun handleVerificationError(state: State, event: Event.PostVerificationError): State {
@@ -154,7 +157,7 @@ class CreateReportViewModel(
     private fun handleAttachmentUploaded(state: State, event: Event.AttachmentUploaded): State {
         val attachments = state.attachments.updateUploaded(event.localId, event.uuid)
         scope.launch {
-            if (attachments.all { it.isUploaded }) {
+            if (attachments.allUploadsFinished()) {
                 postEvent(Event.SaveReport)
             }
         }
@@ -180,21 +183,27 @@ class CreateReportViewModel(
         event: Event.AttachmentUploadFailed,
     ): State {
         val attachments = state.attachments.updateUploaded(event.localId)
+        val allUploadsFinished = attachments.allUploadsFinished()
         scope.launch {
-            if (attachments.all { it.isUploaded || it.uploadFailed }) {
+            if (allUploadsFinished) {
                 handleError(event.error)
+                eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(isVisible = true))
+                eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = false))
             }
         }
-        return state.copy(attachments = attachments)
+        return state.copy(attachments = attachments, savingInProgress = !allUploadsFinished)
     }
 
     private fun handleSaveAttachments(state: State): State {
-        val attachments = state.attachments.filter { !it.isUploaded }
+        val attachments = state.attachments.map { it.copy(uploadFailed = false) }
+        val filteredAttachments = attachments.filter { !it.isUploaded }
         scope.launch {
-            if (attachments.isEmpty()) {
+            eventsRepository.postGlobalEvent(GlobalEvent.Loading(isLoading = true))
+
+            if (filteredAttachments.isEmpty()) {
                 postEvent(Event.SaveReport)
             } else {
-                attachments.forEach { attachment ->
+                filteredAttachments.forEach { attachment ->
                     val data = AddTemporaryAttachmentData(attachment.file)
                     addTemporaryAttachmentUseCase(data)
                         .catch { error ->
@@ -223,7 +232,7 @@ class CreateReportViewModel(
                 }
             }
         }
-        return state
+        return state.copy(savingInProgress = true, attachments = attachments)
     }
 
     // endregion handle Event
@@ -285,11 +294,19 @@ class CreateReportViewModel(
     ): List<State.Attachment> {
         return map { attachment ->
             if (attachment.localId == localId) {
-                attachment.copy(uuid = uuid, uploadFailed = uuid == null)
+                attachment.copy(
+                    uuid = uuid,
+                    uploadFailed = uuid == null,
+                    progress = null,
+                )
             } else {
                 attachment
             }
         }
+    }
+
+    private fun List<State.Attachment>.allUploadsFinished(): Boolean {
+        return all { it.isUploaded || it.uploadFailed }
     }
 
     data class State(
@@ -297,6 +314,7 @@ class CreateReportViewModel(
         val description: String = "",
         val verificationErrors: List<VerificationError> = emptyList(),
         val attachments: List<Attachment> = emptyList(),
+        val savingInProgress: Boolean = false,
     ) {
 
         data class Attachment(
@@ -320,6 +338,7 @@ class CreateReportViewModel(
         val titleVerificationError: Int?,
         val descriptionVerificationError: Int?,
         val attachments: List<Attachment>,
+        val isLoading: Boolean,
     ) {
 
         data class Attachment(

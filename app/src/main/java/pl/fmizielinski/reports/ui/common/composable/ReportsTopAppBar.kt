@@ -58,12 +58,14 @@ fun ReportsTopAppBar(
                     ) { onClick ->
                         Action(
                             action = action,
+                            isEnabled = uiState.isEnabled,
                             onActionClicked = { onClick() },
                         )
                     }
                 } else {
                     Action(
                         action = action,
+                        isEnabled = uiState.isEnabled,
                         onActionClicked = callbacks.onActionClicked,
                     )
                 }
@@ -76,10 +78,12 @@ fun ReportsTopAppBar(
 @Composable
 fun Action(
     action: TopBarAction,
+    isEnabled: Boolean,
     onActionClicked: ((TopBarAction) -> Unit)? = null,
 ) {
     IconButton(
         onClick = { onActionClicked?.invoke(action) },
+        enabled = isEnabled,
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(action.iconResId),
@@ -112,6 +116,7 @@ val previewTopAppBarUiState = ReportsTopAppBarUiState(
     title = R.string.common_label_permission,
     isBackVisible = true,
     actions = listOf(TopBarAction.REGISTER),
+    isEnabled = true,
 )
 
 val emptyTopAppBarCallbacks = ReportsTopAppBarCallbacks(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,39 +77,50 @@ fun RegisterForm(
     val nameFocusRequester = remember(NAME_FOCUS_REQUESTER) { FocusRequester() }
     val surnameFocusRequester = remember(SURNAME_FOCUS_REQUESTER) { FocusRequester() }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-            .padding(32.dp),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Column(
-            modifier = Modifier.align(Alignment.Center),
+        if (uiState.isLoading) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        Box(
+            modifier = Modifier.fillMaxSize()
+                .padding(32.dp),
         ) {
-            val keyboardController = LocalSoftwareKeyboardController.current
-
-            LoginData(
-                uiState = uiState.loginData,
-                callbacks = callbacks.loginDataCallbacks,
-                passwordFocusRequester = passwordFocusRequester,
-                passwordConfirmationFocusRequester = passwordConfirmationFocusRequester,
-                nameFocusRequester = nameFocusRequester,
-            )
-            UserData(
-                uiState = uiState.userData,
-                callbacks = callbacks.userDataCallbacks,
-                onRegisterClicked = callbacks.onRegisterClicked,
-                nameFocusRequester = nameFocusRequester,
-                surnameFocusRequester = surnameFocusRequester,
-            )
-            Button(
-                enabled = uiState.isRegisterButtonEnabled,
-                onClick = {
-                    callbacks.onRegisterClicked()
-                    keyboardController?.hide()
-                },
-                modifier = Modifier.padding(vertical = 8.dp)
-                    .align(Alignment.CenterHorizontally),
+            Column(
+                modifier = Modifier.align(Alignment.Center),
             ) {
-                Text(stringResource(R.string.registerScreen_button_register))
+                val keyboardController = LocalSoftwareKeyboardController.current
+
+                LoginData(
+                    uiState = uiState.loginData,
+                    callbacks = callbacks.loginDataCallbacks,
+                    passwordFocusRequester = passwordFocusRequester,
+                    passwordConfirmationFocusRequester = passwordConfirmationFocusRequester,
+                    nameFocusRequester = nameFocusRequester,
+                    isLoading = uiState.isLoading,
+                )
+                UserData(
+                    uiState = uiState.userData,
+                    callbacks = callbacks.userDataCallbacks,
+                    onRegisterClicked = callbacks.onRegisterClicked,
+                    nameFocusRequester = nameFocusRequester,
+                    surnameFocusRequester = surnameFocusRequester,
+                    isLoading = uiState.isLoading,
+                )
+                Button(
+                    enabled = uiState.isRegisterButtonEnabled,
+                    onClick = {
+                        callbacks.onRegisterClicked()
+                        keyboardController?.hide()
+                    },
+                    modifier = Modifier.padding(vertical = 8.dp)
+                        .align(Alignment.CenterHorizontally),
+                ) {
+                    Text(stringResource(R.string.registerScreen_button_register))
+                }
             }
         }
     }
@@ -117,6 +129,7 @@ fun RegisterForm(
 @Composable
 fun LoginData(
     uiState: UiState.LoginData,
+    isLoading: Boolean,
     callbacks: RegisterCallbacks.LoginDataCallbacks,
     passwordFocusRequester: FocusRequester,
     passwordConfirmationFocusRequester: FocusRequester,
@@ -136,6 +149,7 @@ fun LoginData(
         singleLine = true,
         limit = 254,
         error = uiState.emailVerificationError?.let { stringResource(it) },
+        enabled = !isLoading,
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_password,
@@ -145,6 +159,7 @@ fun LoginData(
         focusRequester = passwordFocusRequester,
         nextFocusRequester = passwordConfirmationFocusRequester,
         error = passwordError,
+        enabled = !isLoading,
     )
     PasswordTextField(
         labelResId = R.string.registerScreen_label_passwordConfirmation,
@@ -154,6 +169,7 @@ fun LoginData(
         focusRequester = passwordConfirmationFocusRequester,
         nextFocusRequester = nameFocusRequester,
         error = passwordError,
+        enabled = !isLoading,
     )
 }
 
@@ -166,6 +182,7 @@ fun PasswordTextField(
     onPasswordChanged: (String) -> Unit,
     onShowPasswordClicked: () -> Unit,
     error: String? = null,
+    enabled: Boolean,
 ) {
     val passwordVisualTransformation = if (showPassword) {
         VisualTransformation.None
@@ -189,17 +206,20 @@ fun PasswordTextField(
         limit = 64,
         trailingIcon = {
             ShowPasswordButton(
-                showPassword,
-                onShowPasswordClicked,
+                showPassword = showPassword,
+                enabled = enabled,
+                onShowPasswordClicked = onShowPasswordClicked,
             )
         },
         error = error,
+        enabled = enabled,
     )
 }
 
 @Composable
 fun ShowPasswordButton(
     showPassword: Boolean,
+    enabled: Boolean,
     onShowPasswordClicked: () -> Unit,
 ) {
     val drawableResId =
@@ -216,6 +236,7 @@ fun ShowPasswordButton(
         }
     IconButton(
         onClick = onShowPasswordClicked,
+        enabled = enabled,
     ) {
         Icon(
             imageVector = ImageVector.vectorResource(drawableResId),
@@ -228,6 +249,7 @@ fun ShowPasswordButton(
 @Composable
 fun UserData(
     uiState: UiState.UserData,
+    isLoading: Boolean,
     callbacks: RegisterCallbacks.UserDataCallbacks,
     onRegisterClicked: () -> Unit,
     nameFocusRequester: FocusRequester,
@@ -249,6 +271,7 @@ fun UserData(
         singleLine = true,
         limit = 254,
         error = uiState.nameVerificationError?.let { stringResource(it) },
+        enabled = !isLoading,
     )
     ReportsTextField(
         onValueChange = callbacks.onSurnameChanged,
@@ -267,6 +290,7 @@ fun UserData(
         singleLine = true,
         limit = 254,
         error = uiState.surnameVerificationError?.let { stringResource(it) },
+        enabled = !isLoading,
     )
 }
 
@@ -316,6 +340,7 @@ private val previewUiState = UiState(
         surnameVerificationError = null,
     ),
     isRegisterButtonEnabled = true,
+    isLoading = false,
 )
 
 private val emptyCallbacks = RegisterCallbacks(
