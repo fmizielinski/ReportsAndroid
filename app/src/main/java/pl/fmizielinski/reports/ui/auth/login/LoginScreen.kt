@@ -78,7 +78,7 @@ fun LoginForm(
                 val keyboardController = LocalSoftwareKeyboardController.current
                 Credentials(
                     showPassword = uiState.showPassword,
-                    enabled = uiState.isLoading,
+                    enabled = !uiState.isLoading,
                     callbacks = callbacks,
                 )
                 Button(
