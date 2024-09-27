@@ -3,7 +3,6 @@ package pl.fmizielinski.reports.domain.usecase.report
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import okhttp3.MultipartBody
 import pl.fmizielinski.reports.R
