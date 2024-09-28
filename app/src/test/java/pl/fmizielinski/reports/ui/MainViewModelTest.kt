@@ -489,8 +489,8 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         fun destinationActions() = listOf(
             arrayOf("Login", listOf(TopBarAction.REGISTER)),
             arrayOf("Register", emptyList<TopBarAction>()),
-            arrayOf("Reports", emptyList<TopBarAction>()),
-            arrayOf("CreateReport", listOf(TopBarAction.FILES, TopBarAction.PHOTO)),
+            arrayOf("Reports", listOf(TopBarAction.LOGOUT)),
+            arrayOf("CreateReport", arrayListOf(TopBarAction.FILES, TopBarAction.PHOTO)),
         )
 
         @JvmStatic
