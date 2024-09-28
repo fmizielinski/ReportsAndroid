@@ -12,13 +12,26 @@ abstract class BaseUseCase {
     @Throws(HttpException::class)
     protected inline fun <reified T> catchHttpExceptions(
         body: () -> T,
-        handler: (HttpException) -> ErrorException,
-    ): T = try {
-        body()
-    } catch (e: HttpException) {
-        throw handler(e)
-    } catch (e: Exception) {
-        throw genericErrorException(e)
+        noinline handler: ((HttpException) -> ErrorException)? = null,
+        noinline fallback: ((Exception) -> T)? = null,
+    ): T {
+        val fallbackErrorMessage =
+            "Fallback must be provided if handler is omitted to handle HttpException"
+        return try {
+            body()
+        } catch (e: HttpException) {
+            if (handler != null) {
+                throw handler(e)
+            } else {
+                requireNotNull(fallback) { fallbackErrorMessage }.invoke(e)
+            }
+        } catch (e: Exception) {
+            if (handler != null) {
+                throw genericErrorException(e)
+            } else {
+                requireNotNull(fallback) { fallbackErrorMessage }.invoke(e)
+            }
+        }
     }
 
     protected open fun genericErrorException(cause: Throwable): SimpleErrorException {

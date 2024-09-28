@@ -125,7 +125,7 @@ fun ReportsApp() {
 
 @SuppressLint("ComposableNaming")
 @Composable
-fun MainViewModel.handleOpenSettings() {
+private fun MainViewModel.handleOpenSettings() {
     val settingsLauncher = rememberLauncherForActivityResult(
         contract = CustomActivityResultContracts.OpenAppSettings(),
     ) { _ -> }
@@ -139,7 +139,7 @@ fun MainViewModel.handleOpenSettings() {
 
 @SuppressLint("ComposableNaming")
 @Composable
-fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
+private fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
     val context = LocalContext.current
     var photoFile by remember { mutableStateOf<File?>(null) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
@@ -169,7 +169,7 @@ fun MainViewModel.handleTakePicture(scope: CoroutineScope) {
 
 @SuppressLint("ComposableNaming")
 @Composable
-fun MainViewModel.handlePickFile(scope: CoroutineScope) {
+private fun MainViewModel.handlePickFile(scope: CoroutineScope) {
     val context = LocalContext.current
     val fileUtils = koinInject<FileUtils>()
 
@@ -197,7 +197,7 @@ fun MainViewModel.handlePickFile(scope: CoroutineScope) {
 
 @SuppressLint("ComposableNaming")
 @Composable
-fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navController: NavHostController) {
+private fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navController: NavHostController) {
     val currentDestination = navController.currentDestinationAsState().value
         ?: NavGraphs.reports.startDestination
     val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
