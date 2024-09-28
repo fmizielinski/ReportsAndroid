@@ -110,6 +110,7 @@ class MainViewModel(
             is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is Event.ChangeLoadingState -> handleChangeLoadingState(state, event)
             is Event.OpenSettings -> handleOpenSettings(state)
+            is Event.ShowLogoutAlert -> handleShowLogoutAlert(state)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.ActionClicked -> handleActionClicked(state, event)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -268,6 +269,18 @@ class MainViewModel(
         return state
     }
 
+    private fun handleShowLogoutAlert(state: State): State {
+        val alert = State.Alert(
+            icon = State.Alert.IconType.QUESTION,
+            titleResId = R.string.common_label_logout,
+            messageResId = R.string.common_label_logoutQuestion,
+            positiveButton = State.Alert.ButtonType.YES,
+            negativeButton = State.Alert.ButtonType.NO,
+            pendingEvent = Event.Logout(withMessage = false),
+        )
+        return state.copy(alert = alert)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -285,7 +298,7 @@ class MainViewModel(
                 REGISTER -> postNavigationEvent(RegisterDestination.toDestinationData())
                 PHOTO -> _takePicture.emit(Unit)
                 FILES -> _pickFile.emit(Unit)
-                LOGOUT -> postEvent(Event.Logout(withMessage = false))
+                LOGOUT -> postEvent(Event.ShowLogoutAlert)
             }
         }
         return state
@@ -342,7 +355,7 @@ class MainViewModel(
 
     private fun handleTakePictureFailed(state: State): State {
         scope.launch {
-            Timber.e("Take picture failed")
+            Timber.i("Take picture failed")
             val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
             postSnackBarEvent(snackBarData)
         }
@@ -392,7 +405,7 @@ class MainViewModel(
 
     private fun handlePickFileFailed(state: State): State {
         scope.launch {
-            Timber.e("Pick file failed")
+            Timber.i("Pick file failed")
             val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
             postSnackBarEvent(snackBarData)
         }
@@ -482,6 +495,7 @@ class MainViewModel(
         data class ChangeFabVisibility(val isVisible: Boolean) : Event
         data class ChangeLoadingState(val isLoading: Boolean) : Event
         data object OpenSettings : Event
+        data object ShowLogoutAlert : Event
     }
 
     sealed interface UiEvent : Event {
