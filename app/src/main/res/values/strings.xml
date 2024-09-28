@@ -18,6 +18,8 @@
     <string name="common_label_imagesPermissionRationale">Storage permission is required to add report attachments</string>
     <string name="common_label_permission">Permission</string>
     <string name="common_label_settings">Settings</string>
+    <string name="common_label_yes">Yes</string>
+    <string name="common_label_no">No</string>
     <string name="createReportScreen_button_deleteAttachment">Delete attachment</string>
     <string name="createReportScreen_error_addAttachment">Unable to save attachment</string>
     <string name="createReportScreen_error_descriptionEmpty">Empty description</string>

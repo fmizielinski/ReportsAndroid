@@ -109,6 +109,7 @@ class MainViewModel(
             is Event.LogoutSuccess -> handleLogoutSuccess(state, event)
             is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is Event.ChangeLoadingState -> handleChangeLoadingState(state, event)
+            is Event.OpenSettings -> handleOpenSettings(state)
             is UiEvent.BackClicked -> handleBackClicked(state)
             is UiEvent.ActionClicked -> handleActionClicked(state, event)
             is UiEvent.NavDestinationChanged -> handleNavDestinationChanged(state, event)
@@ -128,7 +129,7 @@ class MainViewModel(
         return UiState(
             appBarUiState = getAppBarUiState(state.currentDestination, state.isLoading),
             fabConfig = fabConfig.takeIf { !state.isLoading && state.isFabVisible },
-            alertDialogUiState = getAlertDialogUiState(state.permissionRationale),
+            alertDialogUiState = getAlertDialogUiState(state.alert),
         )
     }
 
@@ -193,15 +194,15 @@ class MainViewModel(
     }
 
     private fun getAlertDialogUiState(
-        permissionRationale: State.PermissionRationale?,
+        alert: State.Alert?,
     ): AlertDialogUiState? {
-        return permissionRationale?.let { rationale ->
+        return alert?.let {
             AlertDialogUiState(
-                iconResId = R.drawable.ic_info_24dp,
-                titleResId = R.string.common_label_permission,
-                messageResId = rationale.messageResId,
-                positiveButtonResId = R.string.common_label_settings,
-                negativeButtonResId = R.string.common_label_cancel,
+                iconResId = it.icon.resId,
+                titleResId = it.titleResId,
+                messageResId = it.messageResId,
+                positiveButtonResId = it.positiveButton.titleResId,
+                negativeButtonResId = it.negativeButton.titleResId,
             )
         }
     }
@@ -258,6 +259,13 @@ class MainViewModel(
 
     private fun handleChangeLoadingState(state: State, event: Event.ChangeLoadingState): State {
         return state.copy(isLoading = event.isLoading)
+    }
+
+    private fun handleOpenSettings(state: State): State {
+        scope.launch {
+            _openSettings.emit(Unit)
+        }
+        return state
     }
 
     // endregion handle Event
@@ -345,23 +353,34 @@ class MainViewModel(
         state: State,
         event: UiEvent.ShowPermissionRationale,
     ): State {
-        val permissionRationale = when (event.action) {
+        val message = when (event.action) {
             PHOTO -> R.string.common_label_cameraPermissionRationale
             FILES -> R.string.common_label_imagesPermissionRationale
             else -> null
-        }?.let(State::PermissionRationale)
-        return state.copy(permissionRationale = permissionRationale)
+        } ?: return state
+
+        val alert = State.Alert(
+            icon = State.Alert.IconType.INFO,
+            titleResId = R.string.common_label_permission,
+            messageResId = message,
+            positiveButton = State.Alert.ButtonType.SETTINGS,
+            negativeButton = State.Alert.ButtonType.CANCEL,
+            pendingEvent = Event.OpenSettings,
+        )
+        return state.copy(alert = alert)
     }
 
     private fun handleAlertDialogDismissed(state: State): State {
-        return state.copy(permissionRationale = null)
+        return state.copy(alert = null)
     }
 
     private fun handleAlertDialogPositiveClicked(state: State): State {
         scope.launch {
-            _openSettings.emit(Unit)
+            if (state.alert != null) {
+                postEvent(state.alert.pendingEvent)
+            }
         }
-        return state.copy(permissionRationale = null)
+        return state.copy(alert = null)
     }
 
     private fun handleFilePicked(state: State, event: UiEvent.FilePicked): State {
@@ -416,13 +435,31 @@ class MainViewModel(
         val currentDestination: String? = null,
         val isInitialized: Boolean = false,
         val isFabVisible: Boolean = true,
-        val permissionRationale: PermissionRationale? = null,
         val isLoading: Boolean = false,
+        val alert: Alert? = null,
     ) {
 
-        data class PermissionRationale(
+        data class Alert(
+            val icon: IconType,
+            @StringRes val titleResId: Int,
             @StringRes val messageResId: Int,
-        )
+            val positiveButton: ButtonType,
+            val negativeButton: ButtonType,
+            val pendingEvent: Event,
+        ) {
+
+            enum class IconType(@DrawableRes val resId: Int) {
+                INFO(R.drawable.ic_info_24dp),
+                QUESTION(R.drawable.ic_info_24dp),
+            }
+
+            enum class ButtonType(@StringRes val titleResId: Int) {
+                SETTINGS(R.string.common_label_settings),
+                CANCEL(R.string.common_label_cancel),
+                YES(R.string.common_label_yes),
+                NO(R.string.common_label_no),
+            }
+        }
     }
 
     data class UiState(
@@ -444,6 +481,7 @@ class MainViewModel(
         data class LogoutSuccess(val withMessage: Boolean) : Event
         data class ChangeFabVisibility(val isVisible: Boolean) : Event
         data class ChangeLoadingState(val isLoading: Boolean) : Event
+        data object OpenSettings : Event
     }
 
     sealed interface UiEvent : Event {
