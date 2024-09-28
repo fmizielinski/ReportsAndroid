@@ -463,7 +463,7 @@ class MainViewModel(
 
             enum class IconType(@DrawableRes val resId: Int) {
                 INFO(R.drawable.ic_info_24dp),
-                QUESTION(R.drawable.ic_info_24dp),
+                QUESTION(R.drawable.ic_help_24dp),
             }
 
             enum class ButtonType(@StringRes val titleResId: Int) {

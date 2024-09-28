@@ -33,6 +33,7 @@ import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
+import strikt.assertions.isNotNull
 import strikt.assertions.isNull
 import java.io.File
 
@@ -220,6 +221,44 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
 
         pickFile.cancel()
         uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN LOGOUT action is clicked THEN show logout alert`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+        postUiEvent(UiEvent.ActionClicked(TopBarAction.LOGOUT))
+        scheduler.advanceUntilIdle()
+
+        val result = uiState.expectMostRecentItem()
+        expectThat(result.alertDialogUiState).isNotNull()
+            .and {
+                get { iconResId } isEqualTo R.drawable.ic_help_24dp
+                get { titleResId } isEqualTo R.string.common_label_logout
+                get { messageResId } isEqualTo R.string.common_label_logoutQuestion
+                get { positiveButtonResId } isEqualTo R.string.common_label_yes
+                get { negativeButtonResId } isEqualTo R.string.common_label_no
+            }
+
+        uiState.cancel()
+    }
+
+    @Test
+    fun `GIVEN logout alert is visible WHEN AlertDialogPositiveClicked THEN Navigate to AuthNavGraph start destination`() = runTurbineTest {
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val navigationEvents = viewModel.navigationEvents.testIn(context, name = "navigationEvents")
+        coJustRun { logoutUseCase() }
+
+        postUiEvent(UiEvent.ActionClicked(TopBarAction.LOGOUT))
+        scheduler.advanceUntilIdle()
+        postUiEvent(UiEvent.AlertDialogPositiveClicked)
+        scheduler.advanceUntilIdle()
+
+        val result = navigationEvents.expectMostRecentItem().get()
+        expectThat(result) isEqualTo AuthNavGraph.startDestination.toDestinationData()
+
+        uiState.cancelAndIgnoreRemainingEvents()
+        navigationEvents.cancel()
     }
 
     @Test
