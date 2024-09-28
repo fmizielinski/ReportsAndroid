@@ -4,6 +4,7 @@ import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.data.network.auth.model.RegisterRequestModel
 import pl.fmizielinski.reports.data.network.auth.model.RegisterResponseModel
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Headers
@@ -16,6 +17,9 @@ interface AuthService {
     suspend fun login(
         @Header("Authorization") credentials: String,
     ): LoginResponseModel
+
+    @DELETE("/auth/logout")
+    suspend fun logout()
 
     @POST("/auth/register")
     @Headers("Accept: application/json")

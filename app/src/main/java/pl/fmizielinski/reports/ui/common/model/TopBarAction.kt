@@ -33,6 +33,10 @@ enum class TopBarAction(
         } else {
             listOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
         },
+    ),
+    LOGOUT(
+        nameResId = R.string.common_button_logout,
+        iconResId = R.drawable.ic_logout_24dp,
     );
 
     constructor(

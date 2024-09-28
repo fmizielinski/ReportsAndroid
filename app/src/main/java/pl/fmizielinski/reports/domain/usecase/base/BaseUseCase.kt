@@ -12,11 +12,18 @@ abstract class BaseUseCase {
     @Throws(HttpException::class)
     protected inline fun <reified T> catchHttpExceptions(
         body: () -> T,
-        handler: (HttpException) -> ErrorException,
+        noinline handler: ((HttpException) -> ErrorException)? = null,
+        noinline fallback: ((HttpException) -> T)? = null,
     ): T = try {
         body()
     } catch (e: HttpException) {
-        throw handler(e)
+        if (handler != null) {
+            throw handler(e)
+        } else {
+            requireNotNull(fallback) {
+                "Fallback must be provided if handler is omitted to handle HttpException"
+            }.invoke(e)
+        }
     } catch (e: Exception) {
         throw genericErrorException(e)
     }

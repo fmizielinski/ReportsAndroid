@@ -29,6 +29,7 @@ import pl.fmizielinski.reports.ui.common.model.AlertDialogUiState
 import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.FILES
+import pl.fmizielinski.reports.ui.common.model.TopBarAction.LOGOUT
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.PHOTO
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.REGISTER
 import pl.fmizielinski.reports.ui.destinations.destinations.CreateReportDestination
@@ -81,7 +82,7 @@ class MainViewModel(
         scope.launch {
             eventsRepository.globalEvent
                 .filterIsInstance<GlobalEvent.Logout>()
-                .collect { postEvent(Event.Logout) }
+                .collect { postEvent(Event.Logout(withMessage = true)) }
         }
         scope.launch {
             eventsRepository.globalEvent
@@ -104,8 +105,8 @@ class MainViewModel(
         return when (event) {
             is Event.LoggedInStateChecked -> handleLoggedInStateChecked(state, event)
             is Event.CheckIfLoggedIn -> handleCheckIfLoggedIn(state)
-            is Event.Logout -> handleLogout(state)
-            is Event.LogoutSuccess -> handleLogoutSuccess(state)
+            is Event.Logout -> handleLogout(state, event)
+            is Event.LogoutSuccess -> handleLogoutSuccess(state, event)
             is Event.ChangeFabVisibility -> handleChangeFabVisibility(state, event)
             is Event.ChangeLoadingState -> handleChangeLoadingState(state, event)
             is UiEvent.BackClicked -> handleBackClicked(state)
@@ -158,6 +159,7 @@ class MainViewModel(
             ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
                 title = R.string.reportsScreen_title,
                 destination = currentDestination,
+                actions = arrayListOf(LOGOUT),
                 isEnabled = !isLoading,
             )
 
@@ -228,22 +230,24 @@ class MainViewModel(
         return state
     }
 
-    private fun handleLogout(state: State): State {
+    private fun handleLogout(state: State, event: Event.Logout): State {
         scope.launch {
             logoutUseCase()
-            postEvent(Event.LogoutSuccess)
+            postEvent(Event.LogoutSuccess(withMessage = event.withMessage))
         }
         return state
     }
 
-    private fun handleLogoutSuccess(state: State): State {
+    private fun handleLogoutSuccess(state: State, event: Event.LogoutSuccess): State {
         scope.launch {
             postNavigationEvent(AuthNavGraph.startDestination.toDestinationData())
 
-            val snackBarData = SnackBarData(
-                messageResId = R.string.common_error_unauthorized,
-            )
-            postSnackBarEvent(snackBarData)
+            if (event.withMessage) {
+                val snackBarData = SnackBarData(
+                    messageResId = R.string.common_error_unauthorized,
+                )
+                postSnackBarEvent(snackBarData)
+            }
         }
         return state
     }
@@ -273,6 +277,7 @@ class MainViewModel(
                 REGISTER -> postNavigationEvent(RegisterDestination.toDestinationData())
                 PHOTO -> _takePicture.emit(Unit)
                 FILES -> _pickFile.emit(Unit)
+                LOGOUT -> postEvent(Event.Logout(withMessage = false))
             }
         }
         return state
@@ -435,8 +440,8 @@ class MainViewModel(
     sealed interface Event {
         data class LoggedInStateChecked(val isLoggedIn: Boolean) : Event
         data object CheckIfLoggedIn : Event
-        data object Logout : Event
-        data object LogoutSuccess : Event
+        data class Logout(val withMessage: Boolean) : Event
+        data class LogoutSuccess(val withMessage: Boolean) : Event
         data class ChangeFabVisibility(val isVisible: Boolean) : Event
         data class ChangeLoadingState(val isLoading: Boolean) : Event
     }

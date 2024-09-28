@@ -33,17 +33,17 @@ import javax.net.ssl.X509TrustManager
 class NetworkModule {
 
     @Single
-    @Named("noAuthRetrofit")
+    @Named(NO_AUTH_RETROFIT)
     fun noAuthRetrofit(
-        @Named("jsonConverterFactory") jsonConverterFactory: Converter.Factory,
-        @Named("noAuthClient") client: OkHttpClient,
+        @Named(JSON_CONVERTER_FACTORY) jsonConverterFactory: Converter.Factory,
+        @Named(NO_AUTH_CLIENT) client: OkHttpClient,
     ): Retrofit = retrofit(jsonConverterFactory, client)
 
     @Single
-    @Named("bearerRetrofit")
+    @Named(BEARER_RETROFIT)
     fun bearerRetrofit(
-        @Named("jsonConverterFactory") jsonConverterFactory: Converter.Factory,
-        @Named("bearerClient") client: OkHttpClient,
+        @Named(JSON_CONVERTER_FACTORY) jsonConverterFactory: Converter.Factory,
+        @Named(BEARER_CLIENT) client: OkHttpClient,
     ): Retrofit = retrofit(jsonConverterFactory, client)
 
     fun retrofit(
@@ -56,15 +56,20 @@ class NetworkModule {
         .build()
 
     @Single
-    fun authService(@Named("noAuthRetrofit") retrofit: Retrofit): AuthService =
+    fun authService(@Named(NO_AUTH_RETROFIT) retrofit: Retrofit): AuthService =
         retrofit.create(AuthService::class.java)
 
     @Single
-    fun reportService(@Named("bearerRetrofit") retrofit: Retrofit): ReportService =
+    @Named(BEARER_AUTH_SERVICE)
+    fun bearerAuthService(@Named(BEARER_RETROFIT) retrofit: Retrofit): AuthService =
+        retrofit.create(AuthService::class.java)
+
+    @Single
+    fun reportService(@Named(BEARER_RETROFIT) retrofit: Retrofit): ReportService =
         retrofit.create(ReportService::class.java)
 
     @Factory
-    @Named("noAuthClient")
+    @Named(NO_AUTH_CLIENT)
     fun noAuthOkHttpClient(
         sslSocketFactory: SSLSocketFactory,
         trustManager: X509TrustManager,
@@ -77,7 +82,7 @@ class NetworkModule {
         .build()
 
     @Factory
-    @Named("bearerClient")
+    @Named(BEARER_CLIENT)
     fun bearerOkHttpClient(
         sslSocketFactory: SSLSocketFactory,
         trustManager: X509TrustManager,
@@ -94,7 +99,7 @@ class NetworkModule {
         .build()
 
     @Factory
-    @Named("jsonConverterFactory")
+    @Named(JSON_CONVERTER_FACTORY)
     fun jsonConverterFactory(json: Json): Converter.Factory = json.asConverterFactory(
         "application/json; charset=UTF8".toMediaType(),
     )
@@ -134,5 +139,14 @@ class NetworkModule {
     @Factory
     fun loggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
+    }
+
+    companion object {
+        const val NO_AUTH_RETROFIT = "noAuthRetrofit"
+        const val JSON_CONVERTER_FACTORY = "jsonConverterFactory"
+        const val NO_AUTH_CLIENT = "noAuthClient"
+        const val BEARER_RETROFIT = "bearerRetrofit"
+        const val BEARER_CLIENT = "bearerClient"
+        const val BEARER_AUTH_SERVICE = "bearerAuthService"
     }
 }
