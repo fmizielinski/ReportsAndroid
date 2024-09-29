@@ -4,14 +4,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
@@ -23,18 +24,14 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -172,31 +169,20 @@ fun Attachements(
     onDeleteAttachment: (File) -> Unit,
     onListScrolled: (Int) -> Unit,
 ) {
-    val density = LocalDensity.current
-
-    var width by remember { mutableIntStateOf(ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH) }
-    val cardMinWidth = remember(width) {
-        with(density) {
-            (width.toFloat() / ATTACHMENTS_GRID_COLUMNS).toDp()
-        }
-    }
-
-    val gridState = rememberLazyStaggeredGridState()
+    val gridState = rememberLazyGridState()
+    val arrangement = Arrangement.spacedBy(12.dp)
 
     LaunchedEffect(gridState) {
         snapshotFlow { gridState.firstVisibleItemIndex }
             .collect(onListScrolled)
     }
 
-    LazyVerticalStaggeredGrid(
+    LazyVerticalGrid(
         state = gridState,
-        columns = StaggeredGridCells.Adaptive(cardMinWidth),
-        modifier = Modifier.fillMaxWidth()
-            .onGloballyPositioned { coordinates ->
-                width = coordinates.size.width
-            },
-        verticalItemSpacing = 8.dp,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        columns = GridCells.Fixed(ATTACHMENTS_GRID_COLUMNS),
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = arrangement,
+        horizontalArrangement = arrangement,
     ) {
         items(attachments) { attachment ->
             AttachmentItem(
@@ -228,6 +214,9 @@ fun AttachmentItem(
                 GlideImage(
                     model = attachment.file,
                     contentDescription = null,
+                    modifier = Modifier.fillMaxWidth()
+                        .aspectRatio(1f),
+                    contentScale = ContentScale.FillWidth,
                 )
                 if (attachment.isUploading) {
                     CircularProgressIndicator(
@@ -266,8 +255,7 @@ fun AttachmentItem(
     }
 }
 
-const val ATTACHMENTS_GRID_INITIAL_MIN_COLUMN_WIDTH = 100
-const val ATTACHMENTS_GRID_COLUMNS = 3
+const val ATTACHMENTS_GRID_COLUMNS = 2
 
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
