@@ -20,8 +20,7 @@ import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
-@ExperimentalPermissionsApi
-@ExperimentalMaterial3Api
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsTopAppBar(
     uiState: ReportsTopAppBarUiState,
@@ -74,7 +73,6 @@ fun ReportsTopAppBar(
     )
 }
 
-@ExperimentalPermissionsApi
 @Composable
 fun Action(
     action: TopBarAction,
@@ -99,8 +97,6 @@ data class ReportsTopAppBarCallbacks(
     val onShouldShowPermissionRationale: (TopBarAction) -> Unit,
 )
 
-@ExperimentalMaterial3Api
-@ExperimentalPermissionsApi
 @Preview(device = Devices.PIXEL_4)
 @Composable
 fun ReportsTopAppBarPreview() {
