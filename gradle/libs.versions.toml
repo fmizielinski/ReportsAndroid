@@ -49,6 +49,7 @@ koin = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations" }
 koin-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koinAnnotations" }
 koin-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
+koin-compose-navigation = { module = "io.insert-koin:koin-androidx-compose-navigation", version.ref = "koin" }
 # endregion koin
 
 # region compose
@@ -98,7 +99,7 @@ glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "g
 compose = ["compose-material", "compose-ui", "compose-ui-tooling-preview", "compose-constraintLayout", "compose-destinations"]
 compose-debug = ["compose-ui-test-manifest", "compose-ui-tooling"]
 glide = ["glide", "glide-compose"]
-koin = ["koin", "koin-compose", "koin-annotations"]
+koin = ["koin", "koin-compose", "koin-annotations", "koin-compose-navigation"]
 navigation = ["navigation-ui", "navigation-fragment", "navigation-compose"]
 retrofit = ["retrofit", "retrofit-converter-serialization"]
 room = ["room", "room-ktx"]

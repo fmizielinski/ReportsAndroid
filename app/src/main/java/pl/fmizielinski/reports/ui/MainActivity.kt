@@ -15,7 +15,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -39,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.utils.currentDestinationAsState
@@ -48,8 +46,8 @@ import com.ramcosta.composedestinations.utils.startDestination
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
-import pl.fmizielinski.reports.utils.android.CustomActivityResultContracts
 import pl.fmizielinski.reports.domain.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
@@ -65,10 +63,9 @@ import pl.fmizielinski.reports.ui.common.consumeNavEvent
 import pl.fmizielinski.reports.ui.destinations.NavGraphs
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 import pl.fmizielinski.reports.ui.utils.FileUtils
+import pl.fmizielinski.reports.utils.android.CustomActivityResultContracts
 import java.io.File
 
-@ExperimentalPermissionsApi
-@ExperimentalMaterial3Api
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModel()
@@ -84,41 +81,41 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@ExperimentalPermissionsApi
-@ExperimentalMaterial3Api
 @Composable
 fun ReportsApp() {
     ReportsTheme {
-        BaseScreen<MainViewModel, UiState, UiEvent> {
-            val navController = rememberNavController()
-            viewModel.handleNavigationEvents(coroutineScope, navController)
+        KoinContext {
+            BaseScreen<MainViewModel, UiState, UiEvent> {
+                val navController = rememberNavController()
+                viewModel.handleNavigationEvents(coroutineScope, navController)
 
-            val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
+                val snackBarData = viewModel.showSnackBar.collectAsState(SnackBarData.empty())
 
-            viewModel.handleTakePicture(coroutineScope)
-            viewModel.handlePickFile(coroutineScope)
-            viewModel.handleOpenSettings()
+                viewModel.handleTakePicture(coroutineScope)
+                viewModel.handlePickFile(coroutineScope)
+                viewModel.handleOpenSettings()
 
-            MainScreen(
-                uiState = state.value,
-                navController = navController,
-                snackBarData = snackBarData.value,
-                callbacks = MainCallbacks(
-                    onFabClicked = { postUiEvent(UiEvent.FabClicked) },
-                    topAppBarCallbacks = ReportsTopAppBarCallbacks(
-                        onBackClicked = { postUiEvent(UiEvent.BackClicked) },
-                        onActionClicked = { postUiEvent(UiEvent.ActionClicked(it)) },
-                        onShouldShowPermissionRationale = {
-                            postUiEvent(UiEvent.ShowPermissionRationale(it))
-                        },
+                MainScreen(
+                    uiState = state.value,
+                    navController = navController,
+                    snackBarData = snackBarData.value,
+                    callbacks = MainCallbacks(
+                        onFabClicked = { postUiEvent(UiEvent.FabClicked) },
+                        topAppBarCallbacks = ReportsTopAppBarCallbacks(
+                            onBackClicked = { postUiEvent(UiEvent.BackClicked) },
+                            onActionClicked = { postUiEvent(UiEvent.ActionClicked(it)) },
+                            onShouldShowPermissionRationale = {
+                                postUiEvent(UiEvent.ShowPermissionRationale(it))
+                            },
+                        ),
                     ),
-                ),
-                alertDialogCallbacks = AlertDialogCallbacks(
-                    onDismissRequest = { postUiEvent(UiEvent.AlertDialogDismissed) },
-                    onNegativeClick = { postUiEvent(UiEvent.AlertDialogDismissed) },
-                    onPositiveClick = { postUiEvent(UiEvent.AlertDialogPositiveClicked) },
-                ),
-            )
+                    alertDialogCallbacks = AlertDialogCallbacks(
+                        onDismissRequest = { postUiEvent(UiEvent.AlertDialogDismissed) },
+                        onNegativeClick = { postUiEvent(UiEvent.AlertDialogDismissed) },
+                        onPositiveClick = { postUiEvent(UiEvent.AlertDialogPositiveClicked) },
+                    ),
+                )
+            }
         }
     }
 }
@@ -197,7 +194,10 @@ private fun MainViewModel.handlePickFile(scope: CoroutineScope) {
 
 @SuppressLint("ComposableNaming")
 @Composable
-private fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navController: NavHostController) {
+private fun MainViewModel.handleNavigationEvents(
+    scope: CoroutineScope,
+    navController: NavHostController,
+) {
     val currentDestination = navController.currentDestinationAsState().value
         ?: NavGraphs.reports.startDestination
     val navigator: DestinationsNavigator = navController.rememberDestinationsNavigator()
@@ -214,8 +214,6 @@ private fun MainViewModel.handleNavigationEvents(scope: CoroutineScope, navContr
 }
 
 
-@ExperimentalPermissionsApi
-@ExperimentalMaterial3Api
 @Composable
 fun MainScreen(
     uiState: UiState,
@@ -291,8 +289,6 @@ data class MainCallbacks(
     val topAppBarCallbacks: ReportsTopAppBarCallbacks,
 )
 
-@ExperimentalPermissionsApi
-@ExperimentalMaterial3Api
 @Preview(showBackground = true)
 @Composable
 fun ReportsAppPreview() {
