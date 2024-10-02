@@ -31,12 +31,12 @@ class AttachmentGalleryViewModel(
 
     data class State(
         val initialIndex: Int,
-        val attachments: List<File>,
+        val attachments: List<String>,
     )
 
     data class UiState(
         val initialIndex: Int,
-        val attachments: List<File>,
+        val attachments: List<String>,
     )
 
     sealed interface Event

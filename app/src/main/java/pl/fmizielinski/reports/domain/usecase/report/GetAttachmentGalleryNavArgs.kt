@@ -12,7 +12,7 @@ class GetAttachmentGalleryNavArgs {
         attachments: List<AttachmentData>,
     ): AttachmentGalleryNavArgs {
         val index = attachments.indexOfFirst { it.localId == id }
-        val files = attachments.map { it.file }
+        val files = attachments.map { it.file.absolutePath }
         return AttachmentGalleryNavArgs(
             initialIndex = index,
             attachments = ArrayList(files),
