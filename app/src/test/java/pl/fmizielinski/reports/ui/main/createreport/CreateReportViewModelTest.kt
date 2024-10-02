@@ -22,6 +22,7 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
+import pl.fmizielinski.reports.domain.usecase.report.GetAttachmentGalleryNavArgs
 import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData
 import pl.fmizielinski.reports.fixtures.domain.completeTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
@@ -44,6 +45,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
 
     private val createReportUseCase: CreateReportUseCase = mockk()
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase = mockk()
+    private val getAttachmentGalleryNavArgs: GetAttachmentGalleryNavArgs = mockk()
     private val eventsRepository = spyk(EventsRepository())
 
     override fun createViewModel(dispatcher: TestDispatcher) = CreateReportViewModel(
@@ -51,6 +53,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
         eventsRepository = eventsRepository,
         createReportUseCase = createReportUseCase,
         addTemporaryAttachmentUseCase = addTemporaryAttachmentUseCase,
+        getAttachmentGalleryNavArgs = getAttachmentGalleryNavArgs,
     )
 
     @Test
@@ -270,7 +273,8 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
                 eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(file))
             }
             scheduler.advanceUntilIdle()
-            postUiEvent(UiEvent.DeleteAttachment(file))
+            val localId = uiState.expectMostRecentItem().attachments.first().localId
+            postUiEvent(UiEvent.DeleteAttachment(localId))
             scheduler.advanceUntilIdle()
 
             val result = uiState.expectMostRecentItem()

@@ -21,8 +21,9 @@ import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
 import pl.fmizielinski.reports.fixtures.ui.alertDialogUiState
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
-import pl.fmizielinski.reports.ui.MainViewModel.UiState
+import pl.fmizielinski.reports.ui.common.model.FabUiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarNavigationIcon
 import pl.fmizielinski.reports.ui.destinations.destinations.CreateReportDestination
 import pl.fmizielinski.reports.ui.destinations.destinations.LoginDestination
 import pl.fmizielinski.reports.ui.destinations.destinations.RegisterDestination
@@ -110,7 +111,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
     @MethodSource("destinationBackButton")
     fun `WHEN Destination changed  THEN change back button visibility`(
         destination: String,
-        isBackVisible: Boolean,
+        navigationIcon: TopBarNavigationIcon?,
     ) = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns false
 
@@ -121,7 +122,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.appBarUiState.isBackVisible) isEqualTo isBackVisible
+        expectThat(result.appBarUiState.navigationIcon) isEqualTo navigationIcon
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -152,7 +153,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
     @MethodSource("destinationFabConfig")
     fun `WHEN Destination changed THEN change fab configuration`(
         destination: String,
-        fabConfig: UiState.FabConfig?,
+        fabUiState: FabUiState?,
     ) = runTurbineTest {
         coEvery { isLoggedInUseCase() } returns false
 
@@ -163,7 +164,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.fabUiState) isEqualTo fabConfig
+        expectThat(result.fabUiState) isEqualTo fabUiState
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -346,7 +347,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         }
         scheduler.advanceUntilIdle()
 
-        expectThat(uiState.expectMostRecentItem().fabUiState) isEqualTo UiState.FabConfig(
+        expectThat(uiState.expectMostRecentItem().fabUiState) isEqualTo FabUiState(
             icon = R.drawable.ic_save_24dp,
             contentDescription = R.string.common_button_saveReport,
         )
@@ -534,38 +535,39 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
 
         @JvmStatic
         fun destinationBackButton() = listOf(
-            arrayOf("Login", false),
-            arrayOf("Register", true),
-            arrayOf("Reports", false),
-            arrayOf("CreateReport", true),
+            arrayOf("Login", null),
+            arrayOf("Register", TopBarNavigationIcon.BACK),
+            arrayOf("Reports", null),
+            arrayOf("CreateReport", TopBarNavigationIcon.BACK),
+            arrayOf("AttachmentGallery", TopBarNavigationIcon.CLOSE),
         )
 
         @JvmStatic
         fun destinationFabConfig() = listOf(
             arrayOf(
                 "Login",
-                UiState.FabConfig(
+                FabUiState(
                     icon = R.drawable.ic_login_24dp,
                     contentDescription = R.string.common_button_login,
                 ),
             ),
             arrayOf(
                 "Register",
-                UiState.FabConfig(
+                FabUiState(
                     icon = R.drawable.ic_person_add_24dp,
                     contentDescription = R.string.common_button_register,
                 ),
             ),
             arrayOf(
                 "Reports",
-                UiState.FabConfig(
+                FabUiState(
                     icon = R.drawable.ic_add_24dp,
                     contentDescription = R.string.common_button_createReport,
                 ),
             ),
             arrayOf(
                 "CreateReport",
-                UiState.FabConfig(
+                FabUiState(
                     icon = R.drawable.ic_save_24dp,
                     contentDescription = R.string.common_button_saveReport,
                 ),
