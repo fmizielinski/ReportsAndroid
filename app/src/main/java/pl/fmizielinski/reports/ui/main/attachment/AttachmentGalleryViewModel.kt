@@ -17,20 +17,25 @@ class AttachmentGalleryViewModel(
     handle: SavedStateHandle,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(
     dispatcher = dispatcher,
-    mState = State(attachments = handle.getAttachments()),
+    mState = createState(handle),
 ) {
 
     override fun handleEvent(state: State, event: Event): State = state
 
     override fun mapState(state: State): UiState {
-        return UiState(attachments = state.attachments)
+        return UiState(
+            initialIndex = state.initialIndex,
+            attachments = state.attachments,
+        )
     }
 
     data class State(
+        val initialIndex: Int,
         val attachments: List<File>,
     )
 
     data class UiState(
+        val initialIndex: Int,
         val attachments: List<File>,
     )
 
@@ -39,7 +44,10 @@ class AttachmentGalleryViewModel(
     sealed interface UiEvent : Event
 }
 
-fun SavedStateHandle.getAttachments(): List<File> {
-    val args = AttachmentGalleryDestination.argsFrom(this)
-    return args.attachments
+private fun createState(handle: SavedStateHandle): State {
+    val args = AttachmentGalleryDestination.argsFrom(handle)
+    return State(
+        initialIndex = args.initialIndex,
+        attachments = args.attachments,
+    )
 }

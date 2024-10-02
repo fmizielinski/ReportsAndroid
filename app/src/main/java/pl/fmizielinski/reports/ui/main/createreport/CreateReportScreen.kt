@@ -219,10 +219,10 @@ fun AttachmentItem(
                 GlideImage(
                     model = attachment.file,
                     contentDescription = null,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxSize()
                         .aspectRatio(1f)
                         .clickable { onAttachmentClicked(attachment.localId) },
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                 )
                 if (attachment.isUploading) {
                     CircularProgressIndicator(
