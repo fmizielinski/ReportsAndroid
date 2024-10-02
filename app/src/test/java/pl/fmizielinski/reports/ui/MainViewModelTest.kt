@@ -531,6 +531,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
             arrayOf("Register", emptyList<TopBarAction>()),
             arrayOf("Reports", listOf(TopBarAction.LOGOUT)),
             arrayOf("CreateReport", arrayListOf(TopBarAction.FILES, TopBarAction.PHOTO)),
+            arrayOf("AttachmentGallery", emptyList<TopBarAction>()),
         )
 
         @JvmStatic

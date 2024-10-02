@@ -13,7 +13,7 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FA
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.model.AttachmentUploadResult.Complete
 import pl.fmizielinski.reports.fixtures.common.httpException
-import pl.fmizielinski.reports.fixtures.domain.addAttachmentData
+import pl.fmizielinski.reports.fixtures.domain.addReportAttachmentData
 import pl.fmizielinski.reports.fixtures.domain.networkError
 import pl.fmizielinski.reports.utils.expectThrowable
 import strikt.api.expectThat
@@ -32,7 +32,7 @@ class AddReportAttachmentUseCaseTest {
     fun `GIVEN valid attachment WHEN invoke THEN no errors`() = runTest {
         val reportId = 1
         val file = File.createTempFile("test", "jpg")
-        val data = addAttachmentData(reportId, file)
+        val data = addReportAttachmentData(reportId, file)
         coJustRun { reportService.addAttachment(reportId, any()) }
 
         useCase(data).test {
@@ -50,7 +50,7 @@ class AddReportAttachmentUseCaseTest {
         )
         val reportId = 1
         val file = File.createTempFile("test", "jpg")
-        val data = addAttachmentData(reportId, file)
+        val data = addReportAttachmentData(reportId, file)
         coEvery { reportService.addAttachment(reportId, any()) } throws exception
 
         useCase(data).test {
@@ -70,7 +70,7 @@ class AddReportAttachmentUseCaseTest {
         )
         val reportId = 1
         val file = File.createTempFile("test", "jpg")
-        val data = addAttachmentData(reportId, file)
+        val data = addReportAttachmentData(reportId, file)
         coEvery { reportService.addAttachment(reportId, any()) } throws exception
 
         useCase(data).test {
@@ -91,7 +91,7 @@ class AddReportAttachmentUseCaseTest {
         )
         val reportId = 1
         val file = File.createTempFile("test", "jpg")
-        val data = addAttachmentData(reportId, file)
+        val data = addReportAttachmentData(reportId, file)
         coEvery { reportService.addAttachment(reportId, any()) } throws exception
 
         useCase(data).test {
@@ -111,7 +111,7 @@ class AddReportAttachmentUseCaseTest {
         )
         val reportId = 1
         val file = File.createTempFile("test", "jpg")
-        val data = addAttachmentData(reportId, file)
+        val data = addReportAttachmentData(reportId, file)
         coEvery { reportService.addAttachment(reportId, any()) } throws exception
 
         useCase(data).test {
@@ -127,7 +127,7 @@ class AddReportAttachmentUseCaseTest {
     fun `GIVEN unknown http error WHEN invoke THEN throw generic exception`() = runTest {
         val reportId = 1
         val file = File.createTempFile("test", "jpg")
-        val data = addAttachmentData(reportId, file)
+        val data = addReportAttachmentData(reportId, file)
         coEvery { reportService.addAttachment(reportId, any()) } throws httpException<Unit>(999)
 
         useCase(data).test {

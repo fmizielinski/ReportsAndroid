@@ -19,7 +19,7 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
-import pl.fmizielinski.reports.domain.usecase.report.GetAttachmentGalleryNavArgs
+import pl.fmizielinski.reports.domain.usecase.report.GetAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.base.ErrorHandler
 import pl.fmizielinski.reports.ui.base.ErrorHandler.VerificationError
@@ -43,7 +43,7 @@ class CreateReportViewModel(
     private val eventsRepository: EventsRepository,
     private val createReportUseCase: CreateReportUseCase,
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase,
-    private val getAttachmentGalleryNavArgs: GetAttachmentGalleryNavArgs,
+    private val getAttachmentGalleryNavArgsUseCase: GetAttachmentGalleryNavArgsUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()), ErrorHandler {
 
     init {
@@ -274,7 +274,7 @@ class CreateReportViewModel(
 
     private fun handlePreviewAttachment(state: State, event: UiEvent.PreviewAttachment): State {
         scope.launch {
-            val navArgs = getAttachmentGalleryNavArgs(event.localId, state.attachments)
+            val navArgs = getAttachmentGalleryNavArgsUseCase(event.localId, state.attachments)
             val destination = DestinationData(AttachmentGalleryDestination(navArgs))
             eventsRepository.postNavEvent(destination)
         }

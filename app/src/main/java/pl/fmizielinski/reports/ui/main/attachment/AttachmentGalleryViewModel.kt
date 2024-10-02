@@ -9,7 +9,6 @@ import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.Eve
 import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.State
 import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.UiState
-import java.io.File
 
 @KoinViewModel
 class AttachmentGalleryViewModel(

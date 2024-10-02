@@ -5,7 +5,7 @@ import pl.fmizielinski.reports.domain.model.AttachmentData
 import pl.fmizielinski.reports.ui.main.attachment.model.AttachmentGalleryNavArgs
 
 @Factory
-class GetAttachmentGalleryNavArgs {
+class GetAttachmentGalleryNavArgsUseCase {
 
     operator fun invoke(
         id: Int,
