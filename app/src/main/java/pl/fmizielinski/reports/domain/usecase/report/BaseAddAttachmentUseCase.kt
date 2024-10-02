@@ -13,12 +13,12 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.errorException
 import pl.fmizielinski.reports.domain.mapper.parseErrorBody
-import pl.fmizielinski.reports.domain.model.AttachmentData
+import pl.fmizielinski.reports.domain.model.AddAttachmentData
 import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
 import retrofit2.HttpException
 import java.io.File
 
-abstract class BaseAddAttachmentUseCase<Data : AttachmentData, Result> : BaseUseCase() {
+abstract class BaseAddAttachmentUseCase<Data : AddAttachmentData, Result> : BaseUseCase() {
 
     operator fun invoke(data: Data): Flow<Result> {
         return callbackFlow {

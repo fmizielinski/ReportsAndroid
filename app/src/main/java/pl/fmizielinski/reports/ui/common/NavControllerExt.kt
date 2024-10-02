@@ -9,7 +9,7 @@ fun DestinationsNavigator.consumeNavEvent(destinationData: DestinationData?) {
         navigateUp()
     } else {
         navigate(
-            direction = Direction(destinationData.destination.route),
+            direction = destinationData.direction,
             navOptions = destinationData.navOptions,
         )
     }

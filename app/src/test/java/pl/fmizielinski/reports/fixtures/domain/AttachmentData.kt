@@ -1,13 +1,13 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import pl.fmizielinski.reports.domain.model.AddAttachmentData
+import pl.fmizielinski.reports.domain.model.AddReportAttachmentData
 import pl.fmizielinski.reports.domain.model.AddTemporaryAttachmentData
 import java.io.File
 
 fun addAttachmentData(
     reportId: Int,
     file: File,
-) = AddAttachmentData(
+) = AddReportAttachmentData(
     reportId = reportId,
     file = file,
 )

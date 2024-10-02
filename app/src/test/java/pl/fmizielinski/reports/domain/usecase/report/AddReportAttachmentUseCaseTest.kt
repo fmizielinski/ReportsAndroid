@@ -22,11 +22,11 @@ import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import java.io.File
 
-class AddAttachmentUseCaseTest {
+class AddReportAttachmentUseCaseTest {
 
     private val reportService: ReportService = mockk()
 
-    private val useCase = AddAttachmentUseCase(reportService)
+    private val useCase = AddReportAttachmentUseCase(reportService)
 
     @Test
     fun `GIVEN valid attachment WHEN invoke THEN no errors`() = runTest {

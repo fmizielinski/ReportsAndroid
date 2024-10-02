@@ -54,6 +54,7 @@ import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.AlertDialog
 import pl.fmizielinski.reports.ui.common.composable.AlertDialogCallbacks
+import pl.fmizielinski.reports.ui.common.composable.Fab
 import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBar
 import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBarCallbacks
 import pl.fmizielinski.reports.ui.common.composable.emptyAlertDialogCallbacks
@@ -239,12 +240,12 @@ fun MainScreen(
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             AnimatedVisibility(
-                visible = uiState.fabConfig != null,
+                visible = uiState.fabUiState != null,
                 enter = scaleIn(),
                 exit = scaleOut(),
             ) {
                 Fab(
-                    config = uiState.fabConfig,
+                    uiState = uiState.fabUiState,
                     onFabClicked = callbacks.onFabClicked,
                 )
             }
@@ -264,24 +265,6 @@ fun MainScreen(
             )
         }
     }
-}
-
-@Composable
-fun Fab(
-    config: UiState.FabConfig?,
-    onFabClicked: () -> Unit,
-) {
-    FloatingActionButton(
-        onClick = onFabClicked,
-        content = {
-            if (config != null) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(config.icon),
-                    contentDescription = stringResource(config.contentDescription),
-                )
-            }
-        },
-    )
 }
 
 data class MainCallbacks(
@@ -304,7 +287,7 @@ fun ReportsAppPreview() {
 
 private val previewUiState = UiState(
     appBarUiState = previewTopAppBarUiState,
-    fabConfig = null,
+    fabUiState = null,
     alertDialogUiState = null,
 )
 

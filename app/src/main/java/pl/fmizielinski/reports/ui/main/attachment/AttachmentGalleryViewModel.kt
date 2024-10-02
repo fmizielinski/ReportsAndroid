@@ -1,0 +1,45 @@
+package pl.fmizielinski.reports.ui.main.attachment
+
+import androidx.lifecycle.SavedStateHandle
+import kotlinx.coroutines.CoroutineDispatcher
+import org.koin.android.annotation.KoinViewModel
+import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.destinations.destinations.AttachmentGalleryDestination
+import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.Event
+import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.State
+import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.UiEvent
+import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.UiState
+import java.io.File
+
+@KoinViewModel
+class AttachmentGalleryViewModel(
+    dispatcher: CoroutineDispatcher,
+    handle: SavedStateHandle,
+) : BaseViewModel<State, Event, UiState, UiEvent>(
+    dispatcher = dispatcher,
+    mState = State(attachments = handle.getAttachments()),
+) {
+
+    override fun handleEvent(state: State, event: Event): State = state
+
+    override fun mapState(state: State): UiState {
+        return UiState(attachments = state.attachments)
+    }
+
+    data class State(
+        val attachments: List<File>,
+    )
+
+    data class UiState(
+        val attachments: List<File>,
+    )
+
+    sealed interface Event
+
+    sealed interface UiEvent : Event
+}
+
+fun SavedStateHandle.getAttachments(): List<File> {
+    val args = AttachmentGalleryDestination.argsFrom(this)
+    return args.attachments
+}

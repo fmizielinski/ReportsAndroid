@@ -1,7 +1,5 @@
 package pl.fmizielinski.reports.ui.common.composable
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -18,6 +16,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
+import pl.fmizielinski.reports.ui.common.model.TopBarNavigationIcon
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
@@ -33,13 +32,13 @@ fun ReportsTopAppBar(
             }
         },
         navigationIcon = {
-            if (uiState.isBackVisible) {
+            if (uiState.navigationIcon != null) {
                 IconButton(
                     onClick = callbacks.onBackClicked,
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                        contentDescription = stringResource(R.string.common_button_back),
+                        imageVector = ImageVector.vectorResource(uiState.navigationIcon.iconResId),
+                        contentDescription = stringResource(uiState.navigationIcon.nameResId),
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
@@ -110,7 +109,7 @@ fun ReportsTopAppBarPreview() {
 
 val previewTopAppBarUiState = ReportsTopAppBarUiState(
     title = R.string.common_label_permission,
-    isBackVisible = true,
+    navigationIcon = TopBarNavigationIcon.BACK,
     actions = listOf(TopBarAction.REGISTER),
     isEnabled = true,
 )

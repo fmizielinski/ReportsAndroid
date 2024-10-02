@@ -163,7 +163,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         uiState.skipItems(1)
 
         val result = uiState.awaitItem()
-        expectThat(result.fabConfig) isEqualTo fabConfig
+        expectThat(result.fabUiState) isEqualTo fabConfig
 
         uiState.cancel()
         navigationEvents.cancel()
@@ -346,7 +346,7 @@ class MainViewModelTest : BaseViewModelTest<MainViewModel, UiEvent>() {
         }
         scheduler.advanceUntilIdle()
 
-        expectThat(uiState.expectMostRecentItem().fabConfig) isEqualTo UiState.FabConfig(
+        expectThat(uiState.expectMostRecentItem().fabUiState) isEqualTo UiState.FabConfig(
             icon = R.drawable.ic_save_24dp,
             contentDescription = R.string.common_button_saveReport,
         )

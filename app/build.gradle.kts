@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.serialization)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.parcelize)
 }
 
 android {
@@ -68,8 +69,6 @@ android {
 }
 
 composeCompiler {
-    enableStrongSkippingMode = true
-
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
 }
 

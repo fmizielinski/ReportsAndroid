@@ -3,20 +3,20 @@ package pl.fmizielinski.reports.domain.usecase.report
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.network.report.ReportService
-import pl.fmizielinski.reports.domain.model.AddAttachmentData
+import pl.fmizielinski.reports.domain.model.AddReportAttachmentData
 import pl.fmizielinski.reports.domain.model.AttachmentUploadResult
 import pl.fmizielinski.reports.domain.model.AttachmentUploadResult.Complete
 import pl.fmizielinski.reports.domain.model.AttachmentUploadResult.Progress
 
 @Factory
-class AddAttachmentUseCase(
+class AddReportAttachmentUseCase(
     private val reportService: ReportService,
-) : BaseAddAttachmentUseCase<AddAttachmentData, AttachmentUploadResult>() {
+) : BaseAddAttachmentUseCase<AddReportAttachmentData, AttachmentUploadResult>() {
 
     override fun getProgressResult(progress: Float) = Progress(progress)
 
     override suspend fun getCompleteResult(
-        data: AddAttachmentData,
+        data: AddReportAttachmentData,
         filePart: MultipartBody.Part,
     ): AttachmentUploadResult {
         catchHttpExceptions(
