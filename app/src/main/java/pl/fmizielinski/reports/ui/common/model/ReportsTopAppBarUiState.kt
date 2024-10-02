@@ -1,13 +1,14 @@
 package pl.fmizielinski.reports.ui.common.model
 
 import androidx.annotation.StringRes
+import pl.fmizielinski.reports.ui.common.model.TopBarNavigationIcon.BACK
 import pl.fmizielinski.reports.ui.navigation.isStartDestination
 
 data class ReportsTopAppBarUiState(
     @StringRes val title: Int?,
-    val isBackVisible: Boolean,
-    val actions: List<TopBarAction>,
-    val isEnabled: Boolean,
+    val navigationIcon: TopBarNavigationIcon?,
+    val actions: List<TopBarAction> = emptyList(),
+    val isEnabled: Boolean = true,
 ) {
     constructor(
         @StringRes title: Int? = null,
@@ -16,7 +17,7 @@ data class ReportsTopAppBarUiState(
         isEnabled: Boolean = true,
     ) : this(
         title = title,
-        isBackVisible = destination?.isStartDestination == true,
+        navigationIcon = BACK.takeIf { destination?.isStartDestination == true },
         actions = actions,
         isEnabled = isEnabled,
     )

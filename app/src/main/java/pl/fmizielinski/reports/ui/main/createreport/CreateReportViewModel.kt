@@ -11,23 +11,27 @@ import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
-import pl.fmizielinski.reports.domain.model.AddTemporaryAttachmentData
-import pl.fmizielinski.reports.domain.model.CreateReportData
-import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult
+import pl.fmizielinski.reports.domain.report.model.AddTemporaryAttachmentData
+import pl.fmizielinski.reports.domain.report.model.AttachmentData
+import pl.fmizielinski.reports.domain.report.model.CreateReportData
+import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
-import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
+import pl.fmizielinski.reports.domain.report.usecase.AddTemporaryAttachmentUseCase
+import pl.fmizielinski.reports.domain.report.usecase.CreateReportUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.base.ErrorHandler
 import pl.fmizielinski.reports.ui.base.ErrorHandler.VerificationError
 import pl.fmizielinski.reports.ui.base.filterIsNotInstance
 import pl.fmizielinski.reports.ui.base.findVerificationError
+import pl.fmizielinski.reports.ui.destinations.destinations.AttachmentGalleryDestination
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportsDestination
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.Event
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.State
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiState
+import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import timber.log.Timber
 import java.io.File
@@ -39,6 +43,7 @@ class CreateReportViewModel(
     private val eventsRepository: EventsRepository,
     private val createReportUseCase: CreateReportUseCase,
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase,
+    private val getAttachmentGalleryNavArgsUseCase: GetAttachmentGalleryNavArgsUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()), ErrorHandler {
 
     init {
@@ -54,6 +59,7 @@ class CreateReportViewModel(
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
             is Event.SaveReport -> handleSaveReport(state)
@@ -69,6 +75,7 @@ class CreateReportViewModel(
             is UiEvent.DescriptionChanged -> handleDescriptionChanged(state, event)
             is UiEvent.DeleteAttachment -> handleDeleteAttachment(state, event)
             is UiEvent.ListScrolled -> handleListScrolled(state, event)
+            is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
         }
     }
 
@@ -93,6 +100,7 @@ class CreateReportViewModel(
                     !attachment.isUploaded &&
                     !attachment.uploadFailed
             UiState.Attachment(
+                localId = attachment.localId,
                 file = attachment.file,
                 isUploading = isUploading,
                 progress = attachment.progress ?: 0f,
@@ -252,7 +260,7 @@ class CreateReportViewModel(
     }
 
     private fun handleDeleteAttachment(state: State, event: UiEvent.DeleteAttachment): State {
-        val attachments = state.attachments.filterNot { it.file == event.attachmentFile }
+        val attachments = state.attachments.filterNot { it.localId == event.localId }
         return state.copy(attachments = attachments)
     }
 
@@ -260,6 +268,15 @@ class CreateReportViewModel(
         scope.launch {
             val globalEvent = GlobalEvent.ChangeFabVisibility(event.firstItemIndex == 0)
             eventsRepository.postGlobalEvent(globalEvent)
+        }
+        return state
+    }
+
+    private fun handlePreviewAttachment(state: State, event: UiEvent.PreviewAttachment): State {
+        scope.launch {
+            val navArgs = getAttachmentGalleryNavArgsUseCase(event.localId, state.attachments)
+            val destination = DestinationData(AttachmentGalleryDestination(navArgs))
+            eventsRepository.postNavEvent(destination)
         }
         return state
     }
@@ -316,12 +333,12 @@ class CreateReportViewModel(
     ) {
 
         data class Attachment(
-            val localId: Int,
-            val file: File,
+            override val localId: Int,
+            override val file: File,
             val progress: Float? = null,
             val uuid: String? = null,
             val uploadFailed: Boolean = false,
-        ) {
+        ) : AttachmentData {
             val isUploaded: Boolean
                 get() = uuid != null
 
@@ -340,6 +357,7 @@ class CreateReportViewModel(
     ) {
 
         data class Attachment(
+            val localId: Int,
             val file: File,
             val isUploading: Boolean,
             val progress: Float,
@@ -367,8 +385,9 @@ class CreateReportViewModel(
     sealed interface UiEvent : Event {
         data class TitleChanged(val title: String) : UiEvent
         data class DescriptionChanged(val description: String) : UiEvent
-        data class DeleteAttachment(val attachmentFile: File) : UiEvent
+        data class DeleteAttachment(val localId: Int) : UiEvent
         data class ListScrolled(val firstItemIndex: Int) : UiEvent
+        data class PreviewAttachment(val localId: Int) : UiEvent
     }
 
     data class Title(override val messageResId: Int) : VerificationError

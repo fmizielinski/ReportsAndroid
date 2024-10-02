@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
+import pl.fmizielinski.reports.domain.auth.usecase.LogoutUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.domain.networkError
 import strikt.api.expectDoesNotThrow

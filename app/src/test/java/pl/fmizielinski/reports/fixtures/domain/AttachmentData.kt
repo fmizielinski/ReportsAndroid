@@ -1,19 +1,12 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import pl.fmizielinski.reports.domain.model.AddAttachmentData
-import pl.fmizielinski.reports.domain.model.AddTemporaryAttachmentData
+import pl.fmizielinski.reports.domain.report.model.AttachmentData
 import java.io.File
 
-fun addAttachmentData(
-    reportId: Int,
-    file: File,
-) = AddAttachmentData(
-    reportId = reportId,
-    file = file,
-)
-
-fun addTemporaryAttachmentData(
-    file: File,
-) = AddTemporaryAttachmentData(
-    file = file,
-)
+fun attachmentData(
+    localId: Int = 0,
+    file: File = File(""),
+) = object : AttachmentData {
+    override val localId = localId
+    override val file = file
+}

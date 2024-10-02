@@ -15,17 +15,18 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
-import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
+import pl.fmizielinski.reports.domain.auth.usecase.IsLoggedInUseCase
+import pl.fmizielinski.reports.domain.auth.usecase.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.Event
 import pl.fmizielinski.reports.ui.MainViewModel.State
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.common.model.AlertDialogUiState
+import pl.fmizielinski.reports.ui.common.model.FabUiState
 import pl.fmizielinski.reports.ui.common.model.ReportsTopAppBarUiState
 import pl.fmizielinski.reports.ui.common.model.TopBarAction
 import pl.fmizielinski.reports.ui.common.model.TopBarAction.FILES
@@ -40,6 +41,8 @@ import pl.fmizielinski.reports.ui.destinations.navgraphs.AuthNavGraph
 import pl.fmizielinski.reports.ui.destinations.navgraphs.MainNavGraph
 import pl.fmizielinski.reports.ui.destinations.navgraphs.ReportsNavGraph
 import pl.fmizielinski.reports.ui.navigation.DestinationData
+import pl.fmizielinski.reports.ui.navigation.getAppBarUiState
+import pl.fmizielinski.reports.ui.navigation.getFabUiState
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import timber.log.Timber
 import java.io.File
@@ -126,72 +129,12 @@ class MainViewModel(
     }
 
     override fun mapState(state: State): UiState {
-        val fabConfig = getFabConfig(state.currentDestination)
+        val fabUiState = state.currentDestination.getFabUiState()
         return UiState(
-            appBarUiState = getAppBarUiState(state.currentDestination, state.isLoading),
-            fabConfig = fabConfig.takeIf { !state.isLoading && state.isFabVisible },
+            appBarUiState = state.currentDestination.getAppBarUiState(state.isLoading),
+            fabUiState = fabUiState.takeIf { !state.isLoading && state.isFabVisible },
             alertDialogUiState = getAlertDialogUiState(state.alert),
         )
-    }
-
-    private fun getAppBarUiState(currentDestination: String?, isLoading: Boolean) =
-        when (currentDestination) {
-            LoginDestination.baseRoute -> ReportsTopAppBarUiState(
-                destination = currentDestination,
-                actions = listOf(REGISTER),
-                isEnabled = !isLoading,
-            )
-
-            RegisterDestination.baseRoute -> ReportsTopAppBarUiState(
-                title = R.string.registerScreen_title,
-                destination = currentDestination,
-                isEnabled = !isLoading,
-            )
-
-            CreateReportDestination.baseRoute -> ReportsTopAppBarUiState(
-                title = R.string.createReportScreen_title,
-                destination = currentDestination,
-                actions = arrayListOf(
-                    FILES,
-                    PHOTO,
-                ),
-                isEnabled = !isLoading,
-            )
-
-            ReportsDestination.baseRoute -> ReportsTopAppBarUiState(
-                title = R.string.reportsScreen_title,
-                destination = currentDestination,
-                actions = arrayListOf(LOGOUT),
-                isEnabled = !isLoading,
-            )
-
-            else -> ReportsTopAppBarUiState(isEnabled = !isLoading)
-        }
-
-    private fun getFabConfig(currentDestination: String?): UiState.FabConfig? {
-        return when (currentDestination) {
-            CreateReportDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_save_24dp,
-                contentDescription = R.string.common_button_saveReport,
-            )
-
-            ReportsDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_add_24dp,
-                contentDescription = R.string.common_button_createReport,
-            )
-
-            LoginDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_login_24dp,
-                contentDescription = R.string.common_button_login,
-            )
-
-            RegisterDestination.baseRoute -> UiState.FabConfig(
-                icon = R.drawable.ic_person_add_24dp,
-                contentDescription = R.string.common_button_register,
-            )
-
-            else -> null
-        }
     }
 
     private fun getAlertDialogUiState(
@@ -477,15 +420,9 @@ class MainViewModel(
 
     data class UiState(
         val appBarUiState: ReportsTopAppBarUiState,
-        val fabConfig: FabConfig?,
+        val fabUiState: FabUiState?,
         val alertDialogUiState: AlertDialogUiState?,
-    ) {
-
-        data class FabConfig(
-            @DrawableRes val icon: Int,
-            @StringRes val contentDescription: Int,
-        )
-    }
+    )
 
     sealed interface Event {
         data class LoggedInStateChecked(val isLoggedIn: Boolean) : Event

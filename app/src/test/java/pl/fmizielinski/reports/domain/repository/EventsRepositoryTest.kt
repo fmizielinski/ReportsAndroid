@@ -3,7 +3,7 @@ package pl.fmizielinski.reports.domain.repository
 import app.cash.turbine.test
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.ui.destinations.destinations.LoginDestination
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import strikt.api.expectThat

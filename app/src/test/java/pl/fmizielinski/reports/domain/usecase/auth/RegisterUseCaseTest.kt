@@ -9,6 +9,7 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.RegisterResponseModel
+import pl.fmizielinski.reports.domain.auth.usecase.RegisterUseCase
 import pl.fmizielinski.reports.domain.error.CompositeErrorException
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.EMAIL_NOT_VALID
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.INVALID_CREDENTIALS

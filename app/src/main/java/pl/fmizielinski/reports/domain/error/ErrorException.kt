@@ -1,7 +1,7 @@
 package pl.fmizielinski.reports.domain.error
 
 import androidx.annotation.StringRes
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 
 abstract class ErrorException : Exception()
 

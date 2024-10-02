@@ -16,8 +16,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
@@ -29,10 +27,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -48,12 +44,13 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.AlertDialog
 import pl.fmizielinski.reports.ui.common.composable.AlertDialogCallbacks
+import pl.fmizielinski.reports.ui.common.composable.Fab
 import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBar
 import pl.fmizielinski.reports.ui.common.composable.ReportsTopAppBarCallbacks
 import pl.fmizielinski.reports.ui.common.composable.emptyAlertDialogCallbacks
@@ -239,12 +236,12 @@ fun MainScreen(
         floatingActionButtonPosition = FabPosition.End,
         floatingActionButton = {
             AnimatedVisibility(
-                visible = uiState.fabConfig != null,
+                visible = uiState.fabUiState != null,
                 enter = scaleIn(),
                 exit = scaleOut(),
             ) {
                 Fab(
-                    config = uiState.fabConfig,
+                    uiState = uiState.fabUiState,
                     onFabClicked = callbacks.onFabClicked,
                 )
             }
@@ -264,24 +261,6 @@ fun MainScreen(
             )
         }
     }
-}
-
-@Composable
-fun Fab(
-    config: UiState.FabConfig?,
-    onFabClicked: () -> Unit,
-) {
-    FloatingActionButton(
-        onClick = onFabClicked,
-        content = {
-            if (config != null) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(config.icon),
-                    contentDescription = stringResource(config.contentDescription),
-                )
-            }
-        },
-    )
 }
 
 data class MainCallbacks(
@@ -304,7 +283,7 @@ fun ReportsAppPreview() {
 
 private val previewUiState = UiState(
     appBarUiState = previewTopAppBarUiState,
-    fabConfig = null,
+    fabUiState = null,
     alertDialogUiState = null,
 )
 

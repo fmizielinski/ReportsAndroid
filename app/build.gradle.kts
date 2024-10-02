@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kover)
     alias(libs.plugins.serialization)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.parcelize)
 }
 
 android {
@@ -68,8 +69,6 @@ android {
 }
 
 composeCompiler {
-    enableStrongSkippingMode = true
-
     reportsDestination = layout.buildDirectory.dir("compose_compiler")
 }
 
@@ -164,8 +163,8 @@ koverReport {
                 "pl.fmizielinski.reports.data.db.dao",
                 "pl.fmizielinski.reports.data.network.utils",
                 "pl.fmizielinski.reports.di",
+                "pl.fmizielinski.reports.domain.base",
                 "pl.fmizielinski.reports.domain.error",
-                "pl.fmizielinski.reports.domain.usecase.base",
                 "pl.fmizielinski.reports.ui.base",
                 "pl.fmizielinski.reports.ui.common.composable",
                 "pl.fmizielinski.reports.ui.destinations",

@@ -1,6 +1,6 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import pl.fmizielinski.reports.domain.model.Report
+import pl.fmizielinski.reports.domain.report.model.Report
 
 fun report(
     id: Int = 1,

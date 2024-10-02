@@ -4,6 +4,7 @@ import app.cash.turbine.testIn
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
@@ -17,18 +18,22 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.DESCRIPTI
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.INVALID_DATA
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.TITLE_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
-import pl.fmizielinski.reports.domain.model.CreateReportData
+import pl.fmizielinski.reports.domain.report.model.CreateReportData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.report.AddTemporaryAttachmentUseCase
-import pl.fmizielinski.reports.domain.usecase.report.CreateReportUseCase
+import pl.fmizielinski.reports.domain.report.usecase.AddTemporaryAttachmentUseCase
+import pl.fmizielinski.reports.domain.report.usecase.CreateReportUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData
 import pl.fmizielinski.reports.fixtures.domain.completeTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.progressTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
+import pl.fmizielinski.reports.fixtures.ui.attachmentGalleryNavArgs
+import pl.fmizielinski.reports.ui.destinations.destinations.AttachmentGalleryDestination
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportsDestination
 import pl.fmizielinski.reports.ui.main.createreport.CreateReportViewModel.UiEvent
+import pl.fmizielinski.reports.ui.navigation.DestinationData
 import pl.fmizielinski.reports.ui.navigation.toDestinationData
 import pl.fmizielinski.reports.utils.exceptionFlow
 import strikt.api.expectThat
@@ -44,6 +49,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
 
     private val createReportUseCase: CreateReportUseCase = mockk()
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase = mockk()
+    private val getAttachmentGalleryNavArgsUseCase: GetAttachmentGalleryNavArgsUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
 
     override fun createViewModel(dispatcher: TestDispatcher) = CreateReportViewModel(
@@ -51,6 +57,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
         eventsRepository = eventsRepository,
         createReportUseCase = createReportUseCase,
         addTemporaryAttachmentUseCase = addTemporaryAttachmentUseCase,
+        getAttachmentGalleryNavArgsUseCase = getAttachmentGalleryNavArgsUseCase,
     )
 
     @Test
@@ -270,7 +277,8 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
                 eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(file))
             }
             scheduler.advanceUntilIdle()
-            postUiEvent(UiEvent.DeleteAttachment(file))
+            val localId = uiState.expectMostRecentItem().attachments.first().localId
+            postUiEvent(UiEvent.DeleteAttachment(localId))
             scheduler.advanceUntilIdle()
 
             val result = uiState.expectMostRecentItem()
@@ -299,6 +307,32 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `GIVEN has attachments WHEN PreviewAttachment event posted THEH post AttachmentGallery navigation event`() = runTurbineTest {
+        val file = File.createTempFile("test", "jpg")
+        val attachmentGalleryNavArgs = attachmentGalleryNavArgs(
+            initialIndex = 1,
+            attachments = arrayListOf(file.absolutePath),
+        )
+        every { getAttachmentGalleryNavArgsUseCase(any(), any()) } returns attachmentGalleryNavArgs
+
+        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+
+        context.launch {
+            eventsRepository.postGlobalEvent(GlobalEvent.AddAttachment(file))
+        }
+        scheduler.advanceUntilIdle()
+        val localId = uiState.expectMostRecentItem().attachments.first().localId
+        postUiEvent(UiEvent.PreviewAttachment(localId))
+        scheduler.advanceUntilIdle()
+        val expectedDirection = AttachmentGalleryDestination(attachmentGalleryNavArgs)
+        val directionSlot = slot<DestinationData>()
+        coVerify(exactly = 1) { eventsRepository.postNavEvent(capture(directionSlot)) }
+        expectThat(directionSlot.captured.direction.route) isEqualTo expectedDirection.route
 
         uiState.cancelAndIgnoreRemainingEvents()
     }

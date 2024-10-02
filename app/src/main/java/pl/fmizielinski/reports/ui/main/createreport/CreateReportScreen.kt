@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.ui.main.createreport
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,7 +54,6 @@ import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.AttachmentProgressSize
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
-import java.io.File
 
 @Destination<MainGraph>(route = "CreateReport")
 @Composable
@@ -68,6 +68,7 @@ fun CreateReportScreen() {
                 onListScrolled = { firstItemIndex ->
                     postUiEvent(UiEvent.ListScrolled(firstItemIndex))
                 },
+                onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
             ),
         )
     }
@@ -97,6 +98,7 @@ fun ReportContent(
             Attachements(
                 attachments = uiState.attachments,
                 onDeleteAttachment = callbacks.onDeleteAttachment,
+                onAttachmentClicked = callbacks.onAttachmentClicked,
                 onListScrolled = callbacks.onListScrolled,
                 enabled = !uiState.isLoading,
             )
@@ -166,7 +168,8 @@ fun ReportDetails(
 fun Attachements(
     attachments: List<UiState.Attachment>,
     enabled: Boolean,
-    onDeleteAttachment: (File) -> Unit,
+    onDeleteAttachment: (Int) -> Unit,
+    onAttachmentClicked: (Int) -> Unit,
     onListScrolled: (Int) -> Unit,
 ) {
     val gridState = rememberLazyGridState()
@@ -189,6 +192,7 @@ fun Attachements(
                 attachment = attachment,
                 enabled = enabled,
                 onDeleteAttachment = onDeleteAttachment,
+                onAttachmentClicked = onAttachmentClicked,
             )
         }
     }
@@ -199,7 +203,8 @@ fun Attachements(
 fun AttachmentItem(
     attachment: UiState.Attachment,
     enabled: Boolean,
-    onDeleteAttachment: (File) -> Unit,
+    onDeleteAttachment: (Int) -> Unit,
+    onAttachmentClicked: (Int) -> Unit,
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -214,9 +219,10 @@ fun AttachmentItem(
                 GlideImage(
                     model = attachment.file,
                     contentDescription = null,
-                    modifier = Modifier.fillMaxWidth()
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.fillMaxSize()
+                        .aspectRatio(1f)
+                        .clickable { onAttachmentClicked(attachment.localId) },
+                    contentScale = ContentScale.Crop,
                 )
                 if (attachment.isUploading) {
                     CircularProgressIndicator(
@@ -240,7 +246,7 @@ fun AttachmentItem(
                 }
             }
             IconButton(
-                onClick = { onDeleteAttachment(attachment.file) },
+                onClick = { onDeleteAttachment(attachment.localId) },
                 modifier = Modifier.align(Alignment.End),
                 enabled = enabled,
             ) {
@@ -260,8 +266,9 @@ const val ATTACHMENTS_GRID_COLUMNS = 2
 data class CreateReportCallbacks(
     val onTitleChanged: (String) -> Unit,
     val onDescriptionChanged: (String) -> Unit,
-    val onDeleteAttachment: (File) -> Unit,
+    val onDeleteAttachment: (Int) -> Unit,
     val onListScrolled: (firstItemIndex: Int) -> Unit,
+    val onAttachmentClicked: (Int) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -289,4 +296,5 @@ private val emptyCallbacks = CreateReportCallbacks(
     onDescriptionChanged = {},
     onDeleteAttachment = {},
     onListScrolled = {},
+    onAttachmentClicked = {},
 )

@@ -13,10 +13,10 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.PASSWORD_
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.SURNAME_EMPTY
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
-import pl.fmizielinski.reports.domain.model.RegistrationData
+import pl.fmizielinski.reports.domain.auth.model.RegistrationData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.auth.RegisterUseCase
+import pl.fmizielinski.reports.domain.auth.usecase.RegisterUseCase
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.Event
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.State
 import pl.fmizielinski.reports.ui.auth.register.RegisterViewModel.UiEvent

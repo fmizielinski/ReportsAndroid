@@ -11,6 +11,7 @@ import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.UnauthorizedErrorException
 import pl.fmizielinski.reports.domain.mapper.DateFormatter
+import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.reportModel
 import pl.fmizielinski.reports.fixtures.data.reportsResponseModel

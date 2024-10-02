@@ -2,17 +2,18 @@ package pl.fmizielinski.reports.ui.navigation
 
 import androidx.navigation.NavOptions
 import com.ramcosta.composedestinations.spec.DestinationSpec
+import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.utils.startDestination
 import pl.fmizielinski.reports.ui.destinations.navgraphs.ReportsNavGraph
 
 data class DestinationData(
-    val destination: DestinationSpec,
+    val direction: Direction,
 ) {
-    val navOptions: NavOptions? = buildNavOptions(destination)
+    val navOptions: NavOptions? = buildNavOptions(direction)
 
-    private fun buildNavOptions(destination: DestinationSpec): NavOptions? {
+    private fun buildNavOptions(direction: Direction): NavOptions? {
         val isStartDestination = ReportsNavGraph.nestedNavGraphs.any { graph ->
-            graph.startDestination.baseRoute == destination.route
+            graph.startDestination.baseRoute == direction.route
         }
         return if (isStartDestination) {
             NavOptions.Builder()
@@ -24,4 +25,6 @@ data class DestinationData(
     }
 }
 
-fun DestinationSpec.toDestinationData(): DestinationData = DestinationData(this)
+fun DestinationSpec.toDestinationData(): DestinationData = DestinationData(
+    direction = Direction(this.route),
+)

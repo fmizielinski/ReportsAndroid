@@ -1,8 +1,10 @@
 <resources>
     <string name="app_name">Reports</string>
 
+    <string name="attachmentGalleryScreen_title">Attachments</string>
     <string name="common_button_addFile">Add file</string>
     <string name="common_button_back">Back</string>
+    <string name="common_button_close">Close</string>
     <string name="common_button_createReport">Create report</string>
     <string name="common_button_login">Sign in</string>
     <string name="common_button_logout">Logout</string>
