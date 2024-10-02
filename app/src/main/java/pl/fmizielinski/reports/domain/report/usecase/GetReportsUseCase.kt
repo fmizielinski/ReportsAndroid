@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.network.report.ReportService
@@ -6,8 +6,8 @@ import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.error.UnauthorizedErrorException
 import pl.fmizielinski.reports.domain.mapper.DateFormatter
 import pl.fmizielinski.reports.domain.mapper.toReports
-import pl.fmizielinski.reports.domain.model.Report
-import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
+import pl.fmizielinski.reports.domain.report.model.Report
+import pl.fmizielinski.reports.domain.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory

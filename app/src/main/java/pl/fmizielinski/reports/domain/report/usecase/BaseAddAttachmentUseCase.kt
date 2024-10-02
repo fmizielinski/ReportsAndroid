@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
@@ -13,8 +13,8 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.errorException
 import pl.fmizielinski.reports.domain.mapper.parseErrorBody
-import pl.fmizielinski.reports.domain.model.AddAttachmentData
-import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
+import pl.fmizielinski.reports.domain.report.model.AddAttachmentData
+import pl.fmizielinski.reports.domain.base.BaseUseCase
 import retrofit2.HttpException
 import java.io.File
 

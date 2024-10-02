@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.model
+package pl.fmizielinski.reports.domain.report.model
 
 data class Report(
     val id: Int,

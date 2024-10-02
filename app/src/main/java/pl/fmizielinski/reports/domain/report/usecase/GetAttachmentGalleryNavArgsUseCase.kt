@@ -1,7 +1,7 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import org.koin.core.annotation.Factory
-import pl.fmizielinski.reports.domain.model.AttachmentData
+import pl.fmizielinski.reports.domain.report.model.AttachmentData
 import pl.fmizielinski.reports.ui.main.attachment.model.AttachmentGalleryNavArgs
 
 @Factory

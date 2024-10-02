@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.auth.IsLoggedInUseCase
-import pl.fmizielinski.reports.domain.usecase.auth.LogoutUseCase
+import pl.fmizielinski.reports.domain.auth.usecase.IsLoggedInUseCase
+import pl.fmizielinski.reports.domain.auth.usecase.LogoutUseCase
 import pl.fmizielinski.reports.ui.MainViewModel.Event
 import pl.fmizielinski.reports.ui.MainViewModel.State
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent

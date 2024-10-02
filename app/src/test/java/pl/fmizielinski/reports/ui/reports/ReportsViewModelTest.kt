@@ -10,10 +10,10 @@ import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel

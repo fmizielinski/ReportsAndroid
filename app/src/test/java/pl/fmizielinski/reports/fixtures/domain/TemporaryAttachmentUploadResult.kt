@@ -1,6 +1,6 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult
+import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult
 
 fun progressTemporaryAttachmentUploadResult(
     progress: Float,

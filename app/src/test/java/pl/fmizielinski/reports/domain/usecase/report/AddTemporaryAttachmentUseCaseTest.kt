@@ -16,8 +16,9 @@ import pl.fmizielinski.reports.data.network.utils.createMultipartBody
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.ACCESS_DENIED
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FAILED
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
-import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult.Complete
-import pl.fmizielinski.reports.domain.model.TemporaryAttachmentUploadResult.Progress
+import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult.Complete
+import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult.Progress
+import pl.fmizielinski.reports.domain.report.usecase.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.addTemporaryAttachmentResponse
 import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData

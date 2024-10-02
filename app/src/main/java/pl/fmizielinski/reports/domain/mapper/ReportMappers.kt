@@ -1,7 +1,7 @@
 package pl.fmizielinski.reports.domain.mapper
 
 import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
-import pl.fmizielinski.reports.domain.model.Report
+import pl.fmizielinski.reports.domain.report.model.Report
 
 // region reports
 

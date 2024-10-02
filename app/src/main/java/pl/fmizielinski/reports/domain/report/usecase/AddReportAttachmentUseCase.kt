@@ -1,12 +1,12 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import okhttp3.MultipartBody
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.network.report.ReportService
-import pl.fmizielinski.reports.domain.model.AddReportAttachmentData
-import pl.fmizielinski.reports.domain.model.AttachmentUploadResult
-import pl.fmizielinski.reports.domain.model.AttachmentUploadResult.Complete
-import pl.fmizielinski.reports.domain.model.AttachmentUploadResult.Progress
+import pl.fmizielinski.reports.domain.report.model.AddReportAttachmentData
+import pl.fmizielinski.reports.domain.report.model.AttachmentUploadResult
+import pl.fmizielinski.reports.domain.report.model.AttachmentUploadResult.Complete
+import pl.fmizielinski.reports.domain.report.model.AttachmentUploadResult.Progress
 
 @Factory
 class AddReportAttachmentUseCase(

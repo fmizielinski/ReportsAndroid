@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.auth
+package pl.fmizielinski.reports.domain.auth.usecase
 
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.R
@@ -12,9 +12,9 @@ import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.errorException
 import pl.fmizielinski.reports.domain.mapper.parseErrorBody
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
-import pl.fmizielinski.reports.domain.model.RegistrationData
-import pl.fmizielinski.reports.domain.model.toRegisterRequestModel
-import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
+import pl.fmizielinski.reports.domain.auth.model.RegistrationData
+import pl.fmizielinski.reports.domain.auth.model.toRegisterRequestModel
+import pl.fmizielinski.reports.domain.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory

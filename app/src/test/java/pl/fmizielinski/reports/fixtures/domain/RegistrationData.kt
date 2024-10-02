@@ -1,6 +1,6 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import pl.fmizielinski.reports.domain.model.RegistrationData
+import pl.fmizielinski.reports.domain.auth.model.RegistrationData
 
 fun registrationData(
     email: String = "email",

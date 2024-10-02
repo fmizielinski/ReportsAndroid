@@ -5,11 +5,11 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.domain.error.ErrorException
-import pl.fmizielinski.reports.domain.model.Report
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.report.model.Report
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.report.GetReportsUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.Event
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.State

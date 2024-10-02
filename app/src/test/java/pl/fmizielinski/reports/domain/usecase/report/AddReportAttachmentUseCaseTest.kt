@@ -11,7 +11,8 @@ import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.ACCESS_DENIED
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FAILED
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
-import pl.fmizielinski.reports.domain.model.AttachmentUploadResult.Complete
+import pl.fmizielinski.reports.domain.report.model.AttachmentUploadResult.Complete
+import pl.fmizielinski.reports.domain.report.usecase.AddReportAttachmentUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.domain.addReportAttachmentData
 import pl.fmizielinski.reports.fixtures.domain.networkError

@@ -14,7 +14,7 @@ import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.usecase.auth.LoginUseCase
+import pl.fmizielinski.reports.domain.auth.usecase.LoginUseCase
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel
 import pl.fmizielinski.reports.ui.auth.login.LoginViewModel.UiEvent

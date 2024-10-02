@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.core.annotation.Single
 import pl.fmizielinski.reports.data.network.interceptor.UnauthorizedHandler
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import java.io.File
 import java.util.Optional

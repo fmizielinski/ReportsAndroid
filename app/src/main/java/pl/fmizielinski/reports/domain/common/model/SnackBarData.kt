@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.model
+package pl.fmizielinski.reports.domain.common.model
 
 import androidx.annotation.StringRes
 

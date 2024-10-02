@@ -8,12 +8,12 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
+import pl.fmizielinski.reports.domain.report.usecase.CreateReportUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.createReportResponse
 import pl.fmizielinski.reports.fixtures.domain.createReportData
 import pl.fmizielinski.reports.fixtures.domain.networkError
 import strikt.api.expectDoesNotThrow
-import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse

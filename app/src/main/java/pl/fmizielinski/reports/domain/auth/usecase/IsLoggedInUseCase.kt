@@ -1,8 +1,8 @@
-package pl.fmizielinski.reports.domain.usecase.auth
+package pl.fmizielinski.reports.domain.auth.usecase
 
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.db.dao.TokenDao
-import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
+import pl.fmizielinski.reports.domain.base.BaseUseCase
 
 @Factory
 class IsLoggedInUseCase(

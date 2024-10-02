@@ -16,8 +16,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
@@ -29,10 +27,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -48,7 +44,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject
-import pl.fmizielinski.reports.domain.model.SnackBarData
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.MainViewModel.UiState
 import pl.fmizielinski.reports.ui.base.BaseScreen

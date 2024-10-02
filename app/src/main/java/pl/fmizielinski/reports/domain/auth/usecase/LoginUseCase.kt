@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.auth
+package pl.fmizielinski.reports.domain.auth.usecase
 
 import okhttp3.Credentials
 import org.koin.core.annotation.Factory
@@ -8,7 +8,7 @@ import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.mapper.toTokenModel
-import pl.fmizielinski.reports.domain.usecase.base.BaseUseCase
+import pl.fmizielinski.reports.domain.base.BaseUseCase
 import retrofit2.HttpException
 
 @Factory

@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.model
+package pl.fmizielinski.reports.domain.auth.model
 
 import pl.fmizielinski.reports.data.network.auth.model.RegisterRequestModel
 

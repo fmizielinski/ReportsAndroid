@@ -1,6 +1,6 @@
 package pl.fmizielinski.reports.fixtures.domain
 
-import pl.fmizielinski.reports.domain.model.AttachmentData
+import pl.fmizielinski.reports.domain.report.model.AttachmentData
 import java.io.File
 
 fun attachmentData(
