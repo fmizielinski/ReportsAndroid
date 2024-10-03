@@ -4,17 +4,20 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.R
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.report.model.Report
-import pl.fmizielinski.reports.domain.common.model.SnackBarData
+import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
+import pl.fmizielinski.reports.ui.main.reportdetails.model.ReportDetailsNavArgs
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.Event
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.State
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
+import pl.fmizielinski.reports.ui.navigation.DestinationData
 import timber.log.Timber
 
 @KoinViewModel
@@ -31,6 +34,7 @@ class ReportsViewModel(
             is Event.LoadReportsFailed -> handleLoadReportsFailed(state)
             is UiEvent.ListScrolled -> handleListScrolled(state, event)
             is UiEvent.Refresh -> handleRefresh(state)
+            is UiEvent.ReportClicked -> handleReportClicked(state, event)
         }
     }
 
@@ -107,6 +111,15 @@ class ReportsViewModel(
         return state.copy(isRefreshing = true)
     }
 
+    private fun handleReportClicked(state: State, event: UiEvent.ReportClicked): State {
+        scope.launch {
+            val navArgs = ReportDetailsNavArgs(id = event.reportId)
+            val destination = DestinationData(ReportDetailsDestination(navArgs))
+            eventsRepository.postNavEvent(destination)
+        }
+        return state
+    }
+
     // endregion handle UiEvent
 
     data class State(
@@ -139,5 +152,6 @@ class ReportsViewModel(
     sealed interface UiEvent : Event {
         data class ListScrolled(val firstItemIndex: Int) : UiEvent
         data object Refresh : UiEvent
+        data class ReportClicked(val reportId: Int) : UiEvent
     }
 }

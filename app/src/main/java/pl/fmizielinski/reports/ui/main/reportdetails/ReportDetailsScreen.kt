@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ramcosta.composedestinations.annotation.Destination
 import pl.fmizielinski.reports.domain.report.model.ReportDetails
@@ -61,7 +62,7 @@ fun Details(report: ReportDetails) {
     Text(
         text = report.title,
         fontWeight = FontWeight.Medium,
-        fontSize = 20.sp,
+        fontSize = 22.sp,
     )
     Text(
         text = report.reportDate,
@@ -72,6 +73,7 @@ fun Details(report: ReportDetails) {
         text = report.description,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
+        modifier = Modifier.padding(top = 12.dp),
     )
 }
 
