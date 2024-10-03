@@ -22,10 +22,13 @@ fun ReportsResponseModel.ReportModel.toReport(dateFormatter: DateFormatter): Rep
     )
 }
 
-fun ReportDetailsResponseModel.toReportDetails(dateFormatter: DateFormatter) = ReportDetails(
+fun ReportDetailsResponseModel.toReportDetails(
+    attachmentPath: String,
+    dateFormatter: DateFormatter,
+) = ReportDetails(
     id = id,
     title = title,
     description = description,
     reportDate = dateFormatter.formatReportDetailsDate(reportDate),
-    attachments = attachments.map { it.id.toString() }, // FIXME
+    attachments = attachments.map { "$attachmentPath${it.id}" },
 )

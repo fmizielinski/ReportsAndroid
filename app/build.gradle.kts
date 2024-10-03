@@ -121,6 +121,7 @@ dependencies {
 
     // Glide
     implementation(libs.bundles.glide)
+    ksp(libs.glide.ksp)
 
     testImplementation(libs.bundles.test.strikt)
     testImplementation(libs.test.arch.core)
