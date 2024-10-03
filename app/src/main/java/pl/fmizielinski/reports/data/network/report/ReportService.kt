@@ -1,9 +1,10 @@
 package pl.fmizielinski.reports.data.network.report
 
 import okhttp3.MultipartBody
-import pl.fmizielinski.reports.data.network.report.model.AddTemporaryAttachmentResponse
-import pl.fmizielinski.reports.data.network.report.model.CreateReportRequest
-import pl.fmizielinski.reports.data.network.report.model.CreateReportResponse
+import pl.fmizielinski.reports.data.network.report.model.AddTemporaryAttachmentResponseModel
+import pl.fmizielinski.reports.data.network.report.model.CreateReportRequestModel
+import pl.fmizielinski.reports.data.network.report.model.CreateReportResponseModel
+import pl.fmizielinski.reports.data.network.report.model.ReportDetailsResponseModel
 import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -24,7 +25,7 @@ interface ReportService {
         "Accept: application/json",
         "Content-Type: application/json",
     )
-    suspend fun createReport(@Body request: CreateReportRequest): CreateReportResponse
+    suspend fun createReport(@Body request: CreateReportRequestModel): CreateReportResponseModel
 
     @Multipart
     @POST("/report/{id}/attachment")
@@ -37,5 +38,9 @@ interface ReportService {
     @POST("/report/attachment")
     suspend fun addTemporaryAttachment(
         @Part attachment: MultipartBody.Part,
-    ): AddTemporaryAttachmentResponse
+    ): AddTemporaryAttachmentResponseModel
+
+    @GET("/report/{id}")
+    @Headers("Content-Type: application/json")
+    suspend fun getReportDetails(@Path("id") id: Int): ReportDetailsResponseModel
 }
