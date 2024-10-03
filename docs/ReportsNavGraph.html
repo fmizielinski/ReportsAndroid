@@ -18,10 +18,11 @@ auth(["AuthGraph"]) --- Register("RegisterScreen")
 main(["MainGraph"]) -- "start" --- Reports("ReportsScreen")
 main(["MainGraph"]) --- AttachmentGallery("AttachmentGalleryScreen")
 main(["MainGraph"]) --- CreateReport("CreateReportScreen")
+main(["MainGraph"]) --- ReportDetails("ReportDetailsScreen")
 
 
 classDef destination fill:#5383EC,stroke:#ffffff;
-class Login,Register,AttachmentGallery,CreateReport,Reports destination;
+class Login,Register,AttachmentGallery,CreateReport,ReportDetails,Reports destination;
 classDef navgraph fill:#63BC76,stroke:#ffffff;
 class auth,main,reports,auth,main navgraph;
 

@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.tooling.preview.Devices
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -18,6 +20,7 @@ import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.UiE
 import pl.fmizielinski.reports.ui.main.attachment.AttachmentGalleryViewModel.UiState
 import pl.fmizielinski.reports.ui.main.attachment.model.AttachmentGalleryNavArgs
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
+import pl.fmizielinski.reports.ui.theme.ReportsTheme
 import kotlin.math.absoluteValue
 
 @Destination<MainGraph>(
@@ -76,3 +79,16 @@ fun AttachmentGalleryContent(
         )
     }
 }
+
+@Preview(showBackground = true, device = Devices.PIXEL_4)
+@Composable
+private fun AttachmentGalleryScreenPreview() {
+    ReportsTheme {
+        AttachmentGalleryContent(previewUiState)
+    }
+}
+
+private val previewUiState = UiState(
+    initialIndex = 1,
+    attachments = emptyList(),
+)
