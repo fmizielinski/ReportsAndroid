@@ -5,5 +5,11 @@ data class ReportDetails(
     val title: String,
     val description: String,
     val reportDate: String,
-    val attachments: List<String>,
-)
+    val attachments: List<Attachment>,
+) {
+
+    data class Attachment(
+        val id: Int,
+        val path: String,
+    )
+}

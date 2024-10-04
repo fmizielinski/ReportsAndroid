@@ -30,5 +30,12 @@ fun ReportDetailsResponseModel.toReportDetails(
     title = title,
     description = description,
     reportDate = dateFormatter.formatReportDetailsDate(reportDate),
-    attachments = attachments.map { "$attachmentPath${it.id}" },
+    attachments = attachments.map { it.toAttachment(attachmentPath) },
+)
+
+fun ReportDetailsResponseModel.AttachmentModel.toAttachment(
+    attachmentPath: String,
+) = ReportDetails.Attachment(
+    id = id,
+    path = "$attachmentPath$id",
 )

@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,7 +24,6 @@ import androidx.compose.ui.unit.sp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
-import pl.fmizielinski.reports.domain.report.model.ReportDetails
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
@@ -41,12 +41,18 @@ fun ReportDetailsScreen() {
     BaseScreen<ReportDetailsViewModel, UiState, UiEvent> {
         ReportDetailsContent(
             uiState = state.value,
+            callbacks = ReportDetailsCallbacks(
+                onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
+            ),
         )
     }
 }
 
 @Composable
-fun ReportDetailsContent(uiState: UiState) {
+fun ReportDetailsContent(
+    uiState: UiState,
+    callbacks: ReportDetailsCallbacks,
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -56,12 +62,16 @@ fun ReportDetailsContent(uiState: UiState) {
             )
         }
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(Margin),
         ) {
             uiState.report?.let { report ->
                 if (report.attachments.isNotEmpty()) {
-                    Attachments(report.attachments)
+                    Attachments(
+                        attachments = report.attachments,
+                        callbacks = callbacks,
+                    )
                 }
                 Details(report)
             }
@@ -71,7 +81,10 @@ fun ReportDetailsContent(uiState: UiState) {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
-fun Attachments(attachments: List<String>) {
+fun Attachments(
+    attachments: List<UiState.ReportDetails.Attachment>,
+    callbacks: ReportDetailsCallbacks,
+) {
     val carouselState = rememberCarouselState { attachments.size }
     HorizontalMultiBrowseCarousel(
         state = carouselState,
@@ -79,11 +92,18 @@ fun Attachments(attachments: List<String>) {
         itemSpacing = 16.dp,
         modifier = Modifier.padding(bottom = 16.dp),
     ) { index ->
-        Card(shape = RoundedCornerShape(16.dp)) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.clickable {
+                val id = attachments[index].id
+                callbacks.onAttachmentClicked(id)
+            },
+        ) {
             GlideImage(
-                model = attachments[index],
+                model = attachments[index].path,
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .aspectRatio(1f),
                 contentScale = ContentScale.Crop,
             )
@@ -92,7 +112,7 @@ fun Attachments(attachments: List<String>) {
 }
 
 @Composable
-fun Details(report: ReportDetails) {
+fun Details(report: UiState.ReportDetails) {
     Text(
         text = report.title,
         fontWeight = FontWeight.Medium,
@@ -111,22 +131,33 @@ fun Details(report: ReportDetails) {
     )
 }
 
+data class ReportDetailsCallbacks(
+    val onAttachmentClicked: (Int) -> Unit,
+)
+
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 private fun ReportDetailsScreenPreview() {
     ReportsTheme {
-        ReportDetailsContent(previewUiState)
+        ReportDetailsContent(
+            uiState = previewUiState,
+            callbacks = emptyCallbacks,
+        )
     }
 }
 
 @Suppress("MaxLineLength")
 private val previewUiState = UiState(
     isLoading = false,
-    report = ReportDetails(
+    report = UiState.ReportDetails(
         id = 1,
         title = "Title",
         description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
         reportDate = "2021-01-01, 13:11",
         attachments = emptyList(),
     ),
+)
+
+private val emptyCallbacks = ReportDetailsCallbacks(
+    onAttachmentClicked = {},
 )

@@ -7,14 +7,17 @@ import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.report.model.ReportDetails
+import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.destinations.destinations.AttachmentGalleryDestination
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.Event
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.State
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
+import pl.fmizielinski.reports.ui.navigation.DestinationData
 
 @KoinViewModel
 class ReportDetailsViewModel(
@@ -22,6 +25,7 @@ class ReportDetailsViewModel(
     handle: SavedStateHandle,
     private val eventsRepository: EventsRepository,
     private val getReportDetailsUseCase: GetReportDetailsUseCase,
+    private val getAttachmentGalleryNavArgsUseCase: GetReportDetailsAttachmentGalleryNavArgsUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(
     dispatcher = dispatcher,
     mState = createState(handle),
@@ -32,13 +36,28 @@ class ReportDetailsViewModel(
             is Event.LoadReportDetails -> handleLoadReportDetails(state)
             is Event.ReportDetailsLoaded -> handleReportDetailsLoaded(state, event)
             is Event.LoadReportDetailsFailed -> handleLoadReportDetailsFailed(state, event)
+            is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
         }
     }
 
     override fun mapState(state: State): UiState {
+        val report = state.report?.let {
+            UiState.ReportDetails(
+                id = it.id,
+                title = it.title,
+                description = it.description,
+                reportDate = it.reportDate,
+                attachments = it.attachments.map { attachment ->
+                    UiState.ReportDetails.Attachment(
+                        id = attachment.id,
+                        path = attachment.path,
+                    )
+                },
+            )
+        }
         return UiState(
             isLoading = state.isLoading,
-            report = state.report,
+            report = report,
         )
     }
 
@@ -79,6 +98,20 @@ class ReportDetailsViewModel(
 
     // endregion handle Event
 
+    // region handle UiEvent
+
+    private fun handlePreviewAttachment(state: State, event: UiEvent.PreviewAttachment): State {
+        scope.launch {
+            checkNotNull(state.report)
+            val navArgs = getAttachmentGalleryNavArgsUseCase(event.id, state.report.attachments)
+            val destination = DestinationData(AttachmentGalleryDestination(navArgs))
+            eventsRepository.postNavEvent(destination)
+        }
+        return state
+    }
+
+    // endregion handle UiEvent
+
     data class State(
         val id: Int,
         val isLoading: Boolean = true,
@@ -88,7 +121,22 @@ class ReportDetailsViewModel(
     data class UiState(
         val isLoading: Boolean,
         val report: ReportDetails?,
-    )
+    ) {
+
+        data class ReportDetails(
+            val id: Int,
+            val title: String,
+            val description: String,
+            val reportDate: String,
+            val attachments: List<Attachment>,
+        ) {
+
+            data class Attachment(
+                val id: Int,
+                val path: String,
+            )
+        }
+    }
 
     sealed interface Event {
         data object LoadReportDetails : Event
@@ -96,7 +144,9 @@ class ReportDetailsViewModel(
         data class LoadReportDetailsFailed(val error: SimpleErrorException) : Event
     }
 
-    sealed interface UiEvent : Event
+    sealed interface UiEvent : Event {
+        data class PreviewAttachment(val id: Int) : UiEvent
+    }
 }
 
 private fun createState(handle: SavedStateHandle): State {
