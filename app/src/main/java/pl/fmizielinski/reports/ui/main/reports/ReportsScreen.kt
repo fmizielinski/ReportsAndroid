@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui.main.reports
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,6 +54,7 @@ fun ReportsScreen() {
                     postUiEvent(UiEvent.ListScrolled(firstItemIndex))
                 },
                 onListRefresh = { postUiEvent(UiEvent.Refresh) },
+                onReportClicked = { postUiEvent(UiEvent.ReportClicked(it)) },
             ),
         )
     }
@@ -106,7 +109,10 @@ fun ReportsListContent(
             item { EmptyListPlaceholder() }
         } else {
             itemsIndexed(uiState.reports) { index, report ->
-                ReportItem(uiState = report)
+                ReportItem(
+                    uiState = report,
+                    onReportClicked = callbacks.onReportClicked,
+                )
                 if (index != uiState.reports.lastIndex) {
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = Margin),
@@ -135,10 +141,12 @@ fun EmptyListPlaceholder() {
 @Composable
 fun ReportItem(
     uiState: UiState.Report,
+    onReportClicked: (Int) -> Unit,
 ) {
     ConstraintLayout(
         modifier = Modifier.padding(Margin)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { onReportClicked(uiState.id) },
     ) {
         val title = createRef()
         val description = createRef()
@@ -148,6 +156,8 @@ fun ReportItem(
             text = uiState.title,
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.constrainAs(title) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
@@ -156,6 +166,8 @@ fun ReportItem(
         Text(
             text = uiState.description,
             fontSize = 16.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.constrainAs(description) {
                 top.linkTo(title.bottom)
                 start.linkTo(parent.start)
@@ -207,6 +219,7 @@ fun CommentsIndicator(
 data class ReportsCallbacks(
     val onListScrolled: (firstItemIndex: Int) -> Unit,
     val onListRefresh: () -> Unit,
+    val onReportClicked: (Int) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -250,6 +263,7 @@ private val previewUiStateEmpty = UiState(
 private val emptyCallbacks = ReportsCallbacks(
     onListScrolled = {},
     onListRefresh = {},
+    onReportClicked = {},
 )
 
 private fun previewReport() = UiState.Report(

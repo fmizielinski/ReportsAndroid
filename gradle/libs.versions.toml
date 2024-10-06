@@ -1,7 +1,7 @@
 [versions]
 accompanist = "0.36.0"
 activityCompose = "1.9.2"
-agp = "8.8.0-alpha04"
+agp = "8.8.0-alpha05"
 composeBom = "2024.09.00"
 composeConstraintLayout = "1.0.1"
 composeDestinations = "2.1.0-beta11"
@@ -92,13 +92,16 @@ navigation-ui = { module = "androidx.navigation:navigation-ui-ktx", version.ref 
 
 # region glide
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-annotations = { module = "com.github.bumptech.glide:annotations", version.ref = "glide" }
 glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glideCompose" }
+glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }
+glide-okhttp = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 # endregion
 
 [bundles]
 compose = ["compose-material", "compose-ui", "compose-ui-tooling-preview", "compose-constraintLayout", "compose-destinations"]
 compose-debug = ["compose-ui-test-manifest", "compose-ui-tooling"]
-glide = ["glide", "glide-compose"]
+glide = ["glide", "glide-compose", "glide-annotations", "glide-okhttp"]
 koin = ["koin", "koin-compose", "koin-annotations", "koin-compose-navigation"]
 navigation = ["navigation-ui", "navigation-fragment", "navigation-compose"]
 retrofit = ["retrofit", "retrofit-converter-serialization"]

@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import app.cash.turbine.test
 import io.mockk.coEvery
@@ -18,7 +18,6 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.UPLOAD_FA
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult.Complete
 import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult.Progress
-import pl.fmizielinski.reports.domain.report.usecase.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.addTemporaryAttachmentResponse
 import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData

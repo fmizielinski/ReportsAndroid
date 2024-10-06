@@ -55,7 +55,10 @@ fun String?.getAppBarUiState(isLoading: Boolean) = when (this) {
         navigationIcon = CLOSE,
     )
 
-    else -> ReportsTopAppBarUiState(isEnabled = !isLoading)
+    else -> ReportsTopAppBarUiState(
+        destination = this,
+        isEnabled = !isLoading,
+    )
 }
 
 fun String?.getFabUiState(): FabUiState? {

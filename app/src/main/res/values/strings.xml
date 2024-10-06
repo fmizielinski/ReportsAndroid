@@ -52,6 +52,7 @@
     <string name="registerScreen_label_passwordConfirmation">Confirm password</string>
     <string name="registerScreen_label_surname">Surname</string>
     <string name="registerScreen_title">Register</string>
+    <string name="reportDetailsScreen_error_loading">Unable to load report details</string>
     <string name="reportsScreen_label_emptyList">No reports available</string>
     <string name="reportsScreen_title">Reports</string>
 </resources>

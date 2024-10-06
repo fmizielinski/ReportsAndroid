@@ -19,11 +19,11 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.INVALID_D
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Report.Create.TITLE_EMPTY
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.report.model.CreateReportData
-import pl.fmizielinski.reports.domain.repository.EventsRepository
-import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.report.usecase.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.domain.report.usecase.CreateReportUseCase
-import pl.fmizielinski.reports.domain.report.usecase.GetAttachmentGalleryNavArgsUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetCreateReportAttachmentGalleryNavArgsUseCase
+import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.fixtures.domain.addTemporaryAttachmentData
 import pl.fmizielinski.reports.fixtures.domain.completeTemporaryAttachmentUploadResult
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
@@ -49,7 +49,7 @@ class CreateReportViewModelTest : BaseViewModelTest<CreateReportViewModel, UiEve
 
     private val createReportUseCase: CreateReportUseCase = mockk()
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase = mockk()
-    private val getAttachmentGalleryNavArgsUseCase: GetAttachmentGalleryNavArgsUseCase = mockk()
+    private val getAttachmentGalleryNavArgsUseCase: GetCreateReportAttachmentGalleryNavArgsUseCase = mockk()
     private val eventsRepository = spyk(EventsRepository())
 
     override fun createViewModel(dispatcher: TestDispatcher) = CreateReportViewModel(

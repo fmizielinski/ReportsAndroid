@@ -59,7 +59,7 @@ abstract class BaseAddAttachmentUseCase<Data : AddAttachmentData, Result> : Base
         progressListener: ProgressListener,
     ) = file.createMultipartBody(progressListener = progressListener)
 
-    protected fun HttpException.toErrorException(): ErrorException {
+    override fun HttpException.toErrorException(): ErrorException {
         return if (code() == 400) {
             val exceptions = parseErrorBody().map { error ->
                 when (error.code) {

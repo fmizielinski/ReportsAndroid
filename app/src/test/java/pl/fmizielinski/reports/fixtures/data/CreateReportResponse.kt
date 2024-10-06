@@ -1,9 +1,9 @@
 package pl.fmizielinski.reports.fixtures.data
 
-import pl.fmizielinski.reports.data.network.report.model.CreateReportResponse
+import pl.fmizielinski.reports.data.network.report.model.CreateReportResponseModel
 
 fun createReportResponse(
     id: Int = 1,
-) = CreateReportResponse(
+) = CreateReportResponseModel(
     id = id,
 )

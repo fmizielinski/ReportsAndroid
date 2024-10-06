@@ -15,11 +15,11 @@ import pl.fmizielinski.reports.domain.report.model.AddTemporaryAttachmentData
 import pl.fmizielinski.reports.domain.report.model.AttachmentData
 import pl.fmizielinski.reports.domain.report.model.CreateReportData
 import pl.fmizielinski.reports.domain.report.model.TemporaryAttachmentUploadResult
-import pl.fmizielinski.reports.domain.repository.EventsRepository
-import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.report.usecase.AddTemporaryAttachmentUseCase
 import pl.fmizielinski.reports.domain.report.usecase.CreateReportUseCase
-import pl.fmizielinski.reports.domain.report.usecase.GetAttachmentGalleryNavArgsUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetCreateReportAttachmentGalleryNavArgsUseCase
+import pl.fmizielinski.reports.domain.repository.EventsRepository
+import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.ui.base.BaseViewModel
 import pl.fmizielinski.reports.ui.base.ErrorHandler
 import pl.fmizielinski.reports.ui.base.ErrorHandler.VerificationError
@@ -43,7 +43,7 @@ class CreateReportViewModel(
     private val eventsRepository: EventsRepository,
     private val createReportUseCase: CreateReportUseCase,
     private val addTemporaryAttachmentUseCase: AddTemporaryAttachmentUseCase,
-    private val getAttachmentGalleryNavArgsUseCase: GetAttachmentGalleryNavArgsUseCase,
+    private val getAttachmentGalleryNavArgsUseCase: GetCreateReportAttachmentGalleryNavArgsUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()), ErrorHandler {
 
     init {

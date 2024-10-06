@@ -41,7 +41,7 @@ class LoginUseCase(
         )
     }
 
-    private fun HttpException.toErrorException(): SimpleErrorException {
+    override fun HttpException.toErrorException(): SimpleErrorException {
         return when (code()) {
             401 -> SimpleErrorException(
                 uiMessage = R.string.loginScreen_error_invalidCredentials,
