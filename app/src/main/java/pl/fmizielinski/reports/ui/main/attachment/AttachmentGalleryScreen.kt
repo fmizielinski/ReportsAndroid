@@ -82,7 +82,7 @@ fun AttachmentGalleryContent(
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-private fun AttachmentGalleryScreenPreview() {
+fun AttachmentGalleryScreenPreview() {
     ReportsTheme {
         AttachmentGalleryContent(previewUiState)
     }

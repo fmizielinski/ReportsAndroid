@@ -137,7 +137,7 @@ data class ReportDetailsCallbacks(
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-private fun ReportDetailsScreenPreview() {
+fun ReportDetailsScreenPreview() {
     ReportsTheme {
         ReportDetailsContent(
             uiState = previewUiState,
