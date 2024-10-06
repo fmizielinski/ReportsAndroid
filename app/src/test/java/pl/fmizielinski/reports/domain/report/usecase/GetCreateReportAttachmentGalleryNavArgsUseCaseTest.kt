@@ -1,7 +1,6 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import org.junit.jupiter.api.Test
-import pl.fmizielinski.reports.domain.report.usecase.GetCreateReportAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.fixtures.domain.attachmentData
 import strikt.api.expectThat
 import strikt.assertions.contains

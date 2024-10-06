@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.auth
+package pl.fmizielinski.reports.domain.auth.usecase
 
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -9,7 +9,6 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.db.dao.TokenDao
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.auth.model.LoginResponseModel
-import pl.fmizielinski.reports.domain.auth.usecase.LoginUseCase
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.loginResponseModel

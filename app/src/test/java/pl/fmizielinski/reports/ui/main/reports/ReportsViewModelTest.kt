@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.ui.reports
+package pl.fmizielinski.reports.ui.main.reports
 
 import app.cash.turbine.testIn
 import io.mockk.coEvery
@@ -16,8 +16,10 @@ import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
+import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
+import pl.fmizielinski.reports.ui.navigation.DestinationData
 import strikt.api.expectThat
 import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
@@ -134,6 +136,19 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
         scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { eventsRepository.postGlobalEvent(GlobalEvent.ChangeFabVisibility(false)) }
+
+        uiState.cancelAndIgnoreRemainingEvents()
+    }
+
+    @Test
+    fun `WHEN report clicked THEN post ReportDetailsDestination nav event`() = runTurbineTest {
+        val id = 1
+        val uiState = viewModel.uiState.testIn(context)
+
+        postUiEvent(UiEvent.ReportClicked(id))
+        scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 1) { eventsRepository.postNavEvent(DestinationData(ReportDetailsDestination(id))) }
 
         uiState.cancelAndIgnoreRemainingEvents()
     }

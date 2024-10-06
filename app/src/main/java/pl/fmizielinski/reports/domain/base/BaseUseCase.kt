@@ -48,4 +48,8 @@ abstract class BaseUseCase {
             else -> CompositeErrorException(this)
         }
     }
+
+    protected open fun HttpException.toErrorException(): ErrorException {
+        return genericErrorException(this)
+    }
 }

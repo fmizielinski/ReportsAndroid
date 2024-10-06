@@ -27,7 +27,7 @@ class CreateReportUseCase(
         )
     }
 
-    private fun HttpException.toErrorException(): ErrorException {
+    override fun HttpException.toErrorException(): ErrorException {
         return if (code() == 400) {
             val exceptions = parseErrorBody().map { error ->
                 when (error.code) {

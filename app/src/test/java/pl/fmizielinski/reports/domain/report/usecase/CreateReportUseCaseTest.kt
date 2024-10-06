@@ -1,4 +1,4 @@
-package pl.fmizielinski.reports.domain.usecase.report
+package pl.fmizielinski.reports.domain.report.usecase
 
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -8,7 +8,6 @@ import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.error.ErrorReasons
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
-import pl.fmizielinski.reports.domain.report.usecase.CreateReportUseCase
 import pl.fmizielinski.reports.fixtures.common.httpException
 import pl.fmizielinski.reports.fixtures.data.createReportResponse
 import pl.fmizielinski.reports.fixtures.domain.createReportData

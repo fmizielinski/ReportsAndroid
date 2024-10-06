@@ -153,13 +153,16 @@ koverReport {
                 "*Interceptor*",
                 "*MainViewModelKt*",
                 "*NumberKt*",
+                "*PathProvider*",
                 "*ReportsApplication*",
                 "*ReportsDatabase*",
+                "*ReportsGlideModule*",
                 "*Screen*",
                 "*Serializer*",
             )
             packages(
                 "*.model",
+                "com.bumptech.glide",
                 "org.koin.ksp.generated",
                 "pl.fmizielinski.reports.data.db.dao",
                 "pl.fmizielinski.reports.data.network.utils",
