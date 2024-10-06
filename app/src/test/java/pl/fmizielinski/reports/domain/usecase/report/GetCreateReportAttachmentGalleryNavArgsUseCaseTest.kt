@@ -1,7 +1,7 @@
 package pl.fmizielinski.reports.domain.usecase.report
 
 import org.junit.jupiter.api.Test
-import pl.fmizielinski.reports.domain.report.usecase.GetAttachmentGalleryNavArgsUseCase
+import pl.fmizielinski.reports.domain.report.usecase.GetCreateReportAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.fixtures.domain.attachmentData
 import strikt.api.expectThat
 import strikt.assertions.contains
@@ -9,9 +9,9 @@ import strikt.assertions.hasSize
 import strikt.assertions.isEqualTo
 import java.io.File
 
-class GetAttachmentGalleryNavArgsTest {
+class GetCreateReportAttachmentGalleryNavArgsUseCaseTest {
 
-    private val useCase = GetAttachmentGalleryNavArgsUseCase()
+    private val useCase = GetCreateReportAttachmentGalleryNavArgsUseCase()
 
     @Test
     fun `WHEN invoke THEN return nav args`() {

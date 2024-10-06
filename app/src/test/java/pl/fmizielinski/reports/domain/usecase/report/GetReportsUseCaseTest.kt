@@ -46,7 +46,7 @@ class GetReportsUseCaseTest {
             reports = listOf(reportModel),
         )
         coEvery { reportService.getReports() } returns reportsResponseModel
-        every { dateFormatter.formatReportListDate(reportDate) } returns formattedDate
+        every { dateFormatter.formatReportListDate(reportDate, any()) } returns formattedDate
 
         val result = useCase()
 
