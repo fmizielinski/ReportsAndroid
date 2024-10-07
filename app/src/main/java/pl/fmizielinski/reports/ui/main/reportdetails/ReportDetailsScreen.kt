@@ -6,24 +6,37 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintSet
+import androidx.constraintlayout.compose.Dimension
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
@@ -43,6 +56,7 @@ fun ReportDetailsScreen() {
             uiState = state.value,
             callbacks = ReportDetailsCallbacks(
                 onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
+                onTabClicked = { postUiEvent(UiEvent.TabClicked(it)) },
             ),
         )
     }
@@ -56,6 +70,10 @@ fun ReportDetailsContent(
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
+        Tabs(
+            uiState = uiState,
+            onTabClicked = callbacks.onTabClicked,
+        )
         if (uiState.isLoading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
@@ -66,16 +84,86 @@ fun ReportDetailsContent(
                 .fillMaxSize()
                 .padding(Margin),
         ) {
-            uiState.report?.let { report ->
-                if (report.attachments.isNotEmpty()) {
-                    Attachments(
-                        attachments = report.attachments,
-                        callbacks = callbacks,
-                    )
-                }
-                Details(report)
-            }
+            TabsContent(
+                uiState = uiState,
+                callbacks = callbacks,
+            )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Tabs(
+    uiState: UiState,
+    onTabClicked: (UiState.Tab) -> Unit,
+) {
+    SecondaryTabRow(
+        selectedTabIndex = uiState.selectedTabIndex,
+    ) {
+        Tab(
+            selected = uiState.selectedTab == UiState.Tab.DETAILS,
+            onClick = { onTabClicked(UiState.Tab.DETAILS) },
+            modifier = Modifier.padding(vertical = 8.dp),
+        ) {
+            Text(text = stringResource(R.string.reportDetailsScreen_label_details))
+        }
+        Tab(
+            selected = uiState.selectedTab == UiState.Tab.COMMENTS,
+            onClick = { onTabClicked(UiState.Tab.COMMENTS) },
+            modifier = Modifier.padding(vertical = 8.dp),
+        ) {
+            Text(text = stringResource(R.string.reportDetailsScreen_label_comments))
+        }
+    }
+}
+
+@Composable
+fun TabsContent(
+    uiState: UiState,
+    callbacks: ReportDetailsCallbacks,
+) {
+    when (uiState.selectedTab) {
+        UiState.Tab.DETAILS -> uiState.report?.let {
+            Details(
+                report = it,
+                onAttachmentClicked = callbacks.onAttachmentClicked,
+            )
+        }
+
+        UiState.Tab.COMMENTS -> Comments(uiState.comments)
+    }
+}
+
+@Composable
+fun Details(
+    report: UiState.ReportDetails,
+    onAttachmentClicked: (Int) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Attachments(
+            attachments = report.attachments,
+            onAttachmentClicked = onAttachmentClicked,
+        )
+        Text(
+            text = report.title,
+            fontWeight = FontWeight.Medium,
+            fontSize = 22.sp,
+        )
+        Text(
+            text = report.reportDate,
+            fontWeight = FontWeight.Light,
+            fontSize = 10.sp,
+        )
+        Text(
+            text = report.description,
+            fontWeight = FontWeight.Normal,
+            fontSize = 16.sp,
+            modifier = Modifier.padding(top = 12.dp, bottom = 6.dp),
+        )
     }
 }
 
@@ -83,7 +171,7 @@ fun ReportDetailsContent(
 @Composable
 fun Attachments(
     attachments: List<UiState.ReportDetails.Attachment>,
-    callbacks: ReportDetailsCallbacks,
+    onAttachmentClicked: (Int) -> Unit,
 ) {
     val carouselState = rememberCarouselState { attachments.size }
     HorizontalMultiBrowseCarousel(
@@ -96,7 +184,7 @@ fun Attachments(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.clickable {
                 val id = attachments[index].id
-                callbacks.onAttachmentClicked(id)
+                onAttachmentClicked(id)
             },
         ) {
             GlideImage(
@@ -112,27 +200,94 @@ fun Attachments(
 }
 
 @Composable
-fun Details(report: UiState.ReportDetails) {
-    Text(
-        text = report.title,
-        fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-    )
-    Text(
-        text = report.reportDate,
-        fontWeight = FontWeight.Light,
-        fontSize = 10.sp,
-    )
-    Text(
-        text = report.description,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        modifier = Modifier.padding(top = 12.dp),
-    )
+fun Comments(comments: List<UiState.Comment>) {
+    if (comments.isNotEmpty()) {
+        val state = rememberLazyListState(comments.lastIndex)
+        LazyColumn(
+            state = state,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items(comments) { comment ->
+                Comment(comment)
+            }
+        }
+    }
+}
+
+@Composable
+fun Comment(comment: UiState.Comment) {
+    val constraints = commentConstraintSet(comment.isMine)
+    ConstraintLayout(
+        modifier = Modifier.fillMaxWidth(),
+        constraintSet = constraints,
+    ) {
+        Text(
+            text = comment.user,
+            fontWeight = FontWeight.Light,
+            fontSize = 12.sp,
+            modifier = Modifier.layoutId(CommentConstraints.USER),
+        )
+        Card(
+            modifier = Modifier.layoutId(CommentConstraints.COMMENT),
+        ) {
+            Text(
+                text = comment.comment,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(8.dp),
+            )
+        }
+        Text(
+            text = comment.createDate,
+            fontWeight = FontWeight.Light,
+            fontSize = 10.sp,
+            modifier = Modifier.layoutId(CommentConstraints.DATE),
+        )
+    }
+}
+
+private object CommentConstraints {
+    const val USER = "user"
+    const val COMMENT = "comment"
+    const val DATE = "date"
+}
+
+private fun commentConstraintSet(isMine: Boolean): ConstraintSet {
+    return ConstraintSet {
+        val user = createRefFor(CommentConstraints.USER)
+        val comment = createRefFor(CommentConstraints.COMMENT)
+        val date = createRefFor(CommentConstraints.DATE)
+
+        @Suppress("MagicNumber")
+        val guideline = if (isMine) {
+            createGuidelineFromEnd(0.6f)
+        } else {
+            createGuidelineFromStart(0.6f)
+        }
+
+        constrain(user) {
+            top.linkTo(parent.top)
+            start.linkTo(comment.start)
+        }
+        constrain(comment) {
+            top.linkTo(user.bottom)
+            if (isMine) {
+                linkTo(guideline, parent.end, bias = 1f)
+            } else {
+                linkTo(parent.start, guideline, bias = 0f)
+            }
+            width = Dimension.preferredWrapContent
+        }
+        constrain(date) {
+            top.linkTo(comment.bottom)
+            end.linkTo(comment.end)
+        }
+    }
 }
 
 data class ReportDetailsCallbacks(
     val onAttachmentClicked: (Int) -> Unit,
+    val onTabClicked: (UiState.Tab) -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -157,10 +312,46 @@ private val previewUiState = UiState(
         attachments = emptyList(),
     ),
     comments = listOf(
-
-    )
+        UiState.Comment(
+            id = 1,
+            comment = "Comment 1",
+            user = "User user",
+            createDate = "2021-01-01, 13:11",
+            isMine = true,
+        ),
+        UiState.Comment(
+            id = 2,
+            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            user = "User user",
+            createDate = "2021-01-01, 13:11",
+            isMine = true,
+        ),
+        UiState.Comment(
+            id = 3,
+            comment = "Comment 3",
+            user = "User2 user2",
+            createDate = "2021-01-01, 13:11",
+            isMine = false,
+        ),
+        UiState.Comment(
+            id = 4,
+            comment = "Comment 4",
+            user = "User user",
+            createDate = "2021-01-01, 13:11",
+            isMine = true,
+        ),
+        UiState.Comment(
+            id = 5,
+            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            user = "User2 user2",
+            createDate = "2021-01-01, 13:11",
+            isMine = false,
+        ),
+    ),
+    selectedTab = UiState.Tab.DETAILS,
 )
 
 private val emptyCallbacks = ReportDetailsCallbacks(
     onAttachmentClicked = {},
+    onTabClicked = {},
 )

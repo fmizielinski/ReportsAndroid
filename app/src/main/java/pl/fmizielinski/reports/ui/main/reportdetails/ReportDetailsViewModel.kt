@@ -43,14 +43,20 @@ class ReportDetailsViewModel(
             is Event.CommentsLoaded -> handleCommentsLoaded(state, event)
             is Event.LoadCommentsFailed -> handleLoadCommentsFailed(state, event)
             is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
+            is UiEvent.TabClicked -> handleTabClicked(state, event)
         }
     }
 
     override fun mapState(state: State): UiState {
+        val selectedTab = when (state.selectedTab) {
+            State.Tab.DETAILS -> UiState.Tab.DETAILS
+            State.Tab.COMMENTS -> UiState.Tab.COMMENTS
+        }
         return UiState(
             isLoading = state.isReportLoading || state.isCommentsLoading,
             report = getReportDetailsUiState(state.report),
             comments = getCommentsUiState(state.comments),
+            selectedTab = selectedTab,
         )
     }
 
@@ -160,6 +166,14 @@ class ReportDetailsViewModel(
         return state
     }
 
+    private fun handleTabClicked(state: State, event: UiEvent.TabClicked): State {
+        val selectedTab = when (event.tab) {
+            UiState.Tab.DETAILS -> State.Tab.DETAILS
+            UiState.Tab.COMMENTS -> State.Tab.COMMENTS
+        }
+        return state.copy(selectedTab = selectedTab)
+    }
+
     // endregion handle UiEvent
 
     data class State(
@@ -168,13 +182,27 @@ class ReportDetailsViewModel(
         val report: ReportDetails? = null,
         val isCommentsLoading: Boolean = true,
         val comments: List<Comment> = emptyList(),
-    )
+        val selectedTab: Tab = Tab.DETAILS,
+    ) {
+
+        enum class Tab {
+            DETAILS,
+            COMMENTS,
+        }
+    }
 
     data class UiState(
         val isLoading: Boolean,
         val report: ReportDetails?,
         val comments: List<UiState.Comment>,
+        val selectedTab: Tab,
     ) {
+
+        val selectedTabIndex: Int
+            get() = when (selectedTab) {
+                Tab.DETAILS -> 0
+                Tab.COMMENTS -> 1
+            }
 
         data class ReportDetails(
             val id: Int,
@@ -197,6 +225,11 @@ class ReportDetailsViewModel(
             val createDate: String,
             val isMine: Boolean,
         )
+
+        enum class Tab {
+            DETAILS,
+            COMMENTS,
+        }
     }
 
     sealed interface Event {
@@ -210,6 +243,7 @@ class ReportDetailsViewModel(
 
     sealed interface UiEvent : Event {
         data class PreviewAttachment(val id: Int) : UiEvent
+        data class TabClicked(val tab: UiState.Tab) : UiEvent
     }
 }
 
