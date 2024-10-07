@@ -20,12 +20,24 @@ class DateFormatter(locale: Locale = Locale.getDefault()) {
     private val fileNameFormatter by lazy {
         DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", locale)
     }
+    private val commentTodayDateFormatter by lazy {
+        DateTimeFormatter.ofPattern("HH:mm", locale)
+    }
+    private val commentWeekDateFormatter by lazy {
+        DateTimeFormatter.ofPattern("EEEE, HH:mm", locale)
+    }
+    private val commentDateFormatter by lazy {
+        DateTimeFormatter.ofPattern("d LLL, HH:mm", locale)
+    }
+    private val commentYearDateFormatter by lazy {
+        DateTimeFormatter.ofPattern("d LLL yyyy, HH:mm", locale)
+    }
 
-    fun formatReportListDate(date: LocalDateTime, withYear: Boolean): String {
-        return if (withYear) {
-            reportListYearDateFormatter.format(date)
-        } else {
+    fun formatReportListDate(date: LocalDateTime, isCurrentYear: Boolean): String {
+        return if (isCurrentYear) {
             reportListDateFormatter.format(date)
+        } else {
+            reportListYearDateFormatter.format(date)
         }
     }
 
@@ -35,5 +47,17 @@ class DateFormatter(locale: Locale = Locale.getDefault()) {
 
     fun formatReportDetailsDate(date: LocalDateTime): String {
         return reportDetailsDateFormatter.format(date)
+    }
+
+    fun formatCommentDate(
+        date: LocalDateTime,
+        isToday: Boolean = false,
+        isCurrentWeek: Boolean = false,
+        isCurrentYear: Boolean = false,
+    ): String = when {
+        isToday -> commentTodayDateFormatter.format(date)
+        isCurrentWeek -> commentWeekDateFormatter.format(date)
+        isCurrentYear -> commentDateFormatter.format(date)
+        else -> commentYearDateFormatter.format(date)
     }
 }

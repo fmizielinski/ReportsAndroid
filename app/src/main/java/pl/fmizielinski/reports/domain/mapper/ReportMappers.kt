@@ -1,7 +1,9 @@
 package pl.fmizielinski.reports.domain.mapper
 
+import pl.fmizielinski.reports.data.network.report.model.CommentsResponseModel
 import pl.fmizielinski.reports.data.network.report.model.ReportDetailsResponseModel
 import pl.fmizielinski.reports.data.network.report.model.ReportsResponseModel
+import pl.fmizielinski.reports.domain.report.model.Comment
 import pl.fmizielinski.reports.domain.report.model.Report
 import pl.fmizielinski.reports.domain.report.model.ReportDetails
 import java.time.LocalDateTime
@@ -17,7 +19,7 @@ fun ReportsResponseModel.ReportModel.toReport(dateFormatter: DateFormatter): Rep
         id = id,
         title = title,
         description = description,
-        reportDate = dateFormatter.formatReportListDate(reportDate, withYear = !isCurrentYear),
+        reportDate = dateFormatter.formatReportListDate(reportDate, isCurrentYear),
         comments = comments,
     )
 }
@@ -39,3 +41,37 @@ fun ReportDetailsResponseModel.AttachmentModel.toAttachment(
     id = id,
     path = "$attachmentPath$id",
 )
+
+fun CommentsResponseModel.toComments(dateFormatter: DateFormatter) = comments.map {
+    it.toComment(dateFormatter)
+}
+
+fun CommentsResponseModel.CommentModel.toComment(
+    dateFormatter: DateFormatter,
+): Comment {
+    val now = LocalDateTime.now()
+    val date = when {
+        createDate.dayOfYear == now.dayOfYear -> {
+            dateFormatter.formatCommentDate(createDate, isToday = true)
+        }
+
+        now.dayOfYear - createDate.dayOfYear < 7 -> {
+            dateFormatter.formatCommentDate(createDate, isCurrentWeek = true)
+        }
+
+        createDate.year == now.year -> {
+            dateFormatter.formatCommentDate(createDate, isCurrentYear = true)
+        }
+
+        else -> {
+            dateFormatter.formatCommentDate(createDate)
+        }
+    }
+    return Comment(
+        id = id,
+        comment = comment,
+        user = user,
+        createDate = date,
+        isMine = isMine,
+    )
+}

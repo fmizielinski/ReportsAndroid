@@ -6,7 +6,9 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
+import pl.fmizielinski.reports.domain.report.model.Comment
 import pl.fmizielinski.reports.domain.report.model.ReportDetails
+import pl.fmizielinski.reports.domain.report.usecase.GetCommentsUseCase
 import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
@@ -26,6 +28,7 @@ class ReportDetailsViewModel(
     private val eventsRepository: EventsRepository,
     private val getReportDetailsUseCase: GetReportDetailsUseCase,
     private val getAttachmentGalleryNavArgsUseCase: GetReportDetailsAttachmentGalleryNavArgsUseCase,
+    private val getCommentsUseCase: GetCommentsUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(
     dispatcher = dispatcher,
     mState = createState(handle),
@@ -36,12 +39,23 @@ class ReportDetailsViewModel(
             is Event.LoadReportDetails -> handleLoadReportDetails(state)
             is Event.ReportDetailsLoaded -> handleReportDetailsLoaded(state, event)
             is Event.LoadReportDetailsFailed -> handleLoadReportDetailsFailed(state, event)
+            is Event.LoadComments -> handleLoadComments(state)
+            is Event.CommentsLoaded -> handleCommentsLoaded(state, event)
+            is Event.LoadCommentsFailed -> handleLoadCommentsFailed(state, event)
             is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
         }
     }
 
     override fun mapState(state: State): UiState {
-        val report = state.report?.let {
+        return UiState(
+            isLoading = state.isReportLoading || state.isCommentsLoading,
+            report = getReportDetailsUiState(state.report),
+            comments = getCommentsUiState(state.comments),
+        )
+    }
+
+    private fun getReportDetailsUiState(report: ReportDetails?): UiState.ReportDetails? {
+        return report?.let {
             UiState.ReportDetails(
                 id = it.id,
                 title = it.title,
@@ -55,15 +69,24 @@ class ReportDetailsViewModel(
                 },
             )
         }
-        return UiState(
-            isLoading = state.isLoading,
-            report = report,
-        )
+    }
+
+    private fun getCommentsUiState(comments: List<Comment>): List<UiState.Comment> {
+        return comments.map { comment ->
+            UiState.Comment(
+                id = comment.id,
+                comment = comment.comment,
+                user = comment.user,
+                createDate = comment.createDate,
+                isMine = comment.isMine,
+            )
+        }
     }
 
     override suspend fun onStart() {
         super.onStart()
         postEvent(Event.LoadReportDetails)
+        postEvent(Event.LoadComments)
     }
 
     // region handle Event
@@ -78,11 +101,11 @@ class ReportDetailsViewModel(
                 postEvent(Event.LoadReportDetailsFailed(error))
             }
         }
-        return state.copy(isLoading = true)
+        return state.copy(isReportLoading = true)
     }
 
     private fun handleReportDetailsLoaded(state: State, event: Event.ReportDetailsLoaded): State {
-        return state.copy(isLoading = false, report = event.report)
+        return state.copy(isReportLoading = false, report = event.report)
     }
 
     private fun handleLoadReportDetailsFailed(
@@ -93,7 +116,34 @@ class ReportDetailsViewModel(
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
             eventsRepository.postNavUpEvent()
         }
-        return state.copy(isLoading = false)
+        return state.copy(isReportLoading = false)
+    }
+
+    private fun handleLoadComments(state: State): State {
+        scope.launch {
+            try {
+                val comments = getCommentsUseCase(state.id)
+                postEvent(Event.CommentsLoaded(comments))
+            } catch (error: SimpleErrorException) {
+                logError(error)
+                postEvent(Event.LoadCommentsFailed(error))
+            }
+        }
+        return state.copy(isCommentsLoading = true)
+    }
+
+    private fun handleCommentsLoaded(state: State, event: Event.CommentsLoaded): State {
+        return state.copy(isCommentsLoading = false, comments = event.comments)
+    }
+
+    private fun handleLoadCommentsFailed(
+        state: State,
+        event: Event.LoadCommentsFailed,
+    ): State {
+        scope.launch {
+            eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
+        }
+        return state.copy(isCommentsLoading = false)
     }
 
     // endregion handle Event
@@ -114,13 +164,16 @@ class ReportDetailsViewModel(
 
     data class State(
         val id: Int,
-        val isLoading: Boolean = true,
+        val isReportLoading: Boolean = true,
         val report: ReportDetails? = null,
+        val isCommentsLoading: Boolean = true,
+        val comments: List<Comment> = emptyList(),
     )
 
     data class UiState(
         val isLoading: Boolean,
         val report: ReportDetails?,
+        val comments: List<UiState.Comment>,
     ) {
 
         data class ReportDetails(
@@ -136,12 +189,23 @@ class ReportDetailsViewModel(
                 val path: String,
             )
         }
+
+        data class Comment(
+            val id: Int,
+            val comment: String,
+            val user: String,
+            val createDate: String,
+            val isMine: Boolean,
+        )
     }
 
     sealed interface Event {
         data object LoadReportDetails : Event
         data class ReportDetailsLoaded(val report: ReportDetails) : Event
         data class LoadReportDetailsFailed(val error: SimpleErrorException) : Event
+        data object LoadComments : Event
+        data class CommentsLoaded(val comments: List<Comment>) : Event
+        data class LoadCommentsFailed(val error: SimpleErrorException) : Event
     }
 
     sealed interface UiEvent : Event {

@@ -156,6 +156,9 @@ private val previewUiState = UiState(
         reportDate = "2021-01-01, 13:11",
         attachments = emptyList(),
     ),
+    comments = listOf(
+
+    )
 )
 
 private val emptyCallbacks = ReportDetailsCallbacks(

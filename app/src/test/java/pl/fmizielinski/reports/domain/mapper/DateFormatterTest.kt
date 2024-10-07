@@ -14,7 +14,7 @@ class DateFormatterTest {
     fun formatReportListDate() {
         val date = LocalDateTime.of(2021, 6, 12, 0, 0)
 
-        val formattedDate = formatter.formatReportListDate(date, withYear = false)
+        val formattedDate = formatter.formatReportListDate(date, isCurrentYear = false)
         expectThat(formattedDate) isEqualTo "12 Jun"
     }
 
@@ -22,7 +22,7 @@ class DateFormatterTest {
     fun formatReportListDate_withYear() {
         val date = LocalDateTime.of(2021, 6, 12, 0, 0)
 
-        val formattedDate = formatter.formatReportListDate(date, withYear = true)
+        val formattedDate = formatter.formatReportListDate(date, isCurrentYear = true)
         expectThat(formattedDate) isEqualTo "12 Jun 2021"
     }
 
