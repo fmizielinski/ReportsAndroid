@@ -175,7 +175,7 @@ data class LoginCallbacks(
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-fun LoginScreenPreview() {
+private fun LoginScreenPreview() {
     ReportsTheme {
         LoginForm(
             uiState = previewUiState,

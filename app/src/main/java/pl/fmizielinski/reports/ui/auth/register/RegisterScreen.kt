@@ -301,7 +301,7 @@ private const val SURNAME_FOCUS_REQUESTER = "surnameFocusRequester"
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-fun RegisterScreenPreview() {
+private fun RegisterScreenPreview() {
     ReportsTheme {
         RegisterForm(
             uiState = previewUiState,

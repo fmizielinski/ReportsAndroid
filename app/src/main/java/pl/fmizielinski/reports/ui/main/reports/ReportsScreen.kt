@@ -224,7 +224,7 @@ data class ReportsCallbacks(
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-fun ReportsScreenPreview() {
+private fun ReportsScreenPreview() {
     ReportsTheme {
         ReportsList(
             uiState = previewUiState,
@@ -235,7 +235,7 @@ fun ReportsScreenPreview() {
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-fun ReportsScreenEmptyPreview() {
+private fun ReportsScreenEmptyPreview() {
     ReportsTheme {
         ReportsList(
             uiState = previewUiStateEmpty,

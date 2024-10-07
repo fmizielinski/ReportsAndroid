@@ -273,7 +273,7 @@ data class CreateReportCallbacks(
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-fun CreateReportScreenPreview() {
+private fun CreateReportScreenPreview() {
     ReportsTheme {
         ReportContent(
             uiState = previewUiState,
