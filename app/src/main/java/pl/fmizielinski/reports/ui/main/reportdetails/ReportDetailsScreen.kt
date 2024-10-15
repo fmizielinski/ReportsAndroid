@@ -104,14 +104,14 @@ fun Tabs(
         Tab(
             selected = uiState.selectedTab == UiState.Tab.DETAILS,
             onClick = { onTabClicked(UiState.Tab.DETAILS) },
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 12.dp),
         ) {
             Text(text = stringResource(R.string.reportDetailsScreen_label_details))
         }
         Tab(
             selected = uiState.selectedTab == UiState.Tab.COMMENTS,
             onClick = { onTabClicked(UiState.Tab.COMMENTS) },
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 12.dp),
         ) {
             Text(text = stringResource(R.string.reportDetailsScreen_label_comments))
         }
