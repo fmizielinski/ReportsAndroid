@@ -52,6 +52,10 @@
     <string name="registerScreen_label_passwordConfirmation">Confirm password</string>
     <string name="registerScreen_label_surname">Surname</string>
     <string name="registerScreen_title">Register</string>
+    <string name="reportDetailsScreen_button_addAttachment">Add attachment</string>
+    <string name="reportDetailsScreen_button_addFileAttachment">Add file attachment</string>
+    <string name="reportDetailsScreen_button_addPhotoAttachment">Add photo attachment</string>
+    <string name="reportDetailsScreen_button_send">Send</string>
     <string name="reportDetailsScreen_error_commentsLoading">Unable to load comments</string>
     <string name="reportDetailsScreen_error_loading">Unable to load report details</string>
     <string name="reportDetailsScreen_label_comments">Comments</string>

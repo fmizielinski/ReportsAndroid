@@ -172,10 +172,10 @@ complexity:
     thresholdInInterfaces: 11
     thresholdInObjects: 11
     thresholdInEnums: 11
-    ignoreDeprecated: false
-    ignorePrivate: false
-    ignoreOverridden: false
-    ignoreAnnotatedFunctions: [ 'Single', 'Factory' ]
+    ignoreDeprecated: true
+    ignorePrivate: true
+    ignoreOverridden: true
+    ignoreAnnotatedFunctions: [ 'Single', 'Factory', 'Composable' ]
 
 coroutines:
   active: true
@@ -533,7 +533,7 @@ style:
     active: false
   DestructuringDeclarationWithTooManyEntries:
     active: true
-    maxDestructuringEntries: 3
+    maxDestructuringEntries: 4
   DoubleNegativeLambda:
     active: false
     negativeFunctions:

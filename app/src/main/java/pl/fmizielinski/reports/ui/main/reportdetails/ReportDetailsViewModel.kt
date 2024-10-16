@@ -52,10 +52,14 @@ class ReportDetailsViewModel(
             State.Tab.DETAILS -> UiState.Tab.DETAILS
             State.Tab.COMMENTS -> UiState.Tab.COMMENTS
         }
+        val comments = UiState.Comments(
+            list = getCommentListUiState(state.comments),
+            attachmentOptionsExpanded = state.attachmentOptionsExpanded,
+        )
         return UiState(
             isLoading = state.isReportLoading || state.isCommentsLoading,
             report = getReportDetailsUiState(state.report),
-            comments = getCommentsUiState(state.comments),
+            comments = comments,
             selectedTab = selectedTab,
         )
     }
@@ -77,7 +81,7 @@ class ReportDetailsViewModel(
         }
     }
 
-    private fun getCommentsUiState(comments: List<Comment>): List<UiState.Comment> {
+    private fun getCommentListUiState(comments: List<Comment>): List<UiState.Comment> {
         return comments.map { comment ->
             UiState.Comment(
                 id = comment.id,
@@ -183,6 +187,7 @@ class ReportDetailsViewModel(
         val isCommentsLoading: Boolean = true,
         val comments: List<Comment> = emptyList(),
         val selectedTab: Tab = Tab.DETAILS,
+        val attachmentOptionsExpanded: Boolean = false,
     ) {
 
         enum class Tab {
@@ -194,7 +199,7 @@ class ReportDetailsViewModel(
     data class UiState(
         val isLoading: Boolean,
         val report: ReportDetails?,
-        val comments: List<UiState.Comment>,
+        val comments: Comments,
         val selectedTab: Tab,
     ) {
 
@@ -217,6 +222,11 @@ class ReportDetailsViewModel(
                 val path: String,
             )
         }
+
+        data class Comments(
+            val list: List<Comment>,
+            val attachmentOptionsExpanded: Boolean,
+        )
 
         data class Comment(
             val id: Int,

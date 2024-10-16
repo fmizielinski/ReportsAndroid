@@ -1,7 +1,10 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,17 +17,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,6 +48,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
+import pl.fmizielinski.reports.ui.common.composable.OutlinedReportsTextField
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
 import pl.fmizielinski.reports.ui.main.reportdetails.model.ReportDetailsNavArgs
@@ -81,8 +92,12 @@ fun ReportDetailsContent(
         }
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(Margin),
+                .fillMaxWidth()
+                .padding(
+                    start = Margin,
+                    end = Margin,
+                    bottom = Margin,
+                ),
         ) {
             TabsContent(
                 uiState = uiState,
@@ -200,17 +215,86 @@ fun Attachments(
 }
 
 @Composable
-fun Comments(comments: List<UiState.Comment>) {
-    if (comments.isNotEmpty()) {
-        val state = rememberLazyListState(comments.lastIndex)
-        LazyColumn(
-            state = state,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            items(comments) { comment ->
-                Comment(comment)
+fun Comments(comments: UiState.Comments) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        if (comments.list.isNotEmpty()) {
+            val state = rememberLazyListState(comments.list.lastIndex)
+            LazyColumn(
+                state = state,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            ) {
+                items(comments.list) { comment ->
+                    Comment(comment)
+                }
             }
         }
+        CommentText(comments)
+    }
+}
+
+@Composable
+fun CommentText(comments: UiState.Comments) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        if (comments.attachmentOptionsExpanded) {
+            AddAttachmentButton(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                iconResId = R.drawable.ic_folder_24dp,
+                contentDescriptionResId = R.string.reportDetailsScreen_button_addFileAttachment,
+            )
+            AddAttachmentButton(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                iconResId = R.drawable.ic_add_a_photo_24dp,
+                contentDescriptionResId = R.string.reportDetailsScreen_button_addPhotoAttachment,
+            )
+        } else {
+            AddAttachmentButton(
+                modifier = Modifier.align(Alignment.CenterVertically),
+                iconResId = R.drawable.ic_add_24dp,
+                contentDescriptionResId = R.string.reportDetailsScreen_button_addAttachment,
+            )
+        }
+        OutlinedReportsTextField(
+            onValueChange = {},
+            modifier = Modifier.fillMaxWidth()
+                .padding(start = 4.dp),
+            trailingIcon = {
+                IconButton(
+                    onClick = {},
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_send_24dp),
+                        contentDescription = stringResource(
+                            R.string.reportDetailsScreen_button_send,
+                        ),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            },
+        )
+    }
+}
+
+@Composable
+fun AddAttachmentButton(
+    modifier: Modifier,
+    @DrawableRes iconResId: Int,
+    @StringRes contentDescriptionResId: Int,
+) {
+    FilledIconButton(
+        onClick = {},
+        modifier = modifier,
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(iconResId),
+            contentDescription = stringResource(contentDescriptionResId),
+            tint = MaterialTheme.colorScheme.surfaceContainer,
+        )
     }
 }
 
@@ -295,22 +379,30 @@ data class ReportDetailsCallbacks(
 private fun ReportDetailsScreenPreview() {
     ReportsTheme {
         ReportDetailsContent(
-            uiState = previewUiState,
+            uiState = previewDetailsUiState,
             callbacks = emptyCallbacks,
         )
     }
 }
 
-@Suppress("MaxLineLength")
-private val previewUiState = UiState(
-    isLoading = false,
-    report = UiState.ReportDetails(
-        id = 1,
-        title = "Title",
-        description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-        reportDate = "2021-01-01, 13:11",
-        attachments = emptyList(),
-    ),
+@Preview(showBackground = true, device = Devices.PIXEL_4)
+@Composable
+private fun ReportCommentsScreenPreview() {
+    ReportsTheme {
+        ReportDetailsContent(
+            uiState = previewCommentsUiState,
+            callbacks = emptyCallbacks,
+        )
+    }
+}
+
+private val previewDetailsUiState = previewUiState(
+    comments = emptyList(),
+    selectedTab = UiState.Tab.DETAILS,
+)
+
+@Suppress("MaxLineLength", "StringLiteralDuplication")
+private val previewCommentsUiState = previewUiState(
     comments = listOf(
         UiState.Comment(
             id = 1,
@@ -347,8 +439,49 @@ private val previewUiState = UiState(
             createDate = "2021-01-01, 13:11",
             isMine = false,
         ),
+        UiState.Comment(
+            id = 6,
+            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            user = "User user",
+            createDate = "2021-01-01, 13:11",
+            isMine = true,
+        ),
+        UiState.Comment(
+            id = 7,
+            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            user = "User2 user2",
+            createDate = "2021-01-01, 13:11",
+            isMine = false,
+        ),
+        UiState.Comment(
+            id = 8,
+            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+            user = "User user",
+            createDate = "2021-01-01, 13:11",
+            isMine = true,
+        ),
     ),
-    selectedTab = UiState.Tab.DETAILS,
+    selectedTab = UiState.Tab.COMMENTS,
+)
+
+@Suppress("MaxLineLength")
+private fun previewUiState(
+    comments: List<UiState.Comment>,
+    selectedTab: UiState.Tab,
+) = UiState(
+    isLoading = false,
+    report = UiState.ReportDetails(
+        id = 1,
+        title = "Title",
+        description = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+        reportDate = "2021-01-01, 13:11",
+        attachments = emptyList(),
+    ),
+    comments = UiState.Comments(
+        list = comments,
+        attachmentOptionsExpanded = true,
+    ),
+    selectedTab = selectedTab,
 )
 
 private val emptyCallbacks = ReportDetailsCallbacks(
