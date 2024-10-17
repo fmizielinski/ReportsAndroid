@@ -5,17 +5,22 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -28,14 +33,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,6 +83,12 @@ fun ReportDetailsScreen() {
             callbacks = ReportDetailsCallbacks(
                 onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
                 onTabClicked = { postUiEvent(UiEvent.TabClicked(it)) },
+                commentsCallbacks = CommentsCallbacks(
+                    onAddAttachmentClicked = { postUiEvent(UiEvent.AddAttachmentClicked) },
+                    onTextFieldFocused = { postUiEvent(UiEvent.CommentFieldFocused) },
+                    onCommentChanged = { postUiEvent(UiEvent.CommentChanged(it)) },
+                    onSendClicked = { postUiEvent(UiEvent.SendClicked) },
+                ),
             ),
         )
     }
@@ -146,7 +167,10 @@ fun TabsContent(
             )
         }
 
-        UiState.Tab.COMMENTS -> Comments(uiState.comments)
+        UiState.Tab.COMMENTS -> Comments(
+            comments = uiState.comments,
+            callbacks = callbacks.commentsCallbacks,
+        )
     }
 }
 
@@ -193,7 +217,7 @@ fun Attachments(
         state = carouselState,
         preferredItemWidth = 200.dp,
         itemSpacing = 16.dp,
-        modifier = Modifier.padding(bottom = 16.dp),
+        modifier = Modifier.padding(top = Margin, bottom = 16.dp),
     ) { index ->
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -215,87 +239,83 @@ fun Attachments(
 }
 
 @Composable
-fun Comments(comments: UiState.Comments) {
+fun Comments(
+    comments: UiState.Comments,
+    callbacks: CommentsCallbacks,
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (comments.list.isNotEmpty()) {
-            val state = rememberLazyListState(comments.list.lastIndex)
-            LazyColumn(
-                state = state,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-            ) {
-                items(comments.list) { comment ->
-                    Comment(comment)
-                }
+        val state = rememberLazyListState()
+
+        LaunchedEffect(comments.isLoading, comments.isSending) {
+            if (comments.scrollToFirst && comments.list.isNotEmpty()) {
+                state.scrollToItem(comments.list.lastIndex)
             }
         }
-        CommentText(comments)
+
+        LazyColumn(
+            state = state,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+        ) {
+            items(comments.list) { comment ->
+                Comment(comment)
+            }
+        }
+        CommentText(callbacks)
     }
 }
 
 @Composable
-fun CommentText(comments: UiState.Comments) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        if (comments.attachmentOptionsExpanded) {
-            AddAttachmentButton(
-                modifier = Modifier.align(Alignment.CenterVertically),
-                iconResId = R.drawable.ic_folder_24dp,
-                contentDescriptionResId = R.string.reportDetailsScreen_button_addFileAttachment,
-            )
-            AddAttachmentButton(
-                modifier = Modifier.align(Alignment.CenterVertically),
-                iconResId = R.drawable.ic_add_a_photo_24dp,
-                contentDescriptionResId = R.string.reportDetailsScreen_button_addPhotoAttachment,
-            )
-        } else {
-            AddAttachmentButton(
-                modifier = Modifier.align(Alignment.CenterVertically),
-                iconResId = R.drawable.ic_add_24dp,
-                contentDescriptionResId = R.string.reportDetailsScreen_button_addAttachment,
-            )
-        }
-        OutlinedReportsTextField(
-            onValueChange = {},
-            modifier = Modifier.fillMaxWidth()
-                .padding(start = 4.dp),
-            trailingIcon = {
-                IconButton(
-                    onClick = {},
-                ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_send_24dp),
-                        contentDescription = stringResource(
-                            R.string.reportDetailsScreen_button_send,
-                        ),
-                        tint = MaterialTheme.colorScheme.onSurface,
-                    )
+fun CommentText(
+    callbacks: CommentsCallbacks,
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    var fieldValue by remember { mutableStateOf("") }
+    val onSendClicked = {
+        callbacks.onSendClicked()
+        fieldValue = ""
+        keyboardController?.hide()
+    }
+
+    OutlinedReportsTextField(
+        value = fieldValue,
+        onValueChange = {
+            fieldValue = it
+            callbacks.onCommentChanged(it)
+        },
+        modifier = Modifier.fillMaxWidth()
+            .padding(start = 4.dp)
+            .onFocusChanged { focused ->
+                if (focused.isFocused) {
+                    callbacks.onTextFieldFocused()
                 }
             },
-        )
-    }
-}
-
-@Composable
-fun AddAttachmentButton(
-    modifier: Modifier,
-    @DrawableRes iconResId: Int,
-    @StringRes contentDescriptionResId: Int,
-) {
-    FilledIconButton(
-        onClick = {},
-        modifier = modifier,
-    ) {
-        Icon(
-            imageVector = ImageVector.vectorResource(iconResId),
-            contentDescription = stringResource(contentDescriptionResId),
-            tint = MaterialTheme.colorScheme.surfaceContainer,
-        )
-    }
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Text,
+            imeAction = ImeAction.Send,
+        ),
+        keyboardActions = KeyboardActions {
+            onSendClicked()
+        },
+        trailingIcon = {
+            IconButton(
+                onClick = {
+                    onSendClicked()
+                },
+            ) {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_send_24dp),
+                    contentDescription = stringResource(
+                        R.string.reportDetailsScreen_button_send,
+                    ),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+    )
 }
 
 @Composable
@@ -305,14 +325,18 @@ fun Comment(comment: UiState.Comment) {
         modifier = Modifier.fillMaxWidth(),
         constraintSet = constraints,
     ) {
-        Text(
-            text = comment.user,
-            fontWeight = FontWeight.Light,
-            fontSize = 12.sp,
-            modifier = Modifier.layoutId(CommentConstraints.USER),
-        )
+        if (!comment.isSending) {
+            Text(
+                text = comment.user,
+                fontWeight = FontWeight.Light,
+                fontSize = 12.sp,
+                modifier = Modifier.layoutId(CommentConstraints.USER),
+            )
+        }
+        @Suppress("MagicNumber")
         Card(
-            modifier = Modifier.layoutId(CommentConstraints.COMMENT),
+            modifier = Modifier.layoutId(CommentConstraints.COMMENT)
+                .alpha(if (comment.isSending) 0.5f else 1f),
         ) {
             Text(
                 text = comment.comment,
@@ -321,12 +345,21 @@ fun Comment(comment: UiState.Comment) {
                 modifier = Modifier.padding(8.dp),
             )
         }
-        Text(
-            text = comment.createDate,
-            fontWeight = FontWeight.Light,
-            fontSize = 10.sp,
-            modifier = Modifier.layoutId(CommentConstraints.DATE),
-        )
+        if (!comment.isSending) {
+            Text(
+                text = comment.createDate,
+                fontWeight = FontWeight.Light,
+                fontSize = 10.sp,
+                modifier = Modifier.layoutId(CommentConstraints.DATE),
+            )
+        } else {
+            CircularProgressIndicator(
+                modifier = Modifier.layoutId(CommentConstraints.DATE)
+                    .padding(2.dp)
+                    .size(10.dp),
+                strokeWidth = 2.dp,
+            )
+        }
     }
 }
 
@@ -372,6 +405,14 @@ private fun commentConstraintSet(isMine: Boolean): ConstraintSet {
 data class ReportDetailsCallbacks(
     val onAttachmentClicked: (Int) -> Unit,
     val onTabClicked: (UiState.Tab) -> Unit,
+    val commentsCallbacks: CommentsCallbacks,
+)
+
+data class CommentsCallbacks(
+    val onAddAttachmentClicked: () -> Unit,
+    val onTextFieldFocused: () -> Unit,
+    val onCommentChanged: (String) -> Unit,
+    val onSendClicked: () -> Unit,
 )
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
@@ -405,60 +446,60 @@ private val previewDetailsUiState = previewUiState(
 private val previewCommentsUiState = previewUiState(
     comments = listOf(
         UiState.Comment(
-            id = 1,
             comment = "Comment 1",
             user = "User user",
             createDate = "2021-01-01, 13:11",
             isMine = true,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 2,
             comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             user = "User user",
             createDate = "2021-01-01, 13:11",
             isMine = true,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 3,
             comment = "Comment 3",
             user = "User2 user2",
             createDate = "2021-01-01, 13:11",
             isMine = false,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 4,
             comment = "Comment 4",
             user = "User user",
             createDate = "2021-01-01, 13:11",
             isMine = true,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 5,
             comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             user = "User2 user2",
             createDate = "2021-01-01, 13:11",
             isMine = false,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 6,
             comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             user = "User user",
             createDate = "2021-01-01, 13:11",
             isMine = true,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 7,
             comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             user = "User2 user2",
             createDate = "2021-01-01, 13:11",
             isMine = false,
+            isSending = false,
         ),
         UiState.Comment(
-            id = 8,
             comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            user = "User user",
-            createDate = "2021-01-01, 13:11",
+            user = "",
+            createDate = "",
             isMine = true,
+            isSending = true,
         ),
     ),
     selectedTab = UiState.Tab.COMMENTS,
@@ -480,6 +521,7 @@ private fun previewUiState(
     comments = UiState.Comments(
         list = comments,
         attachmentOptionsExpanded = true,
+        isLoading = false,
     ),
     selectedTab = selectedTab,
 )
@@ -487,4 +529,10 @@ private fun previewUiState(
 private val emptyCallbacks = ReportDetailsCallbacks(
     onAttachmentClicked = {},
     onTabClicked = {},
+    commentsCallbacks = CommentsCallbacks(
+        onAddAttachmentClicked = {},
+        onTextFieldFocused = {},
+        onCommentChanged = {},
+        onSendClicked = {},
+    ),
 )

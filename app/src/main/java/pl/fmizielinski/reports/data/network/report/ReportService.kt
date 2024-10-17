@@ -1,6 +1,7 @@
 package pl.fmizielinski.reports.data.network.report
 
 import okhttp3.MultipartBody
+import pl.fmizielinski.reports.data.network.report.model.AddCommentRequestModel
 import pl.fmizielinski.reports.data.network.report.model.AddTemporaryAttachmentResponseModel
 import pl.fmizielinski.reports.data.network.report.model.CommentsResponseModel
 import pl.fmizielinski.reports.data.network.report.model.CreateReportRequestModel
@@ -57,6 +58,12 @@ interface ReportService {
 
     @GET("/report/{id}/comment")
     suspend fun getComments(@Path("id") reportId: Int): CommentsResponseModel
+
+    @POST("/report/{id}/comment")
+    suspend fun addComment(
+        @Path("id") reportId: Int,
+        @Body requestModel: AddCommentRequestModel,
+    )
 
     // endregion comment
 }

@@ -39,7 +39,6 @@ fun ReportsTextField(
     TextField(
         value = fieldValue,
         onValueChange = {
-            fieldValue = it
             if (it.text.length <= limit) {
                 fieldValue = it
                 onValueChange(it.text)
@@ -72,6 +71,7 @@ fun ReportsTextField(
 
 @Composable
 fun OutlinedReportsTextField(
+    value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
@@ -85,15 +85,12 @@ fun OutlinedReportsTextField(
     supportingText: String? = null,
     enabled: Boolean = true,
 ) {
-    var fieldValue by remember { mutableStateOf(TextFieldValue()) }
 
     OutlinedTextField(
-        value = fieldValue,
+        value = value,
         onValueChange = {
-            fieldValue = it
-            if (it.text.length <= limit) {
-                fieldValue = it
-                onValueChange(it.text)
+            if (it.length <= limit) {
+                onValueChange(it)
             }
         },
         singleLine = singleLine,

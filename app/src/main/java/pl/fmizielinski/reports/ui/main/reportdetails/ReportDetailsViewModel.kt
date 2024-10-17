@@ -6,8 +6,10 @@ import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
+import pl.fmizielinski.reports.domain.report.model.AddCommentData
 import pl.fmizielinski.reports.domain.report.model.Comment
 import pl.fmizielinski.reports.domain.report.model.ReportDetails
+import pl.fmizielinski.reports.domain.report.usecase.AddCommentUseCase
 import pl.fmizielinski.reports.domain.report.usecase.GetCommentsUseCase
 import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsAttachmentGalleryNavArgsUseCase
 import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsUseCase
@@ -20,6 +22,7 @@ import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.Stat
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.DestinationData
+import java.time.LocalDateTime
 
 @KoinViewModel
 class ReportDetailsViewModel(
@@ -29,6 +32,7 @@ class ReportDetailsViewModel(
     private val getReportDetailsUseCase: GetReportDetailsUseCase,
     private val getAttachmentGalleryNavArgsUseCase: GetReportDetailsAttachmentGalleryNavArgsUseCase,
     private val getCommentsUseCase: GetCommentsUseCase,
+    private val addCommentUseCase: AddCommentUseCase,
 ) : BaseViewModel<State, Event, UiState, UiEvent>(
     dispatcher = dispatcher,
     mState = createState(handle),
@@ -42,8 +46,13 @@ class ReportDetailsViewModel(
             is Event.LoadComments -> handleLoadComments(state)
             is Event.CommentsLoaded -> handleCommentsLoaded(state, event)
             is Event.LoadCommentsFailed -> handleLoadCommentsFailed(state, event)
+            is Event.CommentAdded -> handleCommentAdded(state)
             is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
             is UiEvent.TabClicked -> handleTabClicked(state, event)
+            is UiEvent.AddAttachmentClicked -> handleAddAttachmentClicked(state)
+            is UiEvent.CommentFieldFocused -> handleCommentFieldFocused(state)
+            is UiEvent.CommentChanged -> handleCommentChanged(state, event)
+            is UiEvent.SendClicked -> handleSendClicked(state)
         }
     }
 
@@ -53,8 +62,9 @@ class ReportDetailsViewModel(
             State.Tab.COMMENTS -> UiState.Tab.COMMENTS
         }
         val comments = UiState.Comments(
-            list = getCommentListUiState(state.comments),
+            list = state.getCommentListUiState(),
             attachmentOptionsExpanded = state.attachmentOptionsExpanded,
+            isLoading = state.isCommentsLoading,
         )
         return UiState(
             isLoading = state.isReportLoading || state.isCommentsLoading,
@@ -81,15 +91,28 @@ class ReportDetailsViewModel(
         }
     }
 
-    private fun getCommentListUiState(comments: List<Comment>): List<UiState.Comment> {
-        return comments.map { comment ->
-            UiState.Comment(
-                id = comment.id,
-                comment = comment.comment,
-                user = comment.user,
-                createDate = comment.createDate,
-                isMine = comment.isMine,
-            )
+    private fun State.getCommentListUiState(): List<UiState.Comment> {
+        return buildList {
+            val mappedComments = comments.map { comment ->
+                UiState.Comment(
+                    comment = comment.comment,
+                    user = comment.user,
+                    createDate = comment.createDate,
+                    isMine = comment.isMine,
+                    isSending = false,
+                )
+            }
+            addAll(mappedComments)
+            if (sendingCommentData != null) {
+                val sendingComment = UiState.Comment(
+                    comment = sendingCommentData.comment,
+                    user = "",
+                    createDate = "",
+                    isMine = true,
+                    isSending = true,
+                )
+                add(sendingComment)
+            }
         }
     }
 
@@ -156,6 +179,10 @@ class ReportDetailsViewModel(
         return state.copy(isCommentsLoading = false)
     }
 
+    private fun handleCommentAdded(state: State): State {
+        return state.copy(sendingCommentData = null)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -178,6 +205,42 @@ class ReportDetailsViewModel(
         return state.copy(selectedTab = selectedTab)
     }
 
+    private fun handleAddAttachmentClicked(state: State): State {
+        return state.copy(attachmentOptionsExpanded = true)
+    }
+
+    private fun handleCommentFieldFocused(state: State): State {
+        return state.copy(attachmentOptionsExpanded = false)
+    }
+
+    private fun handleCommentChanged(state: State, event: UiEvent.CommentChanged): State {
+        return state.copy(
+            attachmentOptionsExpanded = false,
+            commentText = event.comment,
+        )
+    }
+
+    private fun handleSendClicked(state: State): State {
+        if (state.commentText.isBlank()) {
+            return state
+        }
+        val data = AddCommentData(
+            comment = state.commentText,
+            createDate = LocalDateTime.now(),
+        )
+        scope.launch {
+            try {
+                addCommentUseCase(state.id, data)
+                postEvent(Event.LoadComments) // TODO reload only new comment
+                postEvent(Event.CommentAdded)
+            } catch (error: SimpleErrorException) {
+                logError(error)
+                TODO("Error handling not implemented")
+            }
+        }
+        return state.copy(sendingCommentData = data, commentText = "")
+    }
+
     // endregion handle UiEvent
 
     data class State(
@@ -188,6 +251,8 @@ class ReportDetailsViewModel(
         val comments: List<Comment> = emptyList(),
         val selectedTab: Tab = Tab.DETAILS,
         val attachmentOptionsExpanded: Boolean = false,
+        val commentText: String = "",
+        val sendingCommentData: AddCommentData? = null,
     ) {
 
         enum class Tab {
@@ -226,14 +291,20 @@ class ReportDetailsViewModel(
         data class Comments(
             val list: List<Comment>,
             val attachmentOptionsExpanded: Boolean,
-        )
+            val isLoading: Boolean,
+        ) {
+            val isSending: Boolean
+                get() = list.any { it.isSending }
+            val scrollToFirst: Boolean
+                get() = isSending || !isLoading
+        }
 
         data class Comment(
-            val id: Int,
             val comment: String,
             val user: String,
             val createDate: String,
             val isMine: Boolean,
+            val isSending: Boolean,
         )
 
         enum class Tab {
@@ -249,11 +320,16 @@ class ReportDetailsViewModel(
         data object LoadComments : Event
         data class CommentsLoaded(val comments: List<Comment>) : Event
         data class LoadCommentsFailed(val error: SimpleErrorException) : Event
+        data object CommentAdded : Event
     }
 
     sealed interface UiEvent : Event {
         data class PreviewAttachment(val id: Int) : UiEvent
         data class TabClicked(val tab: UiState.Tab) : UiEvent
+        data object AddAttachmentClicked : UiEvent
+        data object CommentFieldFocused : UiEvent
+        data class CommentChanged(val comment: String) : UiEvent
+        data object SendClicked : UiEvent
     }
 }
 
