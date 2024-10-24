@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
+import pl.fmizielinski.reports.domain.auth.usecase.RegisterUseCase
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.EMAIL_NOT_VALID
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.NAME_EMPTY
 import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.PASSWORD_EMPTY
@@ -20,7 +21,6 @@ import pl.fmizielinski.reports.domain.error.ErrorReasons.Auth.Register.SURNAME_E
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.auth.usecase.RegisterUseCase
 import pl.fmizielinski.reports.fixtures.domain.compositeErrorException
 import pl.fmizielinski.reports.fixtures.domain.registrationData
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException

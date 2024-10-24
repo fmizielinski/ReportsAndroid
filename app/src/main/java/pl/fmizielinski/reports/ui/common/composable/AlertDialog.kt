@@ -65,7 +65,7 @@ data class AlertDialogCallbacks(
 
 @Preview(device = Devices.PIXEL_4)
 @Composable
-fun AlertDialogPreview() {
+private fun AlertDialogPreview() {
     ReportsTheme {
         AlertDialog(
             uiState = previewAlertDialogUIiState,

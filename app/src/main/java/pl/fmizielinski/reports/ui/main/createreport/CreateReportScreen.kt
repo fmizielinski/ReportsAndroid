@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -80,7 +81,8 @@ fun ReportContent(
     callbacks: CreateReportCallbacks,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
+            .imePadding(),
     ) {
         if (uiState.isLoading) {
             LinearProgressIndicator(
@@ -273,7 +275,7 @@ data class CreateReportCallbacks(
 
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
-fun CreateReportScreenPreview() {
+private fun CreateReportScreenPreview() {
     ReportsTheme {
         ReportContent(
             uiState = previewUiState,

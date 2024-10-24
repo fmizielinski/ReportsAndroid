@@ -98,7 +98,7 @@ data class ReportsTopAppBarCallbacks(
 
 @Preview(device = Devices.PIXEL_4)
 @Composable
-fun ReportsTopAppBarPreview() {
+private fun ReportsTopAppBarPreview() {
     ReportsTheme {
         ReportsTopAppBar(
             uiState = previewTopAppBarUiState,

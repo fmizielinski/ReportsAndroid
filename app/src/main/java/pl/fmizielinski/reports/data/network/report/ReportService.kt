@@ -1,7 +1,9 @@
 package pl.fmizielinski.reports.data.network.report
 
 import okhttp3.MultipartBody
+import pl.fmizielinski.reports.data.network.report.model.AddCommentRequestModel
 import pl.fmizielinski.reports.data.network.report.model.AddTemporaryAttachmentResponseModel
+import pl.fmizielinski.reports.data.network.report.model.CommentsResponseModel
 import pl.fmizielinski.reports.data.network.report.model.CreateReportRequestModel
 import pl.fmizielinski.reports.data.network.report.model.CreateReportResponseModel
 import pl.fmizielinski.reports.data.network.report.model.ReportDetailsResponseModel
@@ -16,6 +18,8 @@ import retrofit2.http.Path
 
 interface ReportService {
 
+    // region report
+
     @GET("/report")
     @Headers("Content-Type: application/json")
     suspend fun getReports(): ReportsResponseModel
@@ -26,6 +30,14 @@ interface ReportService {
         "Content-Type: application/json",
     )
     suspend fun createReport(@Body request: CreateReportRequestModel): CreateReportResponseModel
+
+    @GET("/report/{id}")
+    @Headers("Content-Type: application/json")
+    suspend fun getReportDetails(@Path("id") id: Int): ReportDetailsResponseModel
+
+    // endregion report
+
+    // region attachment
 
     @Multipart
     @POST("/report/{id}/attachment")
@@ -40,7 +52,18 @@ interface ReportService {
         @Part attachment: MultipartBody.Part,
     ): AddTemporaryAttachmentResponseModel
 
-    @GET("/report/{id}")
-    @Headers("Content-Type: application/json")
-    suspend fun getReportDetails(@Path("id") id: Int): ReportDetailsResponseModel
+    // endregion attachment
+
+    // region comment
+
+    @GET("/report/{id}/comment")
+    suspend fun getComments(@Path("id") reportId: Int): CommentsResponseModel
+
+    @POST("/report/{id}/comment")
+    suspend fun addComment(
+        @Path("id") reportId: Int,
+        @Body requestModel: AddCommentRequestModel,
+    ): CommentsResponseModel.CommentModel
+
+    // endregion comment
 }
