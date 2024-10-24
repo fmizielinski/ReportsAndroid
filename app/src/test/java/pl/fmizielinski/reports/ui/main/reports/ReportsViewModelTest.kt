@@ -11,13 +11,12 @@ import org.junit.jupiter.api.Test
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
 import pl.fmizielinski.reports.domain.common.model.SnackBarData
+import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
-import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.fixtures.domain.report
 import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
-import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import strikt.api.expectThat

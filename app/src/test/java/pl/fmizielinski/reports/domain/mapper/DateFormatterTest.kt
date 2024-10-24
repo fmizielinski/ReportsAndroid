@@ -11,18 +11,18 @@ class DateFormatterTest {
     private val formatter = DateFormatter(Locale.US)
 
     @Test
-    fun formatReportListDate() {
+    fun formatReportListDate_currentYear() {
         val date = LocalDateTime.of(2021, 6, 12, 0, 0)
 
-        val formattedDate = formatter.formatReportListDate(date, isCurrentYear = false)
+        val formattedDate = formatter.formatReportListDate(date, isCurrentYear = true)
         expectThat(formattedDate) isEqualTo "12 Jun"
     }
 
     @Test
-    fun formatReportListDate_withYear() {
+    fun formatReportListDate() {
         val date = LocalDateTime.of(2021, 6, 12, 0, 0)
 
-        val formattedDate = formatter.formatReportListDate(date, isCurrentYear = true)
+        val formattedDate = formatter.formatReportListDate(date, isCurrentYear = false)
         expectThat(formattedDate) isEqualTo "12 Jun 2021"
     }
 
@@ -40,5 +40,37 @@ class DateFormatterTest {
 
         val formattedDate = formatter.formatReportDetailsDate(date)
         expectThat(formattedDate) isEqualTo "12 Jun 2021, 11:30"
+    }
+
+    @Test
+    fun formatCommentDate() {
+        val date = LocalDateTime.of(2021, 6, 12, 11, 30, 11)
+
+        val formattedDate = formatter.formatCommentDate(date)
+        expectThat(formattedDate) isEqualTo "12 Jun 2021, 11:30"
+    }
+
+    @Test
+    fun formatCommentDate_today() {
+        val date = LocalDateTime.of(2021, 6, 12, 11, 30, 11)
+
+        val formattedDate = formatter.formatCommentDate(date, isToday = true)
+        expectThat(formattedDate) isEqualTo "11:30"
+    }
+
+    @Test
+    fun formatCommentDate_currentWeek() {
+        val date = LocalDateTime.of(2021, 6, 12, 11, 30, 11)
+
+        val formattedDate = formatter.formatCommentDate(date, isCurrentWeek = true)
+        expectThat(formattedDate) isEqualTo "Saturday, 11:30"
+    }
+
+    @Test
+    fun formatCommentDate_currentYear() {
+        val date = LocalDateTime.of(2021, 6, 12, 11, 30, 11)
+
+        val formattedDate = formatter.formatCommentDate(date, isCurrentYear = true)
+        expectThat(formattedDate) isEqualTo "12 Jun, 11:30"
     }
 }

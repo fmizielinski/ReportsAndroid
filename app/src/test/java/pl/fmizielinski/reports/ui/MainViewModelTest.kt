@@ -15,10 +15,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
-import pl.fmizielinski.reports.domain.common.model.SnackBarData
-import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.auth.usecase.IsLoggedInUseCase
 import pl.fmizielinski.reports.domain.auth.usecase.LogoutUseCase
+import pl.fmizielinski.reports.domain.common.model.SnackBarData
+import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.fixtures.ui.alertDialogUiState
 import pl.fmizielinski.reports.ui.MainViewModel.UiEvent
 import pl.fmizielinski.reports.ui.common.model.FabUiState

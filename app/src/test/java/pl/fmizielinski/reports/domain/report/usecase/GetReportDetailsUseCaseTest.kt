@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
+import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.data.network.report.model.ReportDetailsResponseModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
@@ -16,7 +17,6 @@ import pl.fmizielinski.reports.fixtures.data.reportDetailsResponseModel
 import strikt.api.expectThat
 import strikt.api.expectThrows
 import strikt.assertions.hasSize
-import pl.fmizielinski.reports.R
 import strikt.assertions.isEqualTo
 import strikt.assertions.withFirst
 import java.time.LocalDateTime

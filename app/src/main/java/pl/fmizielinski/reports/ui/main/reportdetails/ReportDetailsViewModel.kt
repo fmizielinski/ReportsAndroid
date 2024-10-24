@@ -181,6 +181,7 @@ class ReportDetailsViewModel(
     ): State {
         scope.launch {
             eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
+            eventsRepository.postNavUpEvent()
         }
         return state.copy(isCommentsLoading = false)
     }
