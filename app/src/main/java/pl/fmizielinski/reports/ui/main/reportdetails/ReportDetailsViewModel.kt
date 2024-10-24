@@ -21,6 +21,7 @@ import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.Even
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.State
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
+import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState.Comment.Status
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import java.time.LocalDateTime
 
@@ -47,6 +48,7 @@ class ReportDetailsViewModel(
             is Event.CommentsLoaded -> handleCommentsLoaded(state, event)
             is Event.LoadCommentsFailed -> handleLoadCommentsFailed(state, event)
             is Event.CommentAdded -> handleCommentAdded(state, event)
+            is Event.AddCommentFailed -> handleAddCommentFailed(state)
             is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
             is UiEvent.TabClicked -> handleTabClicked(state, event)
             is UiEvent.AddAttachmentClicked -> handleAddAttachmentClicked(state)
@@ -99,17 +101,21 @@ class ReportDetailsViewModel(
                     user = comment.user,
                     createDate = comment.createDate,
                     isMine = comment.isMine,
-                    isSending = false,
+                    status = Status.SENT,
                 )
             }
             addAll(mappedComments)
             if (sendingCommentData != null) {
                 val sendingComment = UiState.Comment(
-                    comment = sendingCommentData.comment,
+                    comment = sendingCommentData.data.comment,
                     user = "",
                     createDate = "",
                     isMine = true,
-                    isSending = true,
+                    status = if (sendingCommentData.isFailed) {
+                        Status.SENDING_FAILED
+                    } else {
+                        Status.SENDING
+                    },
                 )
                 add(sendingComment)
             }
@@ -190,6 +196,11 @@ class ReportDetailsViewModel(
         )
     }
 
+    private fun handleAddCommentFailed(state: State): State {
+        val sendingCommentData = state.sendingCommentData?.copy(isFailed = true)
+        return state.copy(sendingCommentData = sendingCommentData)
+    }
+
     // endregion handle Event
 
     // region handle UiEvent
@@ -241,10 +252,17 @@ class ReportDetailsViewModel(
                 postEvent(Event.CommentAdded(comment))
             } catch (error: SimpleErrorException) {
                 logError(error)
-                TODO("Error handling not implemented")
+                postEvent(Event.AddCommentFailed)
             }
         }
-        return state.copy(sendingCommentData = data, commentText = "")
+        val sendingCommentData = State.SendingCommentData(
+            data = data,
+            isFailed = false,
+        )
+        return state.copy(
+            sendingCommentData = sendingCommentData,
+            commentText = "",
+        )
     }
 
     // endregion handle UiEvent
@@ -258,13 +276,18 @@ class ReportDetailsViewModel(
         val selectedTab: Tab = Tab.DETAILS,
         val attachmentOptionsExpanded: Boolean = false,
         val commentText: String = "",
-        val sendingCommentData: AddCommentData? = null,
+        val sendingCommentData: SendingCommentData? = null,
     ) {
 
         enum class Tab {
             DETAILS,
             COMMENTS,
         }
+
+        data class SendingCommentData(
+            val data: AddCommentData,
+            val isFailed: Boolean,
+        )
     }
 
     data class UiState(
@@ -300,7 +323,7 @@ class ReportDetailsViewModel(
             val isLoading: Boolean,
         ) {
             val isSending: Boolean
-                get() = list.any { it.isSending }
+                get() = list.any { it.status == Status.SENDING }
             val scrollToFirst: Boolean
                 get() = isSending || !isLoading
         }
@@ -310,8 +333,15 @@ class ReportDetailsViewModel(
             val user: String,
             val createDate: String,
             val isMine: Boolean,
-            val isSending: Boolean,
-        )
+            val status: Status,
+        ) {
+
+            enum class Status {
+                SENDING,
+                SENDING_FAILED,
+                SENT,
+            }
+        }
 
         enum class Tab {
             DETAILS,
@@ -327,6 +357,7 @@ class ReportDetailsViewModel(
         data class CommentsLoaded(val comments: List<Comment>) : Event
         data class LoadCommentsFailed(val error: SimpleErrorException) : Event
         data class CommentAdded(val comment: Comment) : Event
+        data object AddCommentFailed : Event
     }
 
     sealed interface UiEvent : Event {

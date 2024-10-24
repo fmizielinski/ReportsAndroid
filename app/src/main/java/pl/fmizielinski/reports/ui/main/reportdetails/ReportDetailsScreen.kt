@@ -1,11 +1,8 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -39,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.onFocusChanged
@@ -67,6 +62,7 @@ import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.OutlinedReportsTextField
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState
+import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState.Comment.Status
 import pl.fmizielinski.reports.ui.main.reportdetails.model.ReportDetailsNavArgs
 import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.Margin
@@ -327,7 +323,9 @@ fun Comment(comment: UiState.Comment) {
         modifier = Modifier.fillMaxWidth(),
         constraintSet = constraints,
     ) {
-        if (!comment.isSending) {
+        val cardAlpha = if (comment.status == Status.SENT) 1f else SENDING_CARD_ALPHA
+        val errorBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+        if (comment.status == Status.SENT) {
             Text(
                 text = comment.user,
                 fontWeight = FontWeight.Light,
@@ -335,10 +333,10 @@ fun Comment(comment: UiState.Comment) {
                 modifier = Modifier.layoutId(CommentConstraints.USER),
             )
         }
-        @Suppress("MagicNumber")
         Card(
             modifier = Modifier.layoutId(CommentConstraints.COMMENT)
-                .alpha(if (comment.isSending) 0.5f else 1f),
+                .alpha(cardAlpha),
+            border = errorBorder.takeIf { comment.status == Status.SENDING_FAILED },
         ) {
             Text(
                 text = comment.comment,
@@ -347,21 +345,37 @@ fun Comment(comment: UiState.Comment) {
                 modifier = Modifier.padding(8.dp),
             )
         }
-        if (!comment.isSending) {
-            Text(
-                text = comment.createDate,
-                fontWeight = FontWeight.Light,
-                fontSize = 10.sp,
-                modifier = Modifier.layoutId(CommentConstraints.DATE),
-            )
-        } else {
-            CircularProgressIndicator(
-                modifier = Modifier.layoutId(CommentConstraints.DATE)
-                    .padding(2.dp)
-                    .size(10.dp),
-                strokeWidth = 2.dp,
-            )
-        }
+        CommentFooter(comment)
+    }
+}
+
+@Composable
+fun CommentFooter(comment: UiState.Comment) {
+    when (comment.status) {
+        Status.SENT -> Text(
+            text = comment.createDate,
+            fontWeight = FontWeight.Light,
+            fontSize = 10.sp,
+            modifier = Modifier.layoutId(CommentConstraints.DATE),
+        )
+
+        Status.SENDING -> CircularProgressIndicator(
+            modifier = Modifier.layoutId(CommentConstraints.DATE)
+                .padding(2.dp)
+                .size(12.dp),
+            strokeWidth = 2.dp,
+        )
+
+        Status.SENDING_FAILED -> Icon(
+            imageVector = ImageVector.vectorResource(R.drawable.ic_error_24dp),
+            contentDescription = stringResource(
+                R.string.reportDetailsScreen_button_send,
+            ),
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.layoutId(CommentConstraints.DATE)
+                .padding(2.dp)
+                .size(12.dp),
+        )
     }
 }
 
@@ -377,11 +391,10 @@ private fun commentConstraintSet(isMine: Boolean): ConstraintSet {
         val comment = createRefFor(CommentConstraints.COMMENT)
         val date = createRefFor(CommentConstraints.DATE)
 
-        @Suppress("MagicNumber")
         val guideline = if (isMine) {
-            createGuidelineFromEnd(0.6f)
+            createGuidelineFromEnd(COMMENT_GUIDELINE_FRACTION)
         } else {
-            createGuidelineFromStart(0.6f)
+            createGuidelineFromStart(COMMENT_GUIDELINE_FRACTION)
         }
 
         constrain(user) {
@@ -417,6 +430,9 @@ data class CommentsCallbacks(
     val onSendClicked: () -> Unit,
 )
 
+private const val SENDING_CARD_ALPHA = 0.5f
+private const val COMMENT_GUIDELINE_FRACTION = 0.6f
+
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 private fun ReportDetailsScreenPreview() {
@@ -439,71 +455,85 @@ private fun ReportCommentsScreenPreview() {
     }
 }
 
+@Preview(showBackground = true, device = Devices.PIXEL_4)
+@Composable
+private fun ReportCommentsScreenSendingFailePreview() {
+    ReportsTheme {
+        ReportDetailsContent(
+            uiState = previewCommentsSendingFailedUiState,
+            callbacks = emptyCallbacks,
+        )
+    }
+}
+
 private val previewDetailsUiState = previewUiState(
     comments = emptyList(),
     selectedTab = UiState.Tab.DETAILS,
 )
 
 @Suppress("MaxLineLength", "StringLiteralDuplication")
-private val previewCommentsUiState = previewUiState(
-    comments = listOf(
-        UiState.Comment(
-            comment = "Comment 1",
-            user = "User user",
-            createDate = "2021-01-01, 13:11",
-            isMine = true,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            user = "User user",
-            createDate = "2021-01-01, 13:11",
-            isMine = true,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Comment 3",
-            user = "User2 user2",
-            createDate = "2021-01-01, 13:11",
-            isMine = false,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Comment 4",
-            user = "User user",
-            createDate = "2021-01-01, 13:11",
-            isMine = true,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            user = "User2 user2",
-            createDate = "2021-01-01, 13:11",
-            isMine = false,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            user = "User user",
-            createDate = "2021-01-01, 13:11",
-            isMine = true,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            user = "User2 user2",
-            createDate = "2021-01-01, 13:11",
-            isMine = false,
-            isSending = false,
-        ),
-        UiState.Comment(
-            comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            user = "",
-            createDate = "",
-            isMine = true,
-            isSending = true,
-        ),
+private val previewComments = listOf(
+    UiState.Comment(
+        comment = "Comment 1",
+        user = "User user",
+        createDate = "2021-01-01, 13:11",
+        isMine = true,
+        status = Status.SENT,
     ),
+    UiState.Comment(
+        comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        user = "User user",
+        createDate = "2021-01-01, 13:11",
+        isMine = true,
+        status = Status.SENT,
+    ),
+    UiState.Comment(
+        comment = "Comment 3",
+        user = "User2 user2",
+        createDate = "2021-01-01, 13:11",
+        isMine = false,
+        status = Status.SENT,
+    ),
+    UiState.Comment(
+        comment = "Comment 4",
+        user = "User user",
+        createDate = "2021-01-01, 13:11",
+        isMine = true,
+        status = Status.SENT,
+    ),
+)
+
+@Suppress("MaxLineLength", "StringLiteralDuplication")
+private val previewCommentsUiState = previewUiState(
+    comments = buildList {
+        addAll(previewComments)
+        add(
+            UiState.Comment(
+                comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                user = "",
+                createDate = "",
+                isMine = true,
+                status = Status.SENDING,
+            ),
+        )
+    },
+    selectedTab = UiState.Tab.COMMENTS,
+)
+
+@Suppress("MaxLineLength", "StringLiteralDuplication")
+private val previewCommentsSendingFailedUiState = previewUiState(
+    comments = buildList {
+        addAll(previewComments)
+        add(
+            UiState.Comment(
+                comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                user = "",
+                createDate = "",
+                isMine = true,
+                status = Status.SENDING_FAILED,
+            ),
+        )
+    },
     selectedTab = UiState.Tab.COMMENTS,
 )
 
