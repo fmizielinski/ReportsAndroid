@@ -3,14 +3,17 @@ package pl.fmizielinski.reports.ui.main.reportdetails
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,7 +40,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
@@ -81,10 +83,9 @@ fun ReportDetailsScreen() {
                 onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
                 onTabClicked = { postUiEvent(UiEvent.TabClicked(it)) },
                 commentsCallbacks = CommentsCallbacks(
-                    onAddAttachmentClicked = { postUiEvent(UiEvent.AddAttachmentClicked) },
-                    onTextFieldFocused = { postUiEvent(UiEvent.CommentFieldFocused) },
                     onCommentChanged = { postUiEvent(UiEvent.CommentChanged(it)) },
                     onSendClicked = { postUiEvent(UiEvent.SendClicked) },
+                    onCommentClicked = { postUiEvent(UiEvent.CommentClicked(it)) },
                 ),
             ),
         )
@@ -258,8 +259,14 @@ fun Comments(
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
-            items(comments.list) { comment ->
-                Comment(comment)
+            itemsIndexed(comments.list) { index, comment ->
+                if (index == 0) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                Comment(
+                    comment = comment,
+                    onCommentClicked = callbacks.onCommentClicked,
+                )
             }
         }
         CommentText(callbacks)
@@ -285,12 +292,7 @@ fun CommentText(
             callbacks.onCommentChanged(it)
         },
         modifier = Modifier.fillMaxWidth()
-            .padding(start = 4.dp)
-            .onFocusChanged { focused ->
-                if (focused.isFocused) {
-                    callbacks.onTextFieldFocused()
-                }
-            },
+            .padding(start = 4.dp),
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Text,
             imeAction = ImeAction.Send,
@@ -317,7 +319,10 @@ fun CommentText(
 }
 
 @Composable
-fun Comment(comment: UiState.Comment) {
+fun Comment(
+    comment: UiState.Comment,
+    onCommentClicked: (Int?) -> Unit,
+) {
     val constraints = commentConstraintSet(comment.isMine)
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth(),
@@ -335,7 +340,8 @@ fun Comment(comment: UiState.Comment) {
         }
         Card(
             modifier = Modifier.layoutId(CommentConstraints.COMMENT)
-                .alpha(cardAlpha),
+                .alpha(cardAlpha)
+                .clickable { onCommentClicked(comment.id) },
             border = errorBorder.takeIf { comment.status == Status.SENDING_FAILED },
         ) {
             Text(
@@ -424,10 +430,9 @@ data class ReportDetailsCallbacks(
 )
 
 data class CommentsCallbacks(
-    val onAddAttachmentClicked: () -> Unit,
-    val onTextFieldFocused: () -> Unit,
     val onCommentChanged: (String) -> Unit,
     val onSendClicked: () -> Unit,
+    val onCommentClicked: (Int?) -> Unit,
 )
 
 private const val SENDING_CARD_ALPHA = 0.5f
@@ -474,6 +479,7 @@ private val previewDetailsUiState = previewUiState(
 @Suppress("MaxLineLength", "StringLiteralDuplication")
 private val previewComments = listOf(
     UiState.Comment(
+        id = 1,
         comment = "Comment 1",
         user = "User user",
         createDate = "2021-01-01, 13:11",
@@ -481,6 +487,7 @@ private val previewComments = listOf(
         status = Status.SENT,
     ),
     UiState.Comment(
+        id = 1,
         comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         user = "User user",
         createDate = "2021-01-01, 13:11",
@@ -488,6 +495,7 @@ private val previewComments = listOf(
         status = Status.SENT,
     ),
     UiState.Comment(
+        id = 1,
         comment = "Comment 3",
         user = "User2 user2",
         createDate = "2021-01-01, 13:11",
@@ -495,6 +503,7 @@ private val previewComments = listOf(
         status = Status.SENT,
     ),
     UiState.Comment(
+        id = 1,
         comment = "Comment 4",
         user = "User user",
         createDate = "2021-01-01, 13:11",
@@ -509,6 +518,7 @@ private val previewCommentsUiState = previewUiState(
         addAll(previewComments)
         add(
             UiState.Comment(
+                id = null,
                 comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
                 user = "",
                 createDate = "",
@@ -526,6 +536,7 @@ private val previewCommentsSendingFailedUiState = previewUiState(
         addAll(previewComments)
         add(
             UiState.Comment(
+                id = null,
                 comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
                 user = "",
                 createDate = "",
@@ -552,7 +563,6 @@ private fun previewUiState(
     ),
     comments = UiState.Comments(
         list = comments,
-        attachmentOptionsExpanded = true,
         isLoading = false,
     ),
     selectedTab = selectedTab,
@@ -562,9 +572,8 @@ private val emptyCallbacks = ReportDetailsCallbacks(
     onAttachmentClicked = {},
     onTabClicked = {},
     commentsCallbacks = CommentsCallbacks(
-        onAddAttachmentClicked = {},
-        onTextFieldFocused = {},
         onCommentChanged = {},
         onSendClicked = {},
+        onCommentClicked = {},
     ),
 )
