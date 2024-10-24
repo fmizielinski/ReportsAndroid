@@ -46,7 +46,7 @@ class ReportDetailsViewModel(
             is Event.LoadComments -> handleLoadComments(state)
             is Event.CommentsLoaded -> handleCommentsLoaded(state, event)
             is Event.LoadCommentsFailed -> handleLoadCommentsFailed(state, event)
-            is Event.CommentAdded -> handleCommentAdded(state)
+            is Event.CommentAdded -> handleCommentAdded(state, event)
             is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
             is UiEvent.TabClicked -> handleTabClicked(state, event)
             is UiEvent.AddAttachmentClicked -> handleAddAttachmentClicked(state)
@@ -179,8 +179,15 @@ class ReportDetailsViewModel(
         return state.copy(isCommentsLoading = false)
     }
 
-    private fun handleCommentAdded(state: State): State {
-        return state.copy(sendingCommentData = null)
+    private fun handleCommentAdded(state: State, event: Event.CommentAdded): State {
+        val comments = buildList {
+            addAll(state.comments)
+            add(event.comment)
+        }
+        return state.copy(
+            comments = comments,
+            sendingCommentData = null,
+        )
     }
 
     // endregion handle Event
@@ -230,9 +237,8 @@ class ReportDetailsViewModel(
         )
         scope.launch {
             try {
-                addCommentUseCase(state.id, data)
-                postEvent(Event.LoadComments) // TODO reload only new comment
-                postEvent(Event.CommentAdded)
+                val comment = addCommentUseCase(state.id, data)
+                postEvent(Event.CommentAdded(comment))
             } catch (error: SimpleErrorException) {
                 logError(error)
                 TODO("Error handling not implemented")
@@ -320,7 +326,7 @@ class ReportDetailsViewModel(
         data object LoadComments : Event
         data class CommentsLoaded(val comments: List<Comment>) : Event
         data class LoadCommentsFailed(val error: SimpleErrorException) : Event
-        data object CommentAdded : Event
+        data class CommentAdded(val comment: Comment) : Event
     }
 
     sealed interface UiEvent : Event {
