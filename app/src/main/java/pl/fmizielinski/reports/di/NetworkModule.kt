@@ -10,12 +10,12 @@ import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Named
 import org.koin.core.annotation.Single
-import pl.fmizielinski.reports.BuildConfig
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.data.network.auth.AuthService
 import pl.fmizielinski.reports.data.network.interceptor.BearerInterceptor
 import pl.fmizielinski.reports.data.network.interceptor.UnauthorizedInterceptor
 import pl.fmizielinski.reports.data.network.report.ReportService
+import pl.fmizielinski.reports.utils.ApplicationConfig
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -37,20 +37,23 @@ class NetworkModule {
     fun noAuthRetrofit(
         @Named(JSON_CONVERTER_FACTORY) jsonConverterFactory: Converter.Factory,
         @Named(NO_AUTH_CLIENT) client: OkHttpClient,
-    ): Retrofit = retrofit(jsonConverterFactory, client)
+        config: ApplicationConfig,
+    ): Retrofit = retrofit(jsonConverterFactory, client, config)
 
     @Single
     @Named(BEARER_RETROFIT)
     fun bearerRetrofit(
         @Named(JSON_CONVERTER_FACTORY) jsonConverterFactory: Converter.Factory,
         @Named(BEARER_CLIENT) client: OkHttpClient,
-    ): Retrofit = retrofit(jsonConverterFactory, client)
+        config: ApplicationConfig,
+    ): Retrofit = retrofit(jsonConverterFactory, client, config)
 
     fun retrofit(
         jsonConverterFactory: Converter.Factory,
         client: OkHttpClient,
+        config: ApplicationConfig,
     ): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.HOST)
+        .baseUrl(config.host)
         .addConverterFactory(jsonConverterFactory)
         .client(client)
         .build()
@@ -132,8 +135,10 @@ class NetworkModule {
     }
 
     @Factory
-    fun hostnameVerifier(): HostnameVerifier = HostnameVerifier { hostname, _ ->
-        BuildConfig.HOST.contains(hostname)
+    fun hostnameVerifier(
+        config: ApplicationConfig,
+    ): HostnameVerifier = HostnameVerifier { hostname, _ ->
+        config.host.contains(hostname)
     }
 
     @Factory

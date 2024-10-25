@@ -2,19 +2,16 @@ package pl.fmizielinski.reports.ui.main.reports
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -34,7 +31,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
@@ -48,7 +53,7 @@ import pl.fmizielinski.reports.ui.theme.ReportsTheme
 fun ReportsScreen() {
     BaseScreen<ReportsViewModel, UiState, UiEvent> {
         ReportsList(
-            uiState = state.value,
+            pagingContent = viewModel.pagingContent,
             callbacks = ReportsCallbacks(
                 onListScrolled = { firstItemIndex ->
                     postUiEvent(UiEvent.ListScrolled(firstItemIndex))
@@ -63,35 +68,28 @@ fun ReportsScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsList(
-    uiState: UiState,
+    pagingContent: Flow<PagingData<UiState.Report>>,
     callbacks: ReportsCallbacks,
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
-    Column(
+    val lazyPagingItems = pagingContent.collectAsLazyPagingItems()
+
+    PullToRefreshBox(
+        isRefreshing = lazyPagingItems.loadState.refresh == LoadState.Loading,
+        onRefresh = callbacks.onListRefresh,
         modifier = Modifier.fillMaxWidth(),
+        state = pullToRefreshState,
     ) {
-        if (uiState.isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        PullToRefreshBox(
-            isRefreshing = uiState.isRefreshing,
-            onRefresh = callbacks.onListRefresh,
-            modifier = Modifier.fillMaxWidth(),
-            state = pullToRefreshState,
-        ) {
-            ReportsListContent(
-                uiState = uiState,
-                callbacks = callbacks,
-            )
-        }
+        ReportsListContent(
+            lazyPagingItems = lazyPagingItems,
+            callbacks = callbacks,
+        )
     }
 }
 
 @Composable
 fun ReportsListContent(
-    uiState: UiState,
+    lazyPagingItems: LazyPagingItems<UiState.Report>,
     callbacks: ReportsCallbacks,
 ) {
     val listState = rememberLazyListState()
@@ -105,18 +103,24 @@ fun ReportsListContent(
         state = listState,
         modifier = Modifier.fillMaxSize(),
     ) {
-        if (uiState.reports.isEmpty()) {
+        if (lazyPagingItems.itemCount == 0) {
             item { EmptyListPlaceholder() }
         } else {
-            itemsIndexed(uiState.reports) { index, report ->
-                ReportItem(
-                    uiState = report,
-                    onReportClicked = callbacks.onReportClicked,
-                )
-                if (index != uiState.reports.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = Margin),
+            items(
+                count = lazyPagingItems.itemCount,
+                key = lazyPagingItems.itemKey { it.id },
+            ) { index ->
+                val report = lazyPagingItems[index]
+                if (report != null) {
+                    ReportItem(
+                        uiState = report,
+                        onReportClicked = callbacks.onReportClicked,
                     )
+                    if (index != lazyPagingItems.itemCount - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = Margin),
+                        )
+                    }
                 }
             }
         }
@@ -227,7 +231,15 @@ data class ReportsCallbacks(
 private fun ReportsScreenPreview() {
     ReportsTheme {
         ReportsList(
-            uiState = previewUiState,
+            pagingContent = flowOf(
+                PagingData.from(
+                    data = listOf(
+                        previewReport(id = 1),
+                        previewReport(id = 2),
+                        previewReport(id = 3),
+                    ),
+                ),
+            ),
             callbacks = emptyCallbacks,
         )
     }
@@ -238,27 +250,11 @@ private fun ReportsScreenPreview() {
 private fun ReportsScreenEmptyPreview() {
     ReportsTheme {
         ReportsList(
-            uiState = previewUiStateEmpty,
+            pagingContent = flowOf(PagingData.empty()),
             callbacks = emptyCallbacks,
         )
     }
 }
-
-private val previewUiState = UiState(
-    reports = listOf(
-        previewReport(),
-        previewReport(),
-        previewReport(),
-    ),
-    isLoading = false,
-    isRefreshing = false,
-)
-
-private val previewUiStateEmpty = UiState(
-    reports = emptyList(),
-    isLoading = true,
-    isRefreshing = true,
-)
 
 private val emptyCallbacks = ReportsCallbacks(
     onListScrolled = {},
@@ -266,8 +262,8 @@ private val emptyCallbacks = ReportsCallbacks(
     onReportClicked = {},
 )
 
-private fun previewReport() = UiState.Report(
-    id = 1,
+private fun previewReport(id: Int) = UiState.Report(
+    id = id,
     title = "Title",
     description = "Description",
     reportDate = "25 sep",

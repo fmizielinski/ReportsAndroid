@@ -27,7 +27,7 @@ abstract class BaseViewModel<State, Event, UiState, in UiEvent : Event>(
 
     protected val scope = CoroutineScope(dispatcher)
     private val events = MutableSharedFlow<Event>()
-    private val state: Flow<State> = events
+    protected val state: Flow<State> = events
         .runningFold(mState, ::handleEvent)
         .shareIn(
             scope = scope,

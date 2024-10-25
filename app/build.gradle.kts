@@ -39,6 +39,11 @@ android {
             name = "REPORT_TITLE_LENGTH",
             value = "${project.properties["reportTitleLength"]}",
         )
+        buildConfigField(
+            type = "int",
+            name = "REPORT_LIST_PAGE_SIZE",
+            value = "${project.properties["reportListPageSize"]}",
+        )
     }
 
     buildTypes {
@@ -122,6 +127,9 @@ dependencies {
     // Glide
     implementation(libs.bundles.glide)
     ksp(libs.glide.ksp)
+
+    // Paging
+    implementation(libs.bundles.paging)
 
     testImplementation(libs.bundles.test.strikt)
     testImplementation(libs.test.arch.core)

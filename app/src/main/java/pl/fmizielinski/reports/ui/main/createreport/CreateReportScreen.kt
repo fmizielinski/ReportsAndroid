@@ -45,7 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
-import pl.fmizielinski.reports.BuildConfig
+import org.koin.compose.koinInject
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.ReportsTextField
@@ -55,6 +55,7 @@ import pl.fmizielinski.reports.ui.navigation.graph.MainGraph
 import pl.fmizielinski.reports.ui.theme.AttachmentProgressSize
 import pl.fmizielinski.reports.ui.theme.Margin
 import pl.fmizielinski.reports.ui.theme.ReportsTheme
+import pl.fmizielinski.reports.utils.ApplicationConfig
 
 @Destination<MainGraph>(route = "CreateReport")
 @Composable
@@ -113,6 +114,7 @@ fun ReportDetails(
     uiState: UiState,
     callbacks: CreateReportCallbacks,
 ) {
+    val config: ApplicationConfig = koinInject()
     val keyboardController = LocalSoftwareKeyboardController.current
     val descriptionConfirmationFocusRequester = remember {
         FocusRequester()
@@ -121,13 +123,13 @@ fun ReportDetails(
     val titleSupportingText = stringResource(
         R.string.common_label_characterCounter,
         uiState.titleLength,
-        BuildConfig.REPORT_TITLE_LENGTH,
+        config.reportTitleLength,
     )
 
     val descriptionSupportingText = stringResource(
         R.string.common_label_characterCounter,
         uiState.descriptionLength,
-        BuildConfig.REPORT_DESCRIPTION_LENGTH,
+        config.reportDescriptionLength,
     )
 
     ReportsTextField(
@@ -143,7 +145,7 @@ fun ReportDetails(
         keyboardActions = KeyboardActions {
             descriptionConfirmationFocusRequester.requestFocus()
         },
-        limit = BuildConfig.REPORT_TITLE_LENGTH,
+        limit = config.reportListPageSize,
         supportingText = titleSupportingText,
         error = uiState.titleVerificationError?.let { stringResource(it) },
         enabled = !uiState.isLoading,
@@ -159,7 +161,7 @@ fun ReportDetails(
             imeAction = ImeAction.Done,
         ),
         keyboardActions = KeyboardActions { keyboardController?.hide() },
-        limit = BuildConfig.REPORT_DESCRIPTION_LENGTH,
+        limit = config.reportDescriptionLength,
         supportingText = descriptionSupportingText,
         error = uiState.descriptionVerificationError?.let { stringResource(it) },
         enabled = !uiState.isLoading,
