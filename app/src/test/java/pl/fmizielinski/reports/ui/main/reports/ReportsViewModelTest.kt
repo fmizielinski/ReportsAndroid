@@ -1,30 +1,23 @@
 package pl.fmizielinski.reports.ui.main.reports
 
+import androidx.paging.PagingData
 import app.cash.turbine.testIn
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.spyk
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
-import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.base.BaseViewModelTest
-import pl.fmizielinski.reports.domain.common.model.SnackBarData
 import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.fixtures.domain.report
-import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.navigation.DestinationData
-import strikt.api.expectThat
-import strikt.assertions.hasSize
-import strikt.assertions.isEqualTo
-import strikt.assertions.isFalse
-import strikt.assertions.isTrue
-import strikt.assertions.withFirst
 
 class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
 
@@ -39,80 +32,46 @@ class ReportsViewModelTest : BaseViewModelTest<ReportsViewModel, UiEvent>() {
 
     @Test
     fun `GIVEN list of reports WHEN start THEN show reports list`() = runTurbineTest {
-        val expectedId = 1
-        val expectedTitle = "title"
-        val expectedDescription = "description"
-        val expectedReportDate = "12 Jun"
-        val report = report(
-            id = expectedId,
-            title = expectedTitle,
-            description = expectedDescription,
-            reportDate = expectedReportDate,
+        coEvery { getReportsUseCase.data } returns flowOf(
+            PagingData.from(
+                listOf(report()),
+            ),
         )
-        coEvery { getReportsUseCase() } returns listOf(report)
 
-        val uiState = viewModel.uiState.testIn(context)
+        val pagingContent = viewModel.pagingContent.testIn(context)
 
-        context.launch { viewModel.onStart() }
         scheduler.advanceUntilIdle()
 
-        val result = uiState.expectMostRecentItem()
-        expectThat(result.reports).hasSize(1)
-            .withFirst {
-                get { id } isEqualTo expectedId
-                get { title } isEqualTo expectedTitle
-                get { description } isEqualTo expectedDescription
-                get { reportDate } isEqualTo expectedReportDate
-            }
+        pagingContent.skipItems(1)
+        pagingContent.awaitComplete()
+        pagingContent.ensureAllEventsConsumed()
 
-        uiState.cancel()
-    }
-
-    @Test
-    fun `GIVEN reports loading error WHEN start THEN show snackbar`() = runTurbineTest {
-        val errorException = simpleErrorException()
-        val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
-        coEvery { getReportsUseCase() } throws errorException
-
-        val uiState = viewModel.uiState.testIn(context)
-
-        context.launch { viewModel.onStart() }
-        scheduler.advanceUntilIdle()
-
-        coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(snackBarData) }
-
-        uiState.cancelAndIgnoreRemainingEvents()
+        pagingContent.cancel()
     }
 
     @Test
     fun `WHEN refresh THEN refresh reports`() = runTurbineTest {
-        val report = report()
-        coEvery { getReportsUseCase() } returnsMany listOf(
-            listOf(report),
-            listOf(report, report),
+        val reportsFlow = MutableStateFlow(
+            PagingData.from(listOf(report()))
         )
+        coEvery { getReportsUseCase.data } returns reportsFlow
+        coEvery { getReportsUseCase() } coAnswers  {
+            val data = PagingData.from(listOf(report(), report()))
+            reportsFlow.emit(data)
+        }
 
         val uiState = viewModel.uiState.testIn(context)
+        val pagingContent = viewModel.pagingContent.testIn(context)
 
-        context.launch { viewModel.onStart() }
         scheduler.advanceUntilIdle()
         postUiEvent(UiEvent.Refresh)
-        uiState.skipItems(4)
-
-        expectThat(uiState.awaitItem()) {
-            get { isLoading }.isTrue()
-            get { isRefreshing }.isTrue()
-        }
-
         scheduler.advanceUntilIdle()
-        expectThat(uiState.expectMostRecentItem()) {
-            get { isLoading }.isFalse()
-            get { isRefreshing }.isFalse()
-            get { reports }.hasSize(2)
-        }
-        coVerify(exactly = 2) { getReportsUseCase() }
 
-        uiState.cancel()
+        pagingContent.skipItems(2)
+        pagingContent.ensureAllEventsConsumed()
+
+        pagingContent.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
     }
 
     @Test

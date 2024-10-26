@@ -93,8 +93,8 @@ dependencies {
     implementation(libs.accompanist)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.serialization)
     implementation(libs.androidx.splashScreen)
+    implementation(libs.serialization)
 
     // Compose
     implementation(platform(libs.compose.bom))
@@ -131,10 +131,11 @@ dependencies {
     // Paging
     implementation(libs.bundles.paging)
 
+    testImplementation (libs.paging.testing)
+    testImplementation(libs.bundles.test.junit)
     testImplementation(libs.bundles.test.strikt)
     testImplementation(libs.test.arch.core)
     testImplementation(libs.test.coroutines)
-    testImplementation(libs.bundles.test.junit)
     testImplementation(libs.test.mockk)
     testImplementation(libs.test.turbine)
     testRuntimeOnly(libs.test.junit.jupiter.engine)
@@ -153,6 +154,7 @@ koverReport {
         excludes {
             classes(
                 "*Activity*",
+                "*ApplicationConfig*",
                 "*BuildConfig*",
                 "*Callbacks*",
                 "*ComposableSingletons*",
