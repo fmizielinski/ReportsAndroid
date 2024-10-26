@@ -1,9 +1,7 @@
 package pl.fmizielinski.reports.utils
 
-import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.BuildConfig
 
-@Factory
 class ApplicationConfig {
 
     val host: String = BuildConfig.HOST
