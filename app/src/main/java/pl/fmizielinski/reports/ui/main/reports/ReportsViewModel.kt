@@ -1,16 +1,17 @@
 package pl.fmizielinski.reports.ui.main.reports
 
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
-import pl.fmizielinski.reports.R
-import pl.fmizielinski.reports.domain.common.model.SnackBarData
-import pl.fmizielinski.reports.domain.error.ErrorException
 import pl.fmizielinski.reports.domain.report.model.Report
 import pl.fmizielinski.reports.domain.report.usecase.GetReportsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.domain.repository.EventsRepository.GlobalEvent
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.base.PagingContentProvider
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
 import pl.fmizielinski.reports.ui.main.reportdetails.model.ReportDetailsNavArgs
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.Event
@@ -18,28 +19,34 @@ import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.State
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiEvent
 import pl.fmizielinski.reports.ui.main.reports.ReportsViewModel.UiState
 import pl.fmizielinski.reports.ui.navigation.DestinationData
-import timber.log.Timber
 
 @KoinViewModel
 class ReportsViewModel(
     dispatcher: CoroutineDispatcher,
     private val getReportsUseCase: GetReportsUseCase,
     private val eventsRepository: EventsRepository,
-) : BaseViewModel<State, Event, UiState, UiEvent>(dispatcher, State()) {
+) : BaseViewModel<State, Event, UiState, UiEvent>(
+    dispatcher = dispatcher,
+    mState = State(),
+),
+    PagingContentProvider<Report, UiState.Report> {
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
-            is Event.LoadReports -> handleLoadReports(state)
-            is Event.ReportsLoaded -> handleReportsLoaded(state, event)
-            is Event.LoadReportsFailed -> handleLoadReportsFailed(state)
             is UiEvent.ListScrolled -> handleListScrolled(state, event)
             is UiEvent.Refresh -> handleRefresh(state)
             is UiEvent.ReportClicked -> handleReportClicked(state, event)
         }
     }
 
-    override fun mapState(state: State): UiState {
-        val reports = state.reports.map { report ->
+    override fun mapState(state: State): UiState = UiState()
+
+    override fun providePagingContentFlow(): Flow<PagingData<Report>> {
+        return getReportsUseCase.data
+    }
+
+    override fun mapPagingContent(data: PagingData<Report>): PagingData<UiState.Report> {
+        return data.map { report ->
             UiState.Report(
                 id = report.id,
                 title = report.title,
@@ -48,51 +55,7 @@ class ReportsViewModel(
                 comments = report.comments,
             )
         }
-        return UiState(
-            reports = reports,
-            isLoading = state.loadingInProgress,
-            isRefreshing = state.isRefreshing,
-        )
     }
-
-    override suspend fun onStart() {
-        super.onStart()
-        postEvent(Event.LoadReports)
-    }
-
-    // region handle Event
-
-    private fun handleLoadReports(state: State): State {
-        scope.launch {
-            try {
-                val reports = getReportsUseCase()
-                postEvent(Event.ReportsLoaded(reports))
-            } catch (error: ErrorException) {
-                logError(error)
-                postEvent(Event.LoadReportsFailed)
-            }
-        }
-        return state.copy(loadingInProgress = true)
-    }
-
-    private fun handleReportsLoaded(state: State, event: Event.ReportsLoaded): State {
-        return state.copy(
-            reports = event.reports,
-            loadingInProgress = false,
-            isRefreshing = false,
-        )
-    }
-
-    private fun handleLoadReportsFailed(state: State): State {
-        scope.launch {
-            Timber.e("Reports loading failed")
-            val snackBarData = SnackBarData(messageResId = R.string.common_error_oops)
-            eventsRepository.postSnackBarEvent(snackBarData)
-        }
-        return state.copy(loadingInProgress = false, isRefreshing = false)
-    }
-
-    // endregion handle Event
 
     // region handle UiEvent
 
@@ -105,10 +68,8 @@ class ReportsViewModel(
     }
 
     private fun handleRefresh(state: State): State {
-        scope.launch {
-            postEvent(Event.LoadReports)
-        }
-        return state.copy(isRefreshing = true)
+        getReportsUseCase()
+        return state
     }
 
     private fun handleReportClicked(state: State, event: UiEvent.ReportClicked): State {
@@ -122,17 +83,9 @@ class ReportsViewModel(
 
     // endregion handle UiEvent
 
-    data class State(
-        val reports: List<Report> = emptyList(),
-        val loadingInProgress: Boolean = false,
-        val isRefreshing: Boolean = false,
-    )
+    class State
 
-    data class UiState(
-        val reports: List<Report>,
-        val isLoading: Boolean,
-        val isRefreshing: Boolean,
-    ) {
+    class UiState {
 
         data class Report(
             val id: Int,
@@ -143,11 +96,7 @@ class ReportsViewModel(
         )
     }
 
-    sealed interface Event {
-        data object LoadReports : Event
-        data class ReportsLoaded(val reports: List<Report>) : Event
-        data object LoadReportsFailed : Event
-    }
+    sealed interface Event
 
     sealed interface UiEvent : Event {
         data class ListScrolled(val firstItemIndex: Int) : UiEvent

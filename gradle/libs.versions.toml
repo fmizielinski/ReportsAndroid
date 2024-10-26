@@ -20,6 +20,7 @@ lifecycleRuntimeKtx = "2.8.5"
 mockk = "1.13.12"
 navigation = "2.8.0"
 okHttp = "4.12.0"
+paging = "3.3.2"
 retrofit = "2.11.0"
 room = "2.6.1"
 serialization = "1.7.1"
@@ -98,12 +99,19 @@ glide-ksp = { module = "com.github.bumptech.glide:ksp", version.ref = "glide" }
 glide-okhttp = { module = "com.github.bumptech.glide:okhttp3-integration", version.ref = "glide" }
 # endregion
 
+# region paging
+paging = { module = "androidx.paging:paging-runtime-ktx", version.ref = "paging" }
+paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+paging-testing = { module = "androidx.paging:paging-testing", version.ref = "paging" }
+# endregion
+
 [bundles]
 compose = ["compose-material", "compose-ui", "compose-ui-tooling-preview", "compose-constraintLayout", "compose-destinations"]
 compose-debug = ["compose-ui-test-manifest", "compose-ui-tooling"]
 glide = ["glide", "glide-compose", "glide-annotations", "glide-okhttp"]
 koin = ["koin", "koin-compose", "koin-annotations", "koin-compose-navigation"]
 navigation = ["navigation-ui", "navigation-fragment", "navigation-compose"]
+paging = ["paging", "paging-compose"]
 retrofit = ["retrofit", "retrofit-converter-serialization"]
 room = ["room", "room-ktx"]
 test-junit = ["test-junit-jupiter-api", "test-junit-jupiter-params"]
