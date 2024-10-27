@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,9 +53,16 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.ramcosta.composedestinations.annotation.Destination
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import pl.fmizielinski.reports.R
 import pl.fmizielinski.reports.ui.base.BaseScreen
 import pl.fmizielinski.reports.ui.common.composable.OutlinedReportsTextField
@@ -78,6 +83,7 @@ fun ReportDetailsScreen() {
     BaseScreen<ReportDetailsViewModel, UiState, UiEvent> {
         ReportDetailsContent(
             uiState = state.value,
+            pagingContent = viewModel.pagingContent,
             callbacks = ReportDetailsCallbacks(
                 onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
                 onTabClicked = { postUiEvent(UiEvent.TabClicked(it)) },
@@ -94,17 +100,20 @@ fun ReportDetailsScreen() {
 @Composable
 fun ReportDetailsContent(
     uiState: UiState,
+    pagingContent: Flow<PagingData<UiState.Comment>>,
     callbacks: ReportDetailsCallbacks,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
             .imePadding(),
     ) {
+        val lazyPagingItems = pagingContent.collectAsLazyPagingItems()
+
         Tabs(
             uiState = uiState,
             onTabClicked = callbacks.onTabClicked,
         )
-        if (uiState.isLoading) {
+        if (uiState.isLoading || lazyPagingItems.loadState.refresh == LoadState.Loading) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -120,6 +129,7 @@ fun ReportDetailsContent(
         ) {
             TabsContent(
                 uiState = uiState,
+                lazyPagingItems = lazyPagingItems,
                 callbacks = callbacks,
             )
         }
@@ -155,6 +165,7 @@ fun Tabs(
 @Composable
 fun TabsContent(
     uiState: UiState,
+    lazyPagingItems: LazyPagingItems<UiState.Comment>,
     callbacks: ReportDetailsCallbacks,
 ) {
     when (uiState.selectedTab) {
@@ -166,7 +177,8 @@ fun TabsContent(
         }
 
         UiState.Tab.COMMENTS -> Comments(
-            comments = uiState.comments,
+            uiState = uiState,
+            lazyPagingItems = lazyPagingItems,
             callbacks = callbacks.commentsCallbacks,
         )
     }
@@ -238,7 +250,8 @@ fun Attachments(
 
 @Composable
 fun Comments(
-    comments: UiState.Comments,
+    uiState: UiState,
+    lazyPagingItems: LazyPagingItems<UiState.Comment>,
     callbacks: CommentsCallbacks,
 ) {
     Column(
@@ -246,26 +259,34 @@ fun Comments(
     ) {
         val state = rememberLazyListState()
 
-        LaunchedEffect(comments.isLoading, comments.isSending) {
-            if (comments.scrollToFirst && comments.list.isNotEmpty()) {
-                state.scrollToItem(comments.list.lastIndex)
-            }
-        }
-
         LazyColumn(
             state = state,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
+            reverseLayout = true,
         ) {
-            itemsIndexed(comments.list) { index, comment ->
-                if (index == 0) {
-                    Spacer(modifier = Modifier.height(8.dp))
+            if (uiState.comments.sendingComment != null) {
+                item {
+                    Comment(
+                        comment = uiState.comments.sendingComment,
+                        onCommentClicked = callbacks.onCommentClicked,
+                    )
                 }
-                Comment(
-                    comment = comment,
-                    onCommentClicked = callbacks.onCommentClicked,
-                )
+            }
+            items(
+                count = lazyPagingItems.itemCount,
+                key = lazyPagingItems.itemKey { it.id ?: -1 },
+            ) { index ->
+                lazyPagingItems[index]?.let { comment ->
+                    if (index == 0) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    Comment(
+                        comment = comment,
+                        onCommentClicked = callbacks.onCommentClicked,
+                    )
+                }
             }
         }
         CommentText(callbacks)
@@ -443,6 +464,7 @@ private fun ReportDetailsScreenPreview() {
     ReportsTheme {
         ReportDetailsContent(
             uiState = previewDetailsUiState,
+            pagingContent = flowOf(PagingData.empty()),
             callbacks = emptyCallbacks,
         )
     }
@@ -454,6 +476,7 @@ private fun ReportCommentsScreenPreview() {
     ReportsTheme {
         ReportDetailsContent(
             uiState = previewCommentsUiState,
+            pagingContent = flowOf(PagingData.from(previewComments)),
             callbacks = emptyCallbacks,
         )
     }
@@ -465,13 +488,14 @@ private fun ReportCommentsScreenSendingFailePreview() {
     ReportsTheme {
         ReportDetailsContent(
             uiState = previewCommentsSendingFailedUiState,
+            pagingContent = flowOf(PagingData.from(previewComments)),
             callbacks = emptyCallbacks,
         )
     }
 }
 
 private val previewDetailsUiState = previewUiState(
-    comments = emptyList(),
+    sendingComment = null,
     selectedTab = UiState.Tab.DETAILS,
 )
 
@@ -513,43 +537,26 @@ private val previewComments = listOf(
 
 @Suppress("MaxLineLength", "StringLiteralDuplication")
 private val previewCommentsUiState = previewUiState(
-    comments = buildList {
-        addAll(previewComments)
-        add(
-            UiState.Comment(
-                id = null,
-                comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                user = "",
-                createDate = "",
-                isMine = true,
-                status = Status.SENDING,
-            ),
-        )
-    },
+    sendingComment = null,
     selectedTab = UiState.Tab.COMMENTS,
 )
 
 @Suppress("MaxLineLength", "StringLiteralDuplication")
 private val previewCommentsSendingFailedUiState = previewUiState(
-    comments = buildList {
-        addAll(previewComments)
-        add(
-            UiState.Comment(
-                id = null,
-                comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                user = "",
-                createDate = "",
-                isMine = true,
-                status = Status.SENDING_FAILED,
-            ),
-        )
-    },
+    sendingComment = UiState.Comment(
+        id = null,
+        comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        user = "",
+        createDate = "",
+        isMine = true,
+        status = Status.SENDING_FAILED,
+    ),
     selectedTab = UiState.Tab.COMMENTS,
 )
 
 @Suppress("MaxLineLength")
 private fun previewUiState(
-    comments: List<UiState.Comment>,
+    sendingComment: UiState.Comment?,
     selectedTab: UiState.Tab,
 ) = UiState(
     isLoading = false,
@@ -561,7 +568,7 @@ private fun previewUiState(
         attachments = emptyList(),
     ),
     comments = UiState.Comments(
-        list = comments,
+        sendingComment = sendingComment,
         isLoading = false,
     ),
     selectedTab = selectedTab,

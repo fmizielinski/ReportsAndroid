@@ -147,6 +147,10 @@ ksp {
     arg("compose-destinations.htmlMermaidGraph", "$rootDir/docs")
     arg("compose-destinations.codeGenPackageName", "pl.fmizielinski.reports.ui.destinations")
     // endregion Compose Destinations
+
+    // region Koin
+    arg("KOIN_USE_COMPOSE_VIEWMODEL","true")
+    // endregion Koin
 }
 
 koverReport {

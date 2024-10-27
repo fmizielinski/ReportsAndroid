@@ -2,15 +2,12 @@ package pl.fmizielinski.reports.ui.base
 
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 
-interface PagingContentProvider<Input : Any, Output : Any> {
+interface PagingContentProvider<T : Any> {
 
-    val pagingContent: Flow<PagingData<Output>>
+    val pagingContent: Flow<PagingData<T>>
         get() = providePagingContentFlow()
-            .map(::mapPagingContent)
 
-    fun providePagingContentFlow(): Flow<PagingData<Input>>
+    fun providePagingContentFlow(): Flow<PagingData<T>>
 
-    fun mapPagingContent(data: PagingData<Input>): PagingData<Output>
 }

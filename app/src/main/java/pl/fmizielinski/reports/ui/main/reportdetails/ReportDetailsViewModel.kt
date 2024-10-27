@@ -1,9 +1,12 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.paging.PagingData
+import androidx.paging.map
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
 import pl.fmizielinski.reports.domain.error.toSnackBarData
 import pl.fmizielinski.reports.domain.report.model.AddCommentData
@@ -15,6 +18,7 @@ import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsAttachmentG
 import pl.fmizielinski.reports.domain.report.usecase.GetReportDetailsUseCase
 import pl.fmizielinski.reports.domain.repository.EventsRepository
 import pl.fmizielinski.reports.ui.base.BaseViewModel
+import pl.fmizielinski.reports.ui.base.PagingContentProvider
 import pl.fmizielinski.reports.ui.destinations.destinations.AttachmentGalleryDestination
 import pl.fmizielinski.reports.ui.destinations.destinations.ReportDetailsDestination
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.Event
@@ -25,7 +29,6 @@ import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiSt
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import java.time.LocalDateTime
 
-@KoinViewModel
 class ReportDetailsViewModel(
     dispatcher: CoroutineDispatcher,
     handle: SavedStateHandle,
@@ -37,7 +40,8 @@ class ReportDetailsViewModel(
 ) : BaseViewModel<State, Event, UiState, UiEvent>(
     dispatcher = dispatcher,
     mState = createState(handle),
-) {
+),
+    PagingContentProvider<UiState.Comment> {
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
@@ -63,7 +67,7 @@ class ReportDetailsViewModel(
             State.Tab.COMMENTS -> UiState.Tab.COMMENTS
         }
         val comments = UiState.Comments(
-            list = state.getCommentListUiState(),
+            sendingComment = state.getSendingCommentUiState(),
             isLoading = state.isCommentsLoading,
         )
         return UiState(
@@ -91,34 +95,40 @@ class ReportDetailsViewModel(
         }
     }
 
-    private fun State.getCommentListUiState(): List<UiState.Comment> {
-        return buildList {
-            val mappedComments = comments.map { comment ->
-                UiState.Comment(
-                    id = comment.id,
-                    comment = comment.comment,
-                    user = comment.user,
-                    createDate = comment.createDate,
-                    isMine = comment.isMine,
-                    status = Status.SENT,
-                )
-            }
-            addAll(mappedComments)
-            if (sendingCommentData != null) {
-                val sendingComment = UiState.Comment(
-                    id = null,
-                    comment = sendingCommentData.data.comment,
-                    user = "",
-                    createDate = "",
-                    isMine = true,
-                    status = if (sendingCommentData.isFailed) {
-                        Status.SENDING_FAILED
-                    } else {
-                        Status.SENDING
-                    },
-                )
-                add(sendingComment)
-            }
+    private fun State.getSendingCommentUiState(): UiState.Comment? {
+        return sendingCommentData?.let { sendingCommentData ->
+            UiState.Comment(
+                id = null,
+                comment = sendingCommentData.data.comment,
+                user = "",
+                createDate = "",
+                isMine = true,
+                status = if (sendingCommentData.isFailed) {
+                    Status.SENDING_FAILED
+                } else {
+                    Status.SENDING
+                },
+            )
+        }
+    }
+
+    override fun providePagingContentFlow(): Flow<PagingData<UiState.Comment>> {
+        return getCommentsUseCase.data
+            .map(::mapPagingContent)
+    }
+
+    private fun mapPagingContent(data: PagingData<Comment>): PagingData<UiState.Comment> {
+        return data.map { comment ->
+            UiState.Comment(
+                id = comment.id,
+                comment = comment.comment,
+                user = comment.user,
+                createDate = comment.createDate,
+                isMine = comment.isMine,
+                status = Status.SENT,
+            )
+        }.apply {
+
         }
     }
 
@@ -161,8 +171,8 @@ class ReportDetailsViewModel(
     private fun handleLoadComments(state: State): State {
         scope.launch {
             try {
-                val comments = getCommentsUseCase(state.id)
-                postEvent(Event.CommentsLoaded(comments))
+//                val comments = getCommentsUseCase(state.id)
+                postEvent(Event.CommentsLoaded(emptyList()))
             } catch (error: SimpleErrorException) {
                 logError(error)
                 postEvent(Event.LoadCommentsFailed(error))
@@ -320,13 +330,13 @@ class ReportDetailsViewModel(
         }
 
         data class Comments(
-            val list: List<Comment>,
             val isLoading: Boolean,
+            val sendingComment: Comment?,
         ) {
-            val isSending: Boolean
-                get() = list.any { it.status == Status.SENDING }
-            val scrollToFirst: Boolean
-                get() = isSending || !isLoading
+//            val isSending: Boolean
+//                get() = list.any { it.status == Status.SENDING }
+//            val scrollToFirst: Boolean
+//                get() = isSending || !isLoading
         }
 
         data class Comment(

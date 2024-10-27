@@ -4,6 +4,7 @@ import android.app.Application
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import org.koin.dsl.module
 import org.koin.ksp.generated.module
 import pl.fmizielinski.reports.di.ApplicationModule
 import pl.fmizielinski.reports.di.DatabaseModule
@@ -22,9 +23,13 @@ class ReportsApplication : Application() {
         }
 
         startKoin {
+            val appModule = module {
+                single { koin }
+            }
             androidLogger()
             androidContext(this@ReportsApplication)
             modules(
+                appModule,
                 ApplicationModule().module,
                 NetworkModule().module,
                 ViewModelModule().module,
