@@ -2,9 +2,12 @@ package pl.fmizielinski.reports.ui.main.reportdetails
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.insertHeaderItem
 import androidx.paging.map
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
@@ -48,10 +51,7 @@ class ReportDetailsViewModel(
             is Event.LoadReportDetails -> handleLoadReportDetails(state)
             is Event.ReportDetailsLoaded -> handleReportDetailsLoaded(state, event)
             is Event.LoadReportDetailsFailed -> handleLoadReportDetailsFailed(state, event)
-            is Event.LoadComments -> handleLoadComments(state)
-            is Event.CommentsLoaded -> handleCommentsLoaded(state, event)
-            is Event.LoadCommentsFailed -> handleLoadCommentsFailed(state, event)
-            is Event.CommentAdded -> handleCommentAdded(state, event)
+            is Event.CommentAdded -> handleCommentAdded(state)
             is Event.AddCommentFailed -> handleAddCommentFailed(state)
             is UiEvent.PreviewAttachment -> handlePreviewAttachment(state, event)
             is UiEvent.TabClicked -> handleTabClicked(state, event)
@@ -68,10 +68,10 @@ class ReportDetailsViewModel(
         }
         val comments = UiState.Comments(
             sendingComment = state.getSendingCommentUiState(),
-            isLoading = state.isCommentsLoading,
+            scrollToFirst = state.sendingCommentData != null,
         )
         return UiState(
-            isLoading = state.isReportLoading || state.isCommentsLoading,
+            isLoading = state.isReportLoading,
             report = getReportDetailsUiState(state.report),
             comments = comments,
             selectedTab = selectedTab,
@@ -114,7 +114,28 @@ class ReportDetailsViewModel(
 
     override fun providePagingContentFlow(): Flow<PagingData<UiState.Comment>> {
         return getCommentsUseCase.data
-            .map(::mapPagingContent)
+            .cachedIn(scope)
+            .combine(state) { data, state -> data to state }
+            .map { (data, state) ->
+                val content = mapPagingContent(data)
+                if (state.sendingCommentData != null) {
+                    val sendingComment = UiState.Comment(
+                        id = null,
+                        comment = state.sendingCommentData.data.comment,
+                        user = "",
+                        createDate = "",
+                        isMine = true,
+                        status = if (state.sendingCommentData.isFailed) {
+                            Status.SENDING_FAILED
+                        } else {
+                            Status.SENDING
+                        },
+                    )
+                    content.insertHeaderItem(item = sendingComment)
+                } else {
+                    content
+                }
+            }
     }
 
     private fun mapPagingContent(data: PagingData<Comment>): PagingData<UiState.Comment> {
@@ -133,7 +154,6 @@ class ReportDetailsViewModel(
     override suspend fun onStart() {
         super.onStart()
         postEvent(Event.LoadReportDetails)
-        postEvent(Event.LoadComments)
     }
 
     // region handle Event
@@ -166,43 +186,9 @@ class ReportDetailsViewModel(
         return state.copy(isReportLoading = false)
     }
 
-    private fun handleLoadComments(state: State): State {
-        scope.launch {
-            try {
-//                val comments = getCommentsUseCase(state.id)
-                postEvent(Event.CommentsLoaded(emptyList()))
-            } catch (error: SimpleErrorException) {
-                logError(error)
-                postEvent(Event.LoadCommentsFailed(error))
-            }
-        }
-        return state.copy(isCommentsLoading = true)
-    }
-
-    private fun handleCommentsLoaded(state: State, event: Event.CommentsLoaded): State {
-        return state.copy(isCommentsLoading = false, comments = event.comments)
-    }
-
-    private fun handleLoadCommentsFailed(
-        state: State,
-        event: Event.LoadCommentsFailed,
-    ): State {
-        scope.launch {
-            eventsRepository.postSnackBarEvent(event.error.toSnackBarData())
-            eventsRepository.postNavUpEvent()
-        }
-        return state.copy(isCommentsLoading = false)
-    }
-
-    private fun handleCommentAdded(state: State, event: Event.CommentAdded): State {
-        val comments = buildList {
-            addAll(state.comments)
-            add(event.comment)
-        }
-        return state.copy(
-            comments = comments,
-            sendingCommentData = null,
-        )
+    private fun handleCommentAdded(state: State): State {
+        getCommentsUseCase()
+        return state.copy(sendingCommentData = null)
     }
 
     private fun handleAddCommentFailed(state: State): State {
@@ -265,8 +251,8 @@ class ReportDetailsViewModel(
     private fun State.sendComment(data: AddCommentData): State.SendingCommentData {
         scope.launch {
             try {
-                val comment = addCommentUseCase(id, data)
-                postEvent(Event.CommentAdded(comment))
+                addCommentUseCase(id, data)
+                postEvent(Event.CommentAdded)
             } catch (error: SimpleErrorException) {
                 logError(error)
                 postEvent(Event.AddCommentFailed)
@@ -282,8 +268,6 @@ class ReportDetailsViewModel(
         val id: Int,
         val isReportLoading: Boolean = true,
         val report: ReportDetails? = null,
-        val isCommentsLoading: Boolean = true,
-        val comments: List<Comment> = emptyList(),
         val selectedTab: Tab = Tab.DETAILS,
         val commentText: String = "",
         val sendingCommentData: SendingCommentData? = null,
@@ -328,14 +312,9 @@ class ReportDetailsViewModel(
         }
 
         data class Comments(
-            val isLoading: Boolean,
             val sendingComment: Comment?,
-        ) {
-//            val isSending: Boolean
-//                get() = list.any { it.status == Status.SENDING }
-//            val scrollToFirst: Boolean
-//                get() = isSending || !isLoading
-        }
+            val scrollToFirst: Boolean,
+        )
 
         data class Comment(
             val id: Int?,
@@ -363,10 +342,7 @@ class ReportDetailsViewModel(
         data object LoadReportDetails : Event
         data class ReportDetailsLoaded(val report: ReportDetails) : Event
         data class LoadReportDetailsFailed(val error: SimpleErrorException) : Event
-        data object LoadComments : Event
-        data class CommentsLoaded(val comments: List<Comment>) : Event
-        data class LoadCommentsFailed(val error: SimpleErrorException) : Event
-        data class CommentAdded(val comment: Comment) : Event
+        data object CommentAdded : Event
         data object AddCommentFailed : Event
     }
 

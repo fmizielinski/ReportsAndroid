@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -32,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -179,7 +179,7 @@ fun TabsContent(
         }
 
         UiState.Tab.COMMENTS -> Comments(
-            uiState = uiState,
+            comments = uiState.comments,
             lazyPagingItems = lazyPagingItems,
             callbacks = callbacks.commentsCallbacks,
         )
@@ -252,7 +252,7 @@ fun Attachments(
 
 @Composable
 fun Comments(
-    uiState: UiState,
+    comments: UiState.Comments,
     lazyPagingItems: LazyPagingItems<UiState.Comment>,
     callbacks: CommentsCallbacks,
 ) {
@@ -261,6 +261,14 @@ fun Comments(
     ) {
         val state = rememberLazyListState()
 
+        LaunchedEffect(comments.scrollToFirst, lazyPagingItems.loadState.refresh) {
+            val shouldScroll = lazyPagingItems.loadState.refresh is LoadState.NotLoading ||
+                    comments.scrollToFirst
+            if (shouldScroll && lazyPagingItems.itemCount > 0) {
+                state.scrollToItem(0)
+            }
+        }
+
         LazyColumn(
             state = state,
             modifier = Modifier
@@ -268,15 +276,6 @@ fun Comments(
                 .fillMaxWidth(),
             reverseLayout = true,
         ) {
-            Log.d("DUPA", lazyPagingItems.loadState.toString())
-            if (uiState.comments.sendingComment != null) {
-                item {
-                    Comment(
-                        comment = uiState.comments.sendingComment,
-                        onCommentClicked = callbacks.onCommentClicked,
-                    )
-                }
-            }
             items(
                 count = lazyPagingItems.itemCount,
                 key = lazyPagingItems.itemKey { it.id ?: -1 },
@@ -572,7 +571,7 @@ private fun previewUiState(
     ),
     comments = UiState.Comments(
         sendingComment = sendingComment,
-        isLoading = false,
+        scrollToFirst = true,
     ),
     selectedTab = selectedTab,
 )

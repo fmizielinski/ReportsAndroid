@@ -71,7 +71,7 @@ interface ReportService {
     suspend fun addComment(
         @Path("id") reportId: Int,
         @Body requestModel: AddCommentRequestModel,
-    ): CommentsResponseModel.CommentModel
+    )
 
     // endregion comment
 }
