@@ -18,6 +18,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,8 +52,9 @@ import pl.fmizielinski.reports.ui.theme.ReportsTheme
 @Composable
 fun ReportsScreen() {
     BaseScreen<ReportsViewModel, UiState, UiEvent> {
+        val pagingContent = remember { viewModel.pagingContent }
         ReportsList(
-            pagingContent = viewModel.pagingContent,
+            pagingContent = pagingContent,
             callbacks = ReportsCallbacks(
                 onListScrolled = { firstItemIndex ->
                     postUiEvent(UiEvent.ListScrolled(firstItemIndex))

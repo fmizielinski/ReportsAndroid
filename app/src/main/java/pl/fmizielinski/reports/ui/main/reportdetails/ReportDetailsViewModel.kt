@@ -127,8 +127,6 @@ class ReportDetailsViewModel(
                 isMine = comment.isMine,
                 status = Status.SENT,
             )
-        }.apply {
-
         }
     }
 

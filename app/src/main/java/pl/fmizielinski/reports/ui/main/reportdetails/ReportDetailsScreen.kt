@@ -1,5 +1,6 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -81,9 +82,10 @@ import pl.fmizielinski.reports.ui.theme.ReportsTheme
 @Composable
 fun ReportDetailsScreen() {
     BaseScreen<ReportDetailsViewModel, UiState, UiEvent> {
+        val pagingContent = remember { viewModel.pagingContent }
         ReportDetailsContent(
             uiState = state.value,
-            pagingContent = viewModel.pagingContent,
+            pagingContent = pagingContent,
             callbacks = ReportDetailsCallbacks(
                 onAttachmentClicked = { postUiEvent(UiEvent.PreviewAttachment(it)) },
                 onTabClicked = { postUiEvent(UiEvent.TabClicked(it)) },
@@ -266,6 +268,7 @@ fun Comments(
                 .fillMaxWidth(),
             reverseLayout = true,
         ) {
+            Log.d("DUPA", lazyPagingItems.loadState.toString())
             if (uiState.comments.sendingComment != null) {
                 item {
                     Comment(
