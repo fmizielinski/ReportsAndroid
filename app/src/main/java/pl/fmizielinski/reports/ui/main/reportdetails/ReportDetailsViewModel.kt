@@ -67,7 +67,6 @@ class ReportDetailsViewModel(
             State.Tab.COMMENTS -> UiState.Tab.COMMENTS
         }
         val comments = UiState.Comments(
-            sendingComment = state.getSendingCommentUiState(),
             scrollToFirst = state.sendingCommentData != null,
         )
         return UiState(
@@ -90,23 +89,6 @@ class ReportDetailsViewModel(
                         id = attachment.id,
                         path = attachment.path,
                     )
-                },
-            )
-        }
-    }
-
-    private fun State.getSendingCommentUiState(): UiState.Comment? {
-        return sendingCommentData?.let { sendingCommentData ->
-            UiState.Comment(
-                id = null,
-                comment = sendingCommentData.data.comment,
-                user = "",
-                createDate = "",
-                isMine = true,
-                status = if (sendingCommentData.isFailed) {
-                    Status.SENDING_FAILED
-                } else {
-                    Status.SENDING
                 },
             )
         }
@@ -312,7 +294,6 @@ class ReportDetailsViewModel(
         }
 
         data class Comments(
-            val sendingComment: Comment?,
             val scrollToFirst: Boolean,
         )
 

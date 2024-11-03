@@ -50,10 +50,11 @@ fun CommentsResponseModel.CommentModel.toComment(
     dateFormatter: DateFormatter,
 ): Comment {
     val now = LocalDateTime.now()
+    val isCurrentYear = createDate.year == now.year
     val date = dateFormatter.formatCommentDate(
         date = createDate,
-        isToday = createDate.dayOfYear == now.dayOfYear,
-        isCurrentWeek = now.dayOfYear - createDate.dayOfYear < 7,
+        isToday = createDate.dayOfYear == now.dayOfYear && isCurrentYear,
+        isCurrentWeek = now.dayOfYear - createDate.dayOfYear < 7 && isCurrentYear,
         isCurrentYear = createDate.year == now.year,
     )
     return Comment(

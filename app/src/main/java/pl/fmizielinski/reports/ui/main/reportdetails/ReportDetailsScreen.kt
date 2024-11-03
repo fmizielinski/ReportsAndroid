@@ -33,6 +33,7 @@ import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,6 +42,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layoutId
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -345,10 +347,22 @@ fun Comment(
     comment: UiState.Comment,
     onCommentClicked: (Int?) -> Unit,
 ) {
-    val constraints = commentConstraintSet(comment.isMine)
+    val userWidth = remember { mutableIntStateOf(0) }
+    val commentWidth = remember { mutableIntStateOf(0) }
+    val dateWidth = remember { mutableIntStateOf(0) }
+    val constraints = remember(userWidth.intValue, commentWidth.intValue, dateWidth.intValue) {
+        mutableStateOf(
+            commentConstraintSet(
+                comment.isMine,
+                userWidth.intValue,
+                commentWidth.intValue,
+                dateWidth.intValue,
+            ),
+        )
+    }
     ConstraintLayout(
         modifier = Modifier.fillMaxWidth(),
-        constraintSet = constraints,
+        constraintSet = constraints.value,
     ) {
         val cardAlpha = if (comment.status == Status.SENT) 1f else SENDING_CARD_ALPHA
         val errorBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
@@ -357,12 +371,18 @@ fun Comment(
                 text = comment.user,
                 fontWeight = FontWeight.Light,
                 fontSize = 12.sp,
-                modifier = Modifier.layoutId(CommentConstraints.USER),
+                modifier = Modifier.layoutId(CommentConstraints.USER)
+                    .onGloballyPositioned { coordinates ->
+                        userWidth.intValue = coordinates.size.width
+                    },
             )
         }
         Card(
             modifier = Modifier.layoutId(CommentConstraints.COMMENT)
                 .alpha(cardAlpha)
+                .onGloballyPositioned { coordinates ->
+                    commentWidth.intValue = coordinates.size.width
+                }
                 .clickable { onCommentClicked(comment.id) },
             border = errorBorder.takeIf { comment.status == Status.SENDING_FAILED },
         ) {
@@ -373,22 +393,31 @@ fun Comment(
                 modifier = Modifier.padding(8.dp),
             )
         }
-        CommentFooter(comment)
+        CommentFooter(
+            comment = comment,
+            modifier = Modifier.layoutId(CommentConstraints.DATE)
+                .onGloballyPositioned { coordinates ->
+                    dateWidth.intValue = coordinates.size.width
+                },
+        )
     }
 }
 
 @Composable
-fun CommentFooter(comment: UiState.Comment) {
+fun CommentFooter(
+    comment: UiState.Comment,
+    modifier: Modifier,
+) {
     when (comment.status) {
         Status.SENT -> Text(
             text = comment.createDate,
             fontWeight = FontWeight.Light,
             fontSize = 10.sp,
-            modifier = Modifier.layoutId(CommentConstraints.DATE),
+            modifier = modifier,
         )
 
         Status.SENDING -> CircularProgressIndicator(
-            modifier = Modifier.layoutId(CommentConstraints.DATE)
+            modifier = modifier
                 .padding(2.dp)
                 .size(12.dp),
             strokeWidth = 2.dp,
@@ -400,7 +429,7 @@ fun CommentFooter(comment: UiState.Comment) {
                 R.string.reportDetailsScreen_button_send,
             ),
             tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.layoutId(CommentConstraints.DATE)
+            modifier = modifier
                 .padding(2.dp)
                 .size(12.dp),
         )
@@ -413,7 +442,12 @@ private object CommentConstraints {
     const val DATE = "date"
 }
 
-private fun commentConstraintSet(isMine: Boolean): ConstraintSet {
+private fun commentConstraintSet(
+    isMine: Boolean,
+    userWidth: Int,
+    commentWidth: Int,
+    dateWidth: Int,
+): ConstraintSet {
     return ConstraintSet {
         val user = createRefFor(CommentConstraints.USER)
         val comment = createRefFor(CommentConstraints.COMMENT)
@@ -427,7 +461,11 @@ private fun commentConstraintSet(isMine: Boolean): ConstraintSet {
 
         constrain(user) {
             top.linkTo(parent.top)
-            start.linkTo(comment.start)
+            if (userWidth > commentWidth && isMine) {
+                end.linkTo(comment.end)
+            } else {
+                start.linkTo(comment.start)
+            }
         }
         constrain(comment) {
             top.linkTo(user.bottom)
@@ -440,7 +478,11 @@ private fun commentConstraintSet(isMine: Boolean): ConstraintSet {
         }
         constrain(date) {
             top.linkTo(comment.bottom)
-            end.linkTo(comment.end)
+            if (dateWidth > commentWidth && !isMine) {
+                start.linkTo(comment.start)
+            } else {
+                end.linkTo(comment.end)
+            }
         }
     }
 }
@@ -484,20 +526,32 @@ private fun ReportCommentsScreenPreview() {
     }
 }
 
+@Suppress("MaxLineLength", "StringLiteralDuplication")
 @Preview(showBackground = true, device = Devices.PIXEL_4)
 @Composable
 private fun ReportCommentsScreenSendingFailePreview() {
     ReportsTheme {
+        val comments = buildList {
+            val sendingComment = UiState.Comment(
+                id = null,
+                comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                user = "",
+                createDate = "",
+                isMine = true,
+                status = Status.SENDING_FAILED,
+            )
+            add(sendingComment)
+            addAll(previewComments)
+        }
         ReportDetailsContent(
-            uiState = previewCommentsSendingFailedUiState,
-            pagingContent = flowOf(PagingData.from(previewComments)),
+            uiState = previewCommentsUiState,
+            pagingContent = flowOf(PagingData.from(comments)),
             callbacks = emptyCallbacks,
         )
     }
 }
 
 private val previewDetailsUiState = previewUiState(
-    sendingComment = null,
     selectedTab = UiState.Tab.DETAILS,
 )
 
@@ -505,6 +559,22 @@ private val previewDetailsUiState = previewUiState(
 private val previewComments = listOf(
     UiState.Comment(
         id = 1,
+        comment = "A",
+        user = "User user",
+        createDate = "2021-01-01, 13:11",
+        isMine = true,
+        status = Status.SENT,
+    ),
+    UiState.Comment(
+        id = 2,
+        comment = "A",
+        user = "User2 user2",
+        createDate = "2021-01-01, 13:11",
+        isMine = false,
+        status = Status.SENT,
+    ),
+    UiState.Comment(
+        id = 3,
         comment = "Comment 1",
         user = "User user",
         createDate = "2021-01-01, 13:11",
@@ -512,7 +582,7 @@ private val previewComments = listOf(
         status = Status.SENT,
     ),
     UiState.Comment(
-        id = 1,
+        id = 4,
         comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         user = "User user",
         createDate = "2021-01-01, 13:11",
@@ -520,7 +590,7 @@ private val previewComments = listOf(
         status = Status.SENT,
     ),
     UiState.Comment(
-        id = 1,
+        id = 5,
         comment = "Comment 3",
         user = "User2 user2",
         createDate = "2021-01-01, 13:11",
@@ -528,7 +598,7 @@ private val previewComments = listOf(
         status = Status.SENT,
     ),
     UiState.Comment(
-        id = 1,
+        id = 6,
         comment = "Comment 4",
         user = "User user",
         createDate = "2021-01-01, 13:11",
@@ -539,26 +609,11 @@ private val previewComments = listOf(
 
 @Suppress("MaxLineLength", "StringLiteralDuplication")
 private val previewCommentsUiState = previewUiState(
-    sendingComment = null,
-    selectedTab = UiState.Tab.COMMENTS,
-)
-
-@Suppress("MaxLineLength", "StringLiteralDuplication")
-private val previewCommentsSendingFailedUiState = previewUiState(
-    sendingComment = UiState.Comment(
-        id = null,
-        comment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        user = "",
-        createDate = "",
-        isMine = true,
-        status = Status.SENDING_FAILED,
-    ),
     selectedTab = UiState.Tab.COMMENTS,
 )
 
 @Suppress("MaxLineLength")
 private fun previewUiState(
-    sendingComment: UiState.Comment?,
     selectedTab: UiState.Tab,
 ) = UiState(
     isLoading = false,
@@ -570,7 +625,6 @@ private fun previewUiState(
         attachments = emptyList(),
     ),
     comments = UiState.Comments(
-        sendingComment = sendingComment,
         scrollToFirst = true,
     ),
     selectedTab = selectedTab,

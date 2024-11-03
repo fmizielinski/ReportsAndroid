@@ -1,6 +1,5 @@
 package pl.fmizielinski.reports.domain.report.usecase
 
-import kotlinx.coroutines.delay
 import org.koin.core.annotation.Factory
 import pl.fmizielinski.reports.data.network.report.ReportService
 import pl.fmizielinski.reports.domain.base.BaseUseCase
@@ -14,7 +13,6 @@ class AddCommentUseCase(
 
     suspend operator fun invoke(reportId: Int, data: AddCommentData) {
         val request = data.toAddCommentRequest()
-        delay(10000L)
         catchHttpExceptions(
             body = { reportService.addComment(reportId, request) },
             handler = { it.toErrorException() },
