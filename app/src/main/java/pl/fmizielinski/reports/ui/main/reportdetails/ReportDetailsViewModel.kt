@@ -8,6 +8,7 @@ import androidx.paging.map
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import pl.fmizielinski.reports.domain.error.SimpleErrorException
@@ -97,7 +98,7 @@ class ReportDetailsViewModel(
     override fun providePagingContentFlow(): Flow<PagingData<UiState.Comment>> {
         return getCommentsUseCase.data
             .cachedIn(scope)
-            .combine(state) { data, state -> data to state }
+            .combine(state.distinctUntilChanged()) { data, state -> data to state }
             .map { (data, state) ->
                 val content = mapPagingContent(data)
                 if (state.sendingCommentData != null) {

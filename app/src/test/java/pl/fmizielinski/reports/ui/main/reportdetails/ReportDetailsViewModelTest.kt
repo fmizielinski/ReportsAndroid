@@ -1,15 +1,17 @@
 package pl.fmizielinski.reports.ui.main.reportdetails
 
 import androidx.lifecycle.SavedStateHandle
+import androidx.paging.PagingData
 import app.cash.turbine.testIn
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestDispatcher
 import org.junit.jupiter.api.Test
@@ -27,17 +29,13 @@ import pl.fmizielinski.reports.fixtures.domain.simpleErrorException
 import pl.fmizielinski.reports.fixtures.ui.attachmentGalleryNavArgs
 import pl.fmizielinski.reports.ui.destinations.destinations.AttachmentGalleryDestination
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiEvent
-import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState.Comment.Status
 import pl.fmizielinski.reports.ui.main.reportdetails.ReportDetailsViewModel.UiState.Tab
 import pl.fmizielinski.reports.ui.navigation.DestinationData
 import strikt.api.expectThat
 import strikt.assertions.hasSize
-import strikt.assertions.isEmpty
 import strikt.assertions.isEqualTo
 import strikt.assertions.isFalse
 import strikt.assertions.isNotNull
-import strikt.assertions.isNull
-import strikt.assertions.isTrue
 import strikt.assertions.withFirst
 
 class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiEvent>() {
@@ -86,24 +84,14 @@ class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiE
             reportDate = expectedReportDate,
             attachments = attachments,
         )
-        val commentId = 3
-        val comment = "comment"
-        val user = "user"
-        val createDate = "createDate"
-        val isMine = true
 
         coEvery { getReportDetailsUseCase(expectedId) } returns reportDetails
-        coEvery { getCommentsUseCase(id) } returns listOf(
-            comment(
-                id = commentId,
-                comment = comment,
-                user = user,
-                createDate = createDate,
-                isMine = isMine,
-            ),
+        coEvery { getCommentsUseCase.data } returns flowOf(
+            PagingData.from(listOf(comment())),
         )
 
         val uiState = viewModel.uiState.testIn(context)
+        val pagingContent = viewModel.pagingContent.testIn(context)
 
         context.launch { viewModel.onStart() }
         scheduler.advanceUntilIdle()
@@ -122,47 +110,22 @@ class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiE
                             get { path } isEqualTo expectedPath
                         }
                 }
-            get { comments }.and {
-                get { list }.hasSize(1)
-                    .withFirst {
-                        get { this.id } isEqualTo commentId
-                        get { this.comment } isEqualTo comment
-                        get { this.user } isEqualTo user
-                        get { this.createDate } isEqualTo createDate
-                        get { this.isMine } isEqualTo isMine
-                        get { this.status } isEqualTo Status.SENT
-                    }
-                get { this.isSending }.isFalse()
-                get { this.scrollToFirst }.isTrue()
-            }
+            get { comments.scrollToFirst }.isFalse()
             get { selectedTabIndex } isEqualTo 0
         }
 
-        uiState.cancel()
+        pagingContent.skipItems(2)
+        pagingContent.ensureAllEventsConsumed()
+
+        pagingContent.cancel()
+        uiState.cancelAndIgnoreRemainingEvents()
     }
 
     @Test
     fun `GIVEN details loading error WHEN start THEN post snack bar event AND post nav up event`() = runTurbineTest {
         val exception = simpleErrorException()
         coEvery { getReportDetailsUseCase(id) } throws exception
-        coEvery { getCommentsUseCase(id) } returns emptyList()
-
-        val uiState = viewModel.uiState.testIn(context)
-
-        context.launch { viewModel.onStart() }
-        scheduler.advanceUntilIdle()
-
-        coVerify(exactly = 1) { eventsRepository.postNavUpEvent() }
-        coVerify(exactly = 1) { eventsRepository.postSnackBarEvent(exception.toSnackBarData()) }
-
-        uiState.cancelAndIgnoreRemainingEvents()
-    }
-
-    @Test
-    fun `GIVEN comments loading error WHEN start THEN post snack bar event AND post nav up event`() = runTurbineTest {
-        val exception = simpleErrorException()
-        coEvery { getReportDetailsUseCase(id) } returns reportDetails()
-        coEvery { getCommentsUseCase(id) } throws exception
+        coEvery { getCommentsUseCase.data } returns flowOf(PagingData.empty())
 
         val uiState = viewModel.uiState.testIn(context)
 
@@ -188,7 +151,7 @@ class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiE
         )
         every { getAttachmentGalleryNavArgsUseCase(any(), any()) } returns attachmentGalleryNavArgs
         coEvery { getReportDetailsUseCase(id) } returns reportDetails
-        coEvery { getCommentsUseCase(id) } returns emptyList()
+        coEvery { getCommentsUseCase.data } returns flowOf(PagingData.empty())
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
 
@@ -205,79 +168,22 @@ class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiE
         uiState.cancelAndIgnoreRemainingEvents()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `GIVEN comment typed WHEN Send clicked THEN show sending comment on list`() = runTurbineTest {
+    fun `GIVEN comment typed WHEN Send clicked THEN refresh comments list`() = runTurbineTest {
+        val commentsFlow = MutableStateFlow(
+            PagingData.from(listOf(comment())),
+        )
         val reportDetails = reportDetails()
-        val commentId = 3
-        val comment = "comment"
-        val user = "user"
-        val createDate = "createDate"
-        val isMine = true
         coEvery { getReportDetailsUseCase(id) } returns reportDetails
-        coEvery { getCommentsUseCase(id) } returns emptyList()
-        coEvery { addCommentUseCase(any(), any()) } coAnswers {
-            delay(10000L)
-            comment(
-                id = commentId,
-                comment = comment,
-                user = user,
-                createDate = createDate,
-                isMine = isMine,
-            )
+        coEvery { getCommentsUseCase.data } returns commentsFlow
+        coEvery { getCommentsUseCase() } coAnswers {
+            val data = PagingData.from(listOf(comment(), comment()))
+            commentsFlow.emit(data)
         }
+        coJustRun { addCommentUseCase(any(), any()) }
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
-
-        context.launch { viewModel.onStart() }
-        scheduler.advanceUntilIdle()
-        postUiEvent(UiEvent.TabClicked(Tab.COMMENTS))
-        postUiEvent(UiEvent.CommentChanged("comment"))
-        postUiEvent(UiEvent.SendClicked)
-        scheduler.advanceTimeBy(5000L)
-        var result = uiState.expectMostRecentItem()
-        expectThat(result.comments) {
-            get { isSending }.isTrue()
-            get { scrollToFirst }.isTrue()
-            get { list }.hasSize(1)
-                .withFirst {
-                    get { this.id }.isNull()
-                    get { this.comment } isEqualTo comment
-                    get { this.user }.isEmpty()
-                    get { this.createDate }.isEmpty()
-                    get { this.isMine } isEqualTo isMine
-                    get { this.status } isEqualTo Status.SENDING
-                }
-        }
-        scheduler.advanceUntilIdle()
-        result = uiState.expectMostRecentItem()
-        expectThat(result.comments) {
-            get { isSending }.isFalse()
-            get { scrollToFirst }.isTrue()
-            get { list }.hasSize(1)
-                .withFirst {
-                    get { this.id } isEqualTo commentId
-                    get { this.comment } isEqualTo comment
-                    get { this.user } isEqualTo user
-                    get { this.createDate } isEqualTo createDate
-                    get { this.isMine } isEqualTo isMine
-                    get { this.status } isEqualTo Status.SENT
-                }
-        }
-
-        uiState.cancelAndIgnoreRemainingEvents()
-    }
-
-    @Test
-    fun `GIVEN add comment error WHEN Send clicked THEN show comment error on list`() = runTurbineTest {
-        val reportDetails = reportDetails()
-        val comment = "comment"
-        val isMine = true
-        coEvery { getReportDetailsUseCase(id) } returns reportDetails
-        coEvery { getCommentsUseCase(id) } returns emptyList()
-        coEvery { addCommentUseCase(any(), any()) } throws simpleErrorException()
-
-        val uiState = viewModel.uiState.testIn(context, name = "uiState")
+        val pagingContent = viewModel.pagingContent.testIn(context)
 
         context.launch { viewModel.onStart() }
         scheduler.advanceUntilIdle()
@@ -286,21 +192,9 @@ class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiE
         postUiEvent(UiEvent.SendClicked)
         scheduler.advanceUntilIdle()
 
-        val result = uiState.expectMostRecentItem()
-        expectThat(result.comments) {
-            get { isSending }.isFalse()
-            get { scrollToFirst }.isTrue()
-            get { list }.hasSize(1)
-                .withFirst {
-                    get { this.id }.isNull()
-                    get { this.comment } isEqualTo comment
-                    get { this.user }.isEmpty()
-                    get { this.createDate }.isEmpty()
-                    get { this.isMine } isEqualTo isMine
-                    get { this.status } isEqualTo Status.SENDING_FAILED
-                }
-        }
+        coVerify(exactly = 1) { getCommentsUseCase() }
 
+        pagingContent.cancelAndIgnoreRemainingEvents()
         uiState.cancelAndIgnoreRemainingEvents()
     }
 
@@ -308,7 +202,7 @@ class ReportDetailsViewModelTest : BaseViewModelTest<ReportDetailsViewModel, UiE
     fun `GIVEN add comment error visible WHEN Comment clicked THEN retry adding comment`() = runTurbineTest {
         val reportDetails = reportDetails()
         coEvery { getReportDetailsUseCase(id) } returns reportDetails
-        coEvery { getCommentsUseCase(id) } returns emptyList()
+        coEvery { getCommentsUseCase.data } returns flowOf(PagingData.empty())
         coEvery { addCommentUseCase(any(), any()) } throws simpleErrorException()
 
         val uiState = viewModel.uiState.testIn(context, name = "uiState")
