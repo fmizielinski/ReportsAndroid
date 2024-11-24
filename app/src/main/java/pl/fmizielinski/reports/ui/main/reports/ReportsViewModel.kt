@@ -4,6 +4,7 @@ import androidx.paging.PagingData
 import androidx.paging.map
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 import pl.fmizielinski.reports.domain.report.model.Report
@@ -29,7 +30,7 @@ class ReportsViewModel(
     dispatcher = dispatcher,
     mState = State(),
 ),
-    PagingContentProvider<Report, UiState.Report> {
+    PagingContentProvider<UiState.Report> {
 
     override fun handleEvent(state: State, event: Event): State {
         return when (event) {
@@ -41,11 +42,11 @@ class ReportsViewModel(
 
     override fun mapState(state: State): UiState = UiState()
 
-    override fun providePagingContentFlow(): Flow<PagingData<Report>> {
-        return getReportsUseCase.data
+    override fun providePagingContentFlow(): Flow<PagingData<UiState.Report>> {
+        return getReportsUseCase.data.map(::mapPagingContent)
     }
 
-    override fun mapPagingContent(data: PagingData<Report>): PagingData<UiState.Report> {
+    private fun mapPagingContent(data: PagingData<Report>): PagingData<UiState.Report> {
         return data.map { report ->
             UiState.Report(
                 id = report.id,

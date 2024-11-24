@@ -61,13 +61,17 @@ interface ReportService {
     // region comment
 
     @GET("/report/{id}/comment")
-    suspend fun getComments(@Path("id") reportId: Int): CommentsResponseModel
+    suspend fun getComments(
+        @Path("id") reportId: Int,
+        @Query("page") page: Int,
+        @Query("size") size: Int,
+    ): CommentsResponseModel
 
     @POST("/report/{id}/comment")
     suspend fun addComment(
         @Path("id") reportId: Int,
         @Body requestModel: AddCommentRequestModel,
-    ): CommentsResponseModel.CommentModel
+    )
 
     // endregion comment
 }

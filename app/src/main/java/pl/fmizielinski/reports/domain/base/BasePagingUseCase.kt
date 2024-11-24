@@ -9,9 +9,10 @@ import pl.fmizielinski.reports.utils.ApplicationConfig
 import java.util.Optional
 import kotlin.jvm.optionals.getOrNull
 
-abstract class BasePagingUseCase<Source : BasePagingSource<Output>, Output : Any>(
+abstract class BasePagingUseCase<Source : BasePagingSource<Output>, Input, Output : Any>(
+    private val inputData: Input,
     private val config: ApplicationConfig,
-    private val pagingSourceProvider: PagingSourceProvider<Source>,
+    private val pagingSourceProvider: PagingSourceProvider<Input, Source>,
 ) : BaseUseCase() {
 
     val data: Flow<PagingData<Output>>
@@ -26,7 +27,9 @@ abstract class BasePagingUseCase<Source : BasePagingSource<Output>, Output : Any
                 enablePlaceholders = false,
             ),
             pagingSourceFactory = {
-                pagingSourceProvider.providePagingSource().also { pagingSource = Optional.of(it) }
+                pagingSourceProvider.providePagingSource(inputData).also {
+                    pagingSource = Optional.of(it)
+                }
             },
         )
     }
